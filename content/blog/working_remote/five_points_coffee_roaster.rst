@@ -7,7 +7,7 @@ draft: false
 ---
 
 *This one of many posts this summer in which I will review local Portland
-cafes and other loctions with working remotely in mind. If you have any
+cafes and other locations with working remotely in mind. If you have any
 feedback, please contact me on twitter* `@PastyWhiteNoise`_
 
 .. _@PastyWhiteNoise: https://twitter.com/pastywhitenoise
@@ -46,7 +46,7 @@ baristas. I spent the first half my day at the front, window-facing, bar and
 the second half at a table-for-two near an outlet because laptops need
 power.
 
-I'm new to this so I'm not comfortable difinitively saying that this is a good
+I'm new to this so I'm not comfortable definitively saying that this is a good
 or bad place to work at. I was able to get things done for four hours and only
 left because I was hungry and cheap. I wasn't pestered to leave at any point
 and they passed my *"Adequate Cup of Black Coffee"* test. The neighborhood is
