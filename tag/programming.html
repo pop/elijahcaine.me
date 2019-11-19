@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <title>elijahcaine.me - Programming</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="../theme/css/main.css" type="text/css" />
+        <link href="elijahcaine.me/atom.xml" type="application/atom+xml" rel="alternate" title="elijahcaine.me ATOM Feed" />
+
+        <!--[if IE]>
+                <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+        <!--[if lte IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="../css/ie.css"/>
+                <script src="../js/IE8.js" type="text/javascript"></script><![endif]-->
+
+        <!--[if lt IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="../css/ie6.css"/><![endif]-->
+
+</head>
+
+<body>
+
+        <!-- header>
+            <nav>
+                <ul>
+                    <li><a href="../about/">About</a> ::</li>
+                    <li><a href="../contact/">Contact</a></li>
+                    <li>:: <a href="../categories.html">Categories</a></li>
+                    <li>:: <a href="../tags.html">Tags</a></li>
+                </ul>
+            </nav>
+        </header -->
+
+        
+        
+
+            <header>
+                <h1><a href=".." id="site-title">elijahcaine.me </a> : <a href="../tech/programming-hurdles" id="page-title">Conceptual hurdles in programming</a></h1>
+<time datetime="2016-08-21T00:00:00-07:00">Sun 21 August 2016</time>            </header>
+
+            <article>
+                <p>I've been actively learning programming for almost five years now. I started
+by taking a C++ class at Portland Community College.  That class was the best
+thing to happen to my engineering career because it taught me that
+<em>programming is very hard, and I am not naturally good at it</em>, but it was also
+very rewarding so I stuck with it.</p>
+<p>I'm not special either, most of us aren't very good at programming because
+it's so abstract and hard to grasp, like Math and Infinite Jest. There are of
+course the people that seem like <em>programming gods</em>, but nine times out of ten
+those people have been programming since they were eight and it's really not
+fair to compare yourself to them.  That's like comparing your sporting
+abilities to <em>any olympic athlete</em>.  Don't be so hard on yourself.</p>
+<p>In learning to program, and now teaching others how to program, I've
+identified a few <strong>hurdles</strong> (mountains, cliffs, obstacles, w/e) that folks
+tend to hit and have trouble crossing.  They always get past these hurdles
+eventually (or they quit CS ☹), but not without a bit of unnecessary struggle.
+Struggling builds character, and I don't want to cheat anybody out of that,
+but I do want to help those that want it.</p>
+<p>This post will in no way guarantee your success in overcoming these obstacles
+but it should at least give you a head start to help you understand what you're
+learning and point you in the right direction when you want to ask a question.</p>
+<div class="section" id="data-structures">
+<h2>Data Structures</h2>
+<p>Understanding that <strong>a lot of programming is basically manipulating data to
+fit a need</strong> is pretty important.  A social network can be thought of as a
+bunch of people's personal information plugged into a bunch of algorithms to
+make connecting easier.  A word processor is really just a front-end for some
+<a class="reference external" href="https://en.wikipedia.org/wiki/Microsoft_Office_XML_formats">XML under the hood</a>, which is itself <a class="reference external" href="https://en.wikipedia.org/wiki/XML">just a way to represent structured
+data</a>.</p>
+<p>When handling data try to keep in mind what you are trying to accomplish and
+the best way to structure the data in the pursuit of that goal.</p>
+<dl class="docutils">
+<dt><a class="reference external" href="https://en.wikipedia.org/wiki/Array_data_structure">Arrays/Lists/Vectors</a></dt>
+<dd><strong>Arrays and Lists are an ordered data type</strong>.  Use them when you need to
+keep track of the order things happened in, like queuing an event.  Try to
+keep them <em>relatively small</em> since they are fast for retrieval but not
+inherently space efficient.</dd>
+<dt><a class="reference external" href="https://en.wikipedia.org/wiki/Hash_table">Hash-table/Key-Value/Dictionary</a></dt>
+<dd><p class="first"><strong>Hashes are useful for storing unordered data</strong> with keys, like an address
+book or a small database. We use them to access data quickly and easily
+since data is retrieved using a key and always takes approximately the
+same amount of time.  When you get data out of a dictionary you provide a
+key and get back the associated data, just like (you guessed it) <em>a real
+dictionary</em> where provided the word you get back a definition.</p>
+<p class="last">Hash-tables are useful tools but should only be used for <em>relatively
+small</em> amounts of data.  There is a bit of overhead in creating the table
+for storing your data so if your data-set gets too big you'll run out of
+memory.</p>
+</dd>
+<dt><a class="reference external" href="https://en.wikipedia.org/wiki/Linked_list">Linked Lists/Sorted Trees</a></dt>
+<dd><p class="first">Linked Lists and Sorted Trees aren't exactly the same thing but I'm
+lumping them together because they both deal with a lot of the same
+concepts and can be implemented in similar ways.  In learning about LL/ST
+you'll probably deal with Structs, Nodes, Pointers, and dynamic memory
+allocation, which if you're like me will totally break your brain and then
+become second-nature.</p>
+<p><strong>One advantage to these structures is that they can be implemented to
+take up only the space they require</strong>.  Where Hash-maps and lists are hard
+to make the <em>right size</em>, LL/ST can only take up exactly as much room as
+they need.  The trade-off (a word you hear a lot when dealing choosing
+data structures) is that they're not always the <em>fastest</em> way to
+store/retrieve data.  Just consider your use-case and think about what you
+need for the task at hand.</p>
+<p class="last">If you're interested in learning Rust though there's a great guide on
+<a class="reference external" href="http://cglab.ca/~abeinges/blah/too-many-lists/book/README.html">Learning Rust With Entirely Too Many Linked Lists</a>. I do suggest it.</p>
+</dd>
+</dl>
+<p><strong>These are all just the structures you're giving your data</strong> (a series of
+ones and zeros on disk and in memory).  Anybody that's done work with a
+sufficiently complicated project (e.g., the Linux Kernel) can tell you that
+one glob of data can be treated as a Linked List, Array, Hash -- or all three
+at the same time!  The structure you give your data is just so <em>you</em> can work
+with it, the computer doesn't really care one way or another, so choose what
+makes the most sense.</p>
+<p><em>Speaking of data structures...</em></p>
+</div>
+<div class="section" id="objects-classes">
+<h2>Objects/Classes</h2>
+<p><strong>Objects are logical groupings of data (variables) and functions that act on
+that data</strong>.  They differ from structs in that they are (usually) private by
+default, meaning that variables declared in an object are not accessible from
+the <em>outside</em> unless you explicitly say so. Variables are usually manipulated
+via a method called a <em>getter</em> and <em>setter</em>.</p>
+<p>Well... what I've actually described so far is creating a <strong>class: aka a
+blueprint for an object</strong>.  This python is a pretty succinct way to describe
+classes and objects:</p>
+<pre class="code python literal-block">
+<span class="sd">&quot;&quot;&quot;
+objects_example.py
+
+Declare a class named BazClass.
+&quot;&quot;&quot;</span>
+<span class="k">class</span> <span class="nc">BazClass</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;
+        The __init__ function sets class variables and sets up the object.
+        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">var1</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">var2</span> <span class="o">=</span> <span class="mi">6</span>
+
+    <span class="k">def</span> <span class="nf">a</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;
+        a() acts on the object variables (accessed via `self`).
+        &quot;&quot;&quot;</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Variable you set {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var1</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Variable set by class definition {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var2</span><span class="p">))</span>
+
+<span class="sd">&quot;&quot;&quot;
+Creating an instance of the class and call the `a()` function.
+&quot;&quot;&quot;</span>
+<span class="n">foo_object</span> <span class="o">=</span> <span class="n">BazClass</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="n">foo_object</span><span class="o">.</span><span class="n">a</span><span class="p">()</span>
+</pre>
+<p>Objects are something that will <em>click</em> after you use the for a while.
+There's some nuances and implementation quirks depending on the language
+you're using, but in the end they're just logical collections of private data
+and functions.</p>
+</div>
+<div class="section" id="functional-programming">
+<h2>Functional Programming</h2>
+<p><a class="reference external" href="https://en.wikipedia.org/wiki/Functional_programming">Functional Programming</a> (FP) was my first big paradigm shift in CS since
+functions.  FP includes concepts of variable immutability (once it's set it's
+set), callbacks (functions calling functions and propagating results up),
+program state -- the list goes on.  Here's an example to get us started.</p>
+<p>Non-functional paradigm:</p>
+<pre class="code javascript literal-block">
+<span class="kd">function</span> <span class="nx">average_evens</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">avg</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">x</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">x</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">avg</span> <span class="o">+=</span> <span class="nx">x</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="nx">avg</span> <span class="o">=</span> <span class="nx">avg</span><span class="o">/</span><span class="nx">x</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">avg</span><span class="p">;</span>
+<span class="p">}</span>
+</pre>
+<p>Functional Paradigm:</p>
+<pre class="code javascript literal-block">
+<span class="kd">function</span> <span class="nx">average_evens</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">x</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">x</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">x</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">})</span> <span class="o">/</span> <span class="nx">x</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
+<span class="p">}</span>
+</pre>
+<p>In the non-functional example one would create a variable, iterate with a
+for-loop, and return a variable at the end.  In the functional example you
+call functions which return data that you handle (callback) and that result is
+added to or replaces the original data.  I'm honestly not doing this topic
+justice but it's one of those things you either learn first or you learn the
+hard way.</p>
+<p>This is just the tip of the ice-berg; many people prefer functional
+programming. If you are even remotely interested you should find one of
+those people and let them talk your ear off.</p>
+<p>If you're learning functional programming I suggest either <a class="reference external" href="http://learnyouahaskell.com/chapters">Learn You a
+Haskell for Great Good</a> if you're interested in learning Haskell (which is
+interesting an interesting language if nothing else) or <a class="reference external" href="http://www.oreilly.com/programming/free/functional-programming-python.csp">Functional
+Programming in Python</a> for <em>pythonistas</em>.</p>
+</div>
+<div class="section" id="frameworks">
+<h2>Frameworks</h2>
+<p><strong>Frameworks are a collection of libraries, methods, and tools to accomplish a
+specific type of task</strong>.  If you want to get something <em>complicated</em> done
+<em>fast</em>, you'll use a framework.  Take for instance a web-app like Facebook or
+Twitter: it needs to be able to <em>send/receive HTTP requests</em>, <em>interface with
+a database</em> / <em>craft database queries</em>, <em>render web-pages</em>, <em>and</em> whatever the
+actual website is supposed to do.</p>
+<p>Frameworks can be very small or very large but they are always a big hurdle
+for those of us that have never worked with one before.  A good starter
+framework I suggest is <a class="reference external" href="http://flask.pocoo.org/">Flask</a> for Python-based web-apps.</p>
+</div>
+<div class="section" id="testing">
+<h2>Testing</h2>
+<p><strong>Testing is writing a program to test your program</strong>.  There are many different
+<em>kinds</em> of tests from <em>unit tests</em> (checking single functions), to
+<em>integration tests</em> (checking that your functions work <em>together</em>), to <em>random
+tests</em> (trying to break your program by telling a computer to break your
+functions by using they in weird ways).</p>
+<p>Remember that first program you wrote for class?  You wrote one that prompted
+the user for data and then manipulated that input in some way?  Remember how
+you tested that?  Probably in the most tedious way imaginable: <strong>by hand</strong>.
+Tests are much easier to write than your actual code and while they're a
+tedious investment up-front it's a small commitment relative to the <em>hours</em>
+you'd spend checking your program every time you made a change.</p>
+</div>
+<div class="section" id="troubleshooting">
+<h2>Troubleshooting</h2>
+<p>The last thing isn't really about programming but about <em>fixing</em> your
+programming.  When you're learning a new paradigm, language, or framework
+you're going to spend a lot of time <em>fixing</em> what doesn't currently work much
+more than you're going to actually be producing working code.  This skill can
+also be summed up as 'How to Read Error Messages and Google well'.</p>
+<p>My troubleshooting advice is to <em>read</em> the error message, don't give up,
+and search for anything that looks meaningful.  Once you find an answer try to
+<em>grok</em> what the answer means so you can learn <em>why</em> that worked instead of
+knowing <em>if I type this in a certain way it will not fall down</em>.  Future you
+will appreciate the investment you put into <em>understanding</em> the problem and
+it's solution.</p>
+<p>Also don't be afraid to experiment. Make a copy of your program (or use
+<a class="reference external" href="https://git-scm.com/">git</a>) and see if some crazy idea is exactly what you need.</p>
+<hr class="docutils" />
+<p>This list is far from complete but it still felt worth sharing.  If you think
+I missed something, <a class="reference external" href="/about/#contact">contact me</a> and I might do a follow-up post.</p>
+</div>
+            </article>
+
+        <footer>
+            <nav>
+                <ul>
+                    <li><a href="../about/">About</a> ::</li>
+                    <li><a href="../contact/">Contact</a></li>
+                    <li>:: <a href="../categories.html">Categories</a></li>
+                    <li>:: <a href="../tags.html">Tags</a></li>
+                </ul>
+                </nav>
+				<p>
+					<span id="copyright">
+						Creative Commons Attribution 4.0 International License<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a>
+					</span>
+					<span id="banter">
+						This website made with locally sourced bits,
+						hand crafted with Python 🐍 via Pelican 🐦,
+						developed on Linux 🐧,
+						deployed with containers 📦,
+						and hosted on clouds ⛅.
+					</span>
+				</p>
+				<p id="theme-credit">
+					<a href="http://mathieu.agopian.info/mnmlist/theme.html">Thème mnmlist</a>
+					(Well... a fork, but close)
+				</p>
+        </footer>
+
+    <script type="text/javascript">
+    var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+    document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+    try {
+        var pageTracker = _gat._getTracker("UA-48615202-3");
+    pageTracker._trackPageview();
+    } catch(err) {}</script>
+</body>
+</html>

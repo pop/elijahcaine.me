@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <title>elijahcaine.me : Building a Cloud Platform: v0</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="../../../theme/css/main.css" type="text/css" />
+        <link href="elijahcaine.me/atom.xml" type="application/atom+xml" rel="alternate" title="elijahcaine.me ATOM Feed" />
+
+        <!--[if IE]>
+                <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+        <!--[if lte IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="../../../css/ie.css"/>
+                <script src="../../../js/IE8.js" type="text/javascript"></script><![endif]-->
+
+        <!--[if lt IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="../../../css/ie6.css"/><![endif]-->
+
+</head>
+
+<body>
+
+        <!-- header>
+            <nav>
+                <ul>
+                    <li><a href="../../../about/">About</a> ::</li>
+                    <li><a href="../../../contact/">Contact</a></li>
+                    <li>:: <a href="../../../categories.html">Categories</a></li>
+                    <li>:: <a href="../../../tags.html">Tags</a></li>
+                </ul>
+            </nav>
+        </header -->
+
+        
+<header>
+    <h1><a href="../../.." id="site-title">elijahcaine.me </a> :
+        <a href="../../../drafts/tech/cloud-platform-v0" id="page-title">Building a Cloud Platform: v0</a></h1>
+<time datetime="2017-07-12T00:00:00-07:00">Wed 12 July 2017</time></header>
+<article>
+    <p>If you go to a tech-ey container centric conference you'll probably hear something about how ephemeral Kubernetes (K8s) is.
+It can scale up, scale down, self heal, and <em>in theory</em> recover from losing entire nodes if you've got enough redundancy.
+I've even hosted talks at the OSU LUG where these exact things were claimed and prove in a <em>live demo</em>.</p>
+<p>That's fine and dandy, but how hard is it to get up an running with a Kubernetes cluster that has all of those features?
+Specifically <em>these</em> features:</p>
+<ul class="simple">
+<li>A <a class="citation-reference" href="#secure" id="id1">[secure]</a> cloud-hosted K8s cluster.</li>
+<li>The cluster has <a class="citation-reference" href="#fault-tolerence" id="id2">[fault-tolerence]</a>.</li>
+<li>The cluster uses distributed storage.</li>
+<li>The cluster can scale the number of nodes it runs on.</li>
+<li>The cluster is modular, so I can swap out the old shiny for the new shiny.</li>
+<li>I shouldn't need to ssh into a server <em>ever</em>.</li>
+<li>As close to 1 click deployment/upgrade/tear-down as possible.</li>
+<li>Backups would be nice.</li>
+</ul>
+<p>TLDR: my goal is to get a K8s cluster up and running which is as awesome as everybody says it <em>can</em> be.</p>
+<div class="section" id="how">
+<h2>How...?</h2>
+<p><em>Thanks for asking kid.</em></p>
+<p>Here's the tools I'm expecting to use:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://github.com/jetstack/kube-lego">Terraform</a> is a configuration management tool which I like because it spins up resources on my behalf and enforces <a class="citation-reference" href="#statelessness" id="id3">[statelessness]</a> in an intuitive (and very 'cloud native') way.</li>
+<li><a class="reference external" href="https://github.com/jetstack/kube-lego">Container Linux</a> is an operating system which I am pretty comfortable. It also includes some awesome things like <a class="reference external" href="https://github.com/jetstack/kube-lego">ignition</a> which I can use to provision things like etcd and my container runtime automagically.</li>
+<li><strong>Anything bug AWS</strong> for my hosting. I get that it's popular, but I have this thing where I'm not a fan of monopolies and AWS really <a class="citation-reference" href="#smells" id="id4">[smells]</a> like a monopoly , or at least it's trying to be. So instead I'm going to use <a class="reference internal" href="#digitalocean">DigitalOcean</a> and other <a class="reference internal" href="#federated">Federated</a> cloud providers to see how provider-agnostic I can get.</li>
+</ul>
+<p>These will be used to provision arbitrary numbers of hosts on whatever cloud provider(s) I choose.
+In theory I can scale the number of clusters up, down, left, and right with a few changes to the Terraform config files... in theory.</p>
+<ul class="simple">
+<li><a class="reference external" href="https://github.com/jetstack/kube-lego">Rook</a> is a K8s <a class="reference external" href="https://github.com/jetstack/kube-lego">controller</a> for creating an abstraction for storage. TLDR you throw some block devices at it and it gives you a pool of storage bits to use for whatever you want. Plus you get storage redundancy for free!</li>
+<li><a class="reference external" href="https://github.com/jetstack/kube-lego">Ingress</a> is a K8s resource for managing which urls and endpoints go to which K8s services; it's usually backed by Nginx. Ingress mixed with some <a class="reference external" href="https://github.com/jetstack/kube-lego">other components</a> and I can get Letsencrypt SSL termination on all of my public network traffic with very little manual configuration of new services.</li>
+</ul>
+<p>These should give me a robust-enough K8s platform which I can throw services like <a class="reference internal" href="#nextcloud">Nextcloud</a>, <a class="reference internal" href="#emby">Emby</a> and this website onto.</p>
+<p>There's definitely a lot of holes in this plan, but it's at least a starting place.
+I'm not sure the best way to handle backups yet; I better figure that out quick...</p>
+</div>
+<div class="section" id="bored-not-enough-gifs">
+<h2>Bored. Not enough gifs.</h2>
+<p><em>So pushy...</em></p>
+<p>In the next part I'll actually try implementing this idea, document the pitfalls, and hopefully get something up and running.
+Expect another <em>loooooong</em> post.</p>
+</div>
+<div class="section" id="errata">
+<h2>Errata</h2>
+<table class="docutils citation" frame="void" id="secure" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[secure]</a></td><td><p class="first">What?</p>
+<p>Good question.</p>
+<p class="last">By this I mean each node in the cluster communicates with every other node over a secure (encrypted) channel.
+Communication for things like etcd, administration, etc. are all encrypted.</p>
+</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="fault-tolerence" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[fault-tolerence]</a></td><td>I am arbitrarily deciding that this means we can &quot;lose&quot; (read: kill on purpose in a demo) 1/3 of our nodes and maintain all services.
+Plus or minus a few network hiccups.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="statelessness" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[statelessness]</a></td><td>I <em>love</em> statelessness. Can't get enough of it.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="smells" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[smells]</a></td><td><p class="first">Yes I am aware this might cost me a job at Amazon.</p>
+<p class="last">No I do not care.</p>
+</td></tr>
+</tbody>
+</table>
+<span class="target" id="emby"><span id="nextcloud"></span><span id="federated"></span><span id="digitalocean"></span></span></div>
+
+</article>
+
+        <footer>
+            <nav>
+                <ul>
+                    <li><a href="../../../about/">About</a> ::</li>
+                    <li><a href="../../../contact/">Contact</a></li>
+                    <li>:: <a href="../../../categories.html">Categories</a></li>
+                    <li>:: <a href="../../../tags.html">Tags</a></li>
+                </ul>
+                </nav>
+				<p>
+					<span id="copyright">
+						Creative Commons Attribution 4.0 International License<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a>
+					</span>
+					<span id="banter">
+						This website made with locally sourced bits,
+						hand crafted with Python 🐍 via Pelican 🐦,
+						developed on Linux 🐧,
+						deployed with containers 📦,
+						and hosted on clouds ⛅.
+					</span>
+				</p>
+				<p id="theme-credit">
+					<a href="http://mathieu.agopian.info/mnmlist/theme.html">Thème mnmlist</a>
+					(Well... a fork, but close)
+				</p>
+        </footer>
+
+    <script type="text/javascript">
+    var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+    document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+    try {
+        var pageTracker = _gat._getTracker("UA-48615202-3");
+    pageTracker._trackPageview();
+    } catch(err) {}</script>
+</body>
+</html>
