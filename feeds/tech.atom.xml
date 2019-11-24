@@ -1,0 +1,2155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>elijahcaine.me - tech</title><link href="elijahcaine.me/" rel="alternate"></link><link href="elijahcaine.me/feeds/tech.atom.xml" rel="self"></link><id>elijahcaine.me/</id><updated>2018-10-13T00:00:00-07:00</updated><entry><title>Kubernetes as an external service proxy</title><link href="elijahcaine.me/kubernetes-as-an-external-service-proxy" rel="alternate"></link><published>2018-10-13T00:00:00-07:00</published><updated>2018-10-13T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2018-10-13:elijahcaine.me/kubernetes-as-an-external-service-proxy</id><summary type="html">&lt;p class="first last"&gt;An adventure where we learn [Kubernetes] by doing [a very straight forward project]; documenting every success, failure, and quip along the way.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;Say you have a firewall restriction that creates the following situation:&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;App1 cannot communicate directly with App2.&lt;/li&gt;
+&lt;li&gt;App1 and App2 can both talk to a Kubernets cluster.&lt;/li&gt;
+&lt;li&gt;Neither app is hosted on the Kubernetes cluster.&lt;/li&gt;
+&lt;li&gt;How can you get messages between App1 and App2?&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;The way the problem is stated makes it pretty obvious that the solution &lt;em&gt;involves&lt;/em&gt; using a Kubernetes cluster, but how exactly?&lt;/p&gt;
+&lt;p&gt;The naive solution might be to spin up a container which acts as a proxy; Nginx comes to mind.
+This would definitely work, but I am exceedingly lazy and don't want to learn how to configure Nginx.
+In fact, the solution I came to doesn't involve running any new pods!&lt;/p&gt;
+&lt;p&gt;Here's the code.
+Below I'll explain what's happening here and why it works.&lt;/p&gt;
+&lt;pre class="code yaml literal-block"&gt;
+&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;Endpoints&lt;/span&gt;
+&lt;span class="nt"&gt;metadata&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;myapp-proxy&lt;/span&gt;
+&lt;span class="nt"&gt;subsets&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;addresses&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;ip&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;2.3.4.5k&lt;/span&gt; &lt;span class="c1"&gt;# App2's address&lt;/span&gt;
+  &lt;span class="nt"&gt;ports&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;port&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;8080&lt;/span&gt; &lt;span class="c1"&gt;# App2's service port&lt;/span&gt;
+&lt;span class="nt"&gt;apiVersion&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;v1&lt;/span&gt;
+
+&lt;span class="nn"&gt;---&lt;/span&gt;
+
+&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;Service&lt;/span&gt;
+&lt;span class="nt"&gt;metadata&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;myapp-proxy&lt;/span&gt;
+&lt;span class="nt"&gt;spec&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;LoadBalancer&lt;/span&gt;
+  &lt;span class="nt"&gt;loadBalancerSourceRanges&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;1.2.3.4/32&amp;quot;&lt;/span&gt; &lt;span class="c1"&gt;# App1's address&lt;/span&gt;
+  &lt;span class="nt"&gt;ports&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;protocol&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;TCP&lt;/span&gt;
+    &lt;span class="nt"&gt;port&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;80&lt;/span&gt; &lt;span class="c1"&gt;# Redirect traffic hitting 80 to the app's service port&lt;/span&gt;
+    &lt;span class="nt"&gt;targetPort&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;8080&lt;/span&gt;
+&lt;span class="nt"&gt;apiVersion&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;v1&lt;/span&gt;
+
+&lt;span class="nn"&gt;---&lt;/span&gt;
+
+&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;Ingress&lt;/span&gt;
+&lt;span class="nt"&gt;metadata&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;restaurant-proxy&lt;/span&gt;
+&lt;span class="nt"&gt;spec&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="nt"&gt;rules&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;host&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;myapp-proxy.somehost.net&lt;/span&gt;
+  &lt;span class="nt"&gt;http&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;paths&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;path&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;/&lt;/span&gt;
+        &lt;span class="l-Scalar-Plain"&gt;backend&lt;/span&gt;&lt;span class="p-Indicator"&gt;:&lt;/span&gt;
+          &lt;span class="nt"&gt;serviceName&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;myapp-proxy&lt;/span&gt;
+          &lt;span class="nt"&gt;servicePort&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;80&lt;/span&gt;
+&lt;span class="nt"&gt;apiVersion&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;extensions/v1beta1&lt;/span&gt;
+&lt;/pre&gt;
+&lt;div class="section" id="endpoints"&gt;
+&lt;h2&gt;Endpoints&lt;/h2&gt;
+&lt;p&gt;Endpoints are the Kubernetes abstraction for IPs+Ports running the same application.
+It's how you group together N instances of an app into one pool.&lt;/p&gt;
+&lt;p&gt;Under the hood Endpoints get created as a pre-requisite for every Service you deploy.
+You don't usually need to deal with these directly as they are created implicitly whenever a Deployment gets applied.&lt;/p&gt;
+&lt;p&gt;By manually creating an endpoint we have imported our non-kubernetes app into Kubernetes.
+That means we can do Kubernetes things with it like expose it via a Service or even put it behind an Ingress
+Pretty neat!&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="service"&gt;
+&lt;h2&gt;Service&lt;/h2&gt;
+&lt;p&gt;Services are how we expose an endpoint to the world.
+Most cloud providers will give you a public IP address for a service and load balance across all of that service's endpoints.&lt;/p&gt;
+&lt;p&gt;This is as far as we need to proxy traffic between our two Apps.
+App1 makes a request to whatever IP Kubernetes gets for the &lt;cite&gt;myapp-proxy&lt;/cite&gt; Service and relays it to the &lt;cite&gt;myapp-proxy&lt;/cite&gt; endpoint, which ultimately routes the traffic to App2.
+What's really cool is that the endpoint that &lt;strong&gt;is&lt;/strong&gt; App2 can be an self-hosted Virtual Machine, as long as the IP doesn't change this proxy will continue to work.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="ingress"&gt;
+&lt;h2&gt;Ingress&lt;/h2&gt;
+&lt;p&gt;Ingresses are my favorite part of Kubernetes.
+They're very convenient, incredibly powerful, and they work like... over half the time.&lt;/p&gt;
+&lt;p&gt;While not strictly necessary, this Ingress gives us some nice-to-haves.&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Gives us an easy to manage host name via something like &lt;a class="reference external" href="https://github.com/kubernetes-incubator/external-dns"&gt;External DNS&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Could be extended to terminate SSL, again &amp;quot;for free&amp;quot;, with something like &lt;a class="reference external" href="https://github.com/jetstack/cert-manager"&gt;Cert Manager&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;So that's how we use Kubernetes to manage services (lower-case 's') which aren't running in Pods.&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="tech"></category><category term="Kubernetes"></category></entry><entry><title>Dynamic Attributes in Chef</title><link href="elijahcaine.me/chef-dynamic-attributes" rel="alternate"></link><published>2018-06-23T00:00:00-07:00</published><updated>2018-06-23T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2018-06-23:elijahcaine.me/chef-dynamic-attributes</id><summary type="html">&lt;p class="first last"&gt;An adventure where we learn [Kubernetes] by doing [a very straight forward project]; documenting every success, failure, and quip along the way.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;So you want to set a node attribute in a resource block?
+Good luck --
+oh wait you don't need luck because you have this blogpost!&lt;/p&gt;
+&lt;div class="section" id="problem"&gt;
+&lt;h2&gt;Problem&lt;/h2&gt;
+&lt;p&gt;You are trying to set a node attribute in a resource block but it isn't working.&lt;/p&gt;
+&lt;p&gt;For example you have the following code:&lt;/p&gt;
+&lt;pre class="code ruby literal-block"&gt;
+&lt;span class="n"&gt;ruby_block&lt;/span&gt; &lt;span class="s1"&gt;'foo'&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt;
+  &lt;span class="n"&gt;block&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt;
+    &lt;span class="c1"&gt;# some ruby&lt;/span&gt;
+    &lt;span class="n"&gt;node&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;override&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'var'&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;'value'&lt;/span&gt;
+  &lt;span class="k"&gt;end&lt;/span&gt;
+  &lt;span class="n"&gt;action&lt;/span&gt; &lt;span class="ss"&gt;:run&lt;/span&gt;
+&lt;span class="k"&gt;end&lt;/span&gt;
+
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;node&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'var'&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s1"&gt;'value'&lt;/span&gt;
+  &lt;span class="n"&gt;notifies&lt;/span&gt; &lt;span class="ss"&gt;:run&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;some_resource&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="nb"&gt;name&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;
+&lt;span class="k"&gt;else&lt;/span&gt;
+  &lt;span class="n"&gt;notifies&lt;/span&gt; &lt;span class="ss"&gt;:run&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;other_resource&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;whatever&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;
+&lt;span class="k"&gt;end&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;Even though you're setting &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;node['var']&lt;/span&gt;&lt;/tt&gt;, &lt;tt class="docutils literal"&gt;other_resource[whatever]&lt;/tt&gt; is getting notified to &lt;tt class="docutils literal"&gt;:run&lt;/tt&gt;.
+What gives?&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="solution"&gt;
+&lt;h2&gt;Solution&lt;/h2&gt;
+&lt;p&gt;To jump ahead, because you're skimming this post for the answer, you're going to want to do something like this:&lt;/p&gt;
+&lt;pre class="code diff literal-block"&gt;
+# go-go-gadget diffs
+# Chef Version 13.5.8
+
+  ruby_block 'foo' do
+    block do
+      # some ruby
+      node.override['var'] = 'value'
+    end
+&lt;span class="gd"&gt;-   action :run
+&lt;/span&gt;&lt;span class="gi"&gt;+   action :nothing
+&lt;/span&gt;&lt;span class="gd"&gt;- end
+&lt;/span&gt;&lt;span class="gi"&gt;+ end.run_action(:run)
+&lt;/span&gt;
+if node['var'] == 'value'
+  notifies :run, some_resource[name]
+else
+  notifies :run, other_resource[whatever]
+end
+&lt;/pre&gt;
+&lt;p&gt;Basically you want to execute the &lt;tt class="docutils literal"&gt;ruby_block&lt;/tt&gt; that sets your attribute &lt;strong&gt;now&lt;/strong&gt; so the rest of your code can consume the value either later in the compilation phase or during the execution phase of the Chef run.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="how-why-did-that-work"&gt;
+&lt;h2&gt;How/why did that work?&lt;/h2&gt;
+&lt;p&gt;If you've read his far you're actually reading.
+Welcome to the post!
+Let's begin.&lt;/p&gt;
+&lt;p&gt;Let's dig into &lt;em&gt;exactly&lt;/em&gt; what my problem was, because sometimes examples aren't good enough.
+You know... for fun.&lt;/p&gt;
+&lt;p&gt;I was trying to trigger an application upgrade based on the current installed version.
+I was &lt;em&gt;not&lt;/em&gt; installing a package-manager-managed package &lt;a class="footnote-reference" href="#id4" id="id1"&gt;[2]&lt;/a&gt; so I couldn't just pin the version a &lt;tt class="docutils literal"&gt;yum&lt;/tt&gt; resource, I had to do this kludge of a solution.&lt;/p&gt;
+&lt;p&gt;So for me &lt;tt class="docutils literal"&gt;some_resource[name]&lt;/tt&gt; was downloading the latest version of the app (a &lt;tt class="docutils literal"&gt;.tar.gz2&lt;/tt&gt; file from GitHub) and &lt;tt class="docutils literal"&gt;other_resource[whatever]&lt;/tt&gt; was a no-op.
+The as part of the package download I unconditionally trigger a &lt;tt class="docutils literal"&gt;:delayed&lt;/tt&gt; service restart.
+Chef was 'upgrading' and restarting my app every thirty minutes which broke core functionality. &lt;a class="footnote-reference" href="#id3" id="id2"&gt;[1]&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="shit-i-tried-before-stumbling-upon-the-solution"&gt;
+&lt;h2&gt;Shit I tried before stumbling upon the solution&lt;/h2&gt;
+&lt;p&gt;I tried a bunch of things, but they can all kinda be summed up in this:&lt;/p&gt;
+&lt;pre class="code diff literal-block"&gt;
+# yay more diffs
+  ruby_block 'foo' do
+    block do
+      # some ruby
+      node.override['var'] = 'value'
+    end
+    notifies :create, 'tar[my-app]', :immediately # Triggers tar[my-app] to run now
+  end
+
+&lt;span class="gd"&gt;- if node['var'] == 'value'
+-   notify :run, some_resource[name]
+- else
+-   notify :run, other_resource[whatever]
+- end
+&lt;/span&gt;
+  tar 'my-app' do
+    action  :nothing # Unless triggered this does nothing
+&lt;span class="gi"&gt;+   only_if { node['var'] == 'value' } # This should also do nothing if this isn't true
+&lt;/span&gt;    # The rest of the resource block
+  end
+&lt;/pre&gt;
+&lt;p&gt;Which ultimately didn't work either.&lt;/p&gt;
+&lt;p&gt;I... I have no idea why this didn't work.&lt;/p&gt;
+&lt;p&gt;Something something Chef is complicated.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="why-the-solution-works-and-the-other-stuff-didn-t"&gt;
+&lt;h2&gt;Why the solution works (and the other stuff didn't)&lt;/h2&gt;
+&lt;p&gt;The reason my ultimate solution &lt;em&gt;did&lt;/em&gt; work is best summed up by this quote from the &lt;a class="reference external" href="https://docs.chef.io/resource_common.html#run-action"&gt;Chef Docs&lt;/a&gt;:&lt;/p&gt;
+&lt;blockquote&gt;
+Use &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;.run_action(:some_action)&lt;/span&gt;&lt;/tt&gt; at the end of a resource block to run the specified action during the compile phase.&lt;/blockquote&gt;
+&lt;p&gt;My original code (read: broken code) was running the &lt;tt class="docutils literal"&gt;if&lt;/tt&gt; block during the compilation phase (happens earlier) and running the &lt;tt class="docutils literal"&gt;ruby_block&lt;/tt&gt; in the execution phase (happens later).
+By telling it to run my &lt;tt class="docutils literal"&gt;ruby_block&lt;/tt&gt; during the compilation phase we were ensuring it happened before the &lt;tt class="docutils literal"&gt;if&lt;/tt&gt; block, and in a way running it like you would 'expect' a script to run.&lt;/p&gt;
+&lt;p&gt;It ain't idiomatic but it gets the job done.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="errata"&gt;
+&lt;h2&gt;Errata&lt;/h2&gt;
+&lt;table class="docutils footnote" frame="void" id="id3" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;&lt;a class="fn-backref" href="#id2"&gt;[1]&lt;/a&gt;&lt;/td&gt;&lt;td&gt;The service was in question was Prometheus.
+When Chef ran every 30 minutes, it killed the Prometheus process and thus killed all of our pending alerts.
+TLDR we didn't get any alerts that took more than 30 minutes to trigger
+We also &lt;em&gt;kept&lt;/em&gt; getting alerts that should taken a few hours to re-notify.&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils footnote" frame="void" id="id4" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;&lt;a class="fn-backref" href="#id1"&gt;[2]&lt;/a&gt;&lt;/td&gt;&lt;td&gt;Say that three times fast.&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+</content><category term="tech"></category><category term="CoreOS"></category><category term="Kubernetes"></category><category term="Buildbot"></category><category term="Adventure"></category></entry><entry><title>Deploying Buildbot on Kubernetes</title><link href="elijahcaine.me/buildbot-on-kubernetes" rel="alternate"></link><published>2016-12-12T00:00:00-08:00</published><updated>2016-12-12T00:00:00-08:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2016-12-12:elijahcaine.me/buildbot-on-kubernetes</id><summary type="html">&lt;p class="first last"&gt;An adventure where we learn [Kubernetes] by doing [a very straight forward project]; documenting every success, failure, and quip along the way.&lt;/p&gt;
+</summary><content type="html">&lt;hr class="docutils" /&gt;
+&lt;blockquote&gt;
+&lt;strong&gt;TLDR:&lt;/strong&gt; If you just want to see the end-result of this post, the results can be found at this GitHub Repository: &lt;a class="reference external" href="https://github.com/ElijahCaine/buildbot-on-kubernetes"&gt;https://github.com/ElijahCaine/buildbot-on-kubernetes&lt;/a&gt;&lt;/blockquote&gt;
+&lt;div class="section" id="preamble"&gt;
+&lt;h2&gt;Preamble&lt;/h2&gt;
+&lt;p&gt;I'm learning Kubernetes (K8s) for work and decided to try my hand at deploying Buildbot with K8s because we all know the universal law discovered made by Science McSmartyPants in the 1758 which stated: &lt;strong&gt;doing cool shit &amp;gt; reading docs&lt;/strong&gt; &lt;a class="citation-reference" href="#docs-should" id="id1"&gt;[docs-should]&lt;/a&gt;.
+I would describe K8s and Buildbot, but they each already did that:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&amp;quot;Buildbot is an open-source framework for automating software build, test, and release processes.&amp;quot;&lt;/p&gt;
+&lt;p&gt;- &lt;a class="reference external" href="http://buildbot.net/"&gt;Buildbot.net&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;hr class="docutils" /&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Kubernetes is an open-source system for automating deployment, scaling, and management of containerized applications.&lt;/p&gt;
+&lt;p&gt;- &lt;a class="reference external" href="http://kubernetes.io/"&gt;Kubernetes.io&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;hr class="docutils" /&gt;
+&lt;p&gt;If that still didn't make sense, don't worry you should keep reading.
+This is a fun post.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; As you read this post keep in mind: &lt;em&gt;it might walk like a tutorial, quack like a tutorial, and even read like a tutorial, but I promise you that it is in fact&lt;/em&gt; &lt;strong&gt;not&lt;/strong&gt; &lt;em&gt;a tutorial.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;This post is an adventure.&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;div class="section" id="squad-goals"&gt;
+&lt;h3&gt;Squad Goals&lt;/h3&gt;
+&lt;p&gt;Here's a quick rundown of what I want to achieve:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Deploy an instance of Buildbot on K8s.&lt;/li&gt;
+&lt;li&gt;Have that instance scale it's number of workers automagically depending on the amount of work being asked of it.&lt;/li&gt;
+&lt;li&gt;Share all relevant storage between replicated containers (e.g., databases, builds, etc).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class="section" id="why"&gt;
+&lt;h3&gt;Why?&lt;/h3&gt;
+&lt;p&gt;I have never deployed Buildbot ever for anything.
+I have also not really worked with K8s until starting my recent jorb at &lt;a class="reference external" href="https://coreos.com"&gt;CoreOS&lt;/a&gt;.
+Why Buildbot and why K8s?&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;I have to learn K8s sooner or later for work.&lt;/li&gt;
+&lt;li&gt;I want to deploy something a little more complicated than Nginx.
+As fun as that is, every K8s tutorial uses that as an example and it's getting &lt;em&gt;oooooold&lt;/em&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;dl class="first docutils"&gt;
+&lt;dt&gt;Buildbot seems like a good K8s challenge b/c:&lt;/dt&gt;
+&lt;dd&gt;&lt;ol class="first last loweralpha"&gt;
+&lt;li&gt;It has 3 moving parts (master, worker, database)&lt;/li&gt;
+&lt;li&gt;It could benefit from the fancy-dancy auto-scaling features built into K8s (e.g., high workload -&amp;gt; add more workers)&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Anyway, let's get started.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="my-sick-rig"&gt;
+&lt;h3&gt;My sick rig&lt;/h3&gt;
+&lt;p&gt;I'm using the latest version of K8s and &lt;a class="reference external" href="https://github.com/kubernetes/minikube#minikube"&gt;Minikube&lt;/a&gt;, which is backed by Virtualbox on a 2014 MacBook Pro running OSX.&lt;/p&gt;
+&lt;p&gt;Minikube version and associated OS:&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ minikube version
+minikube version: v0.13.1
+$ minikube ssh
+...
+Boot2Docker version 1.11.1, build master : 901340f - Fri Jul  1 22:52:19 UTC 2016
+Docker version 1.11.1, build 5604cbe
+docker&amp;#64;minikube:~$
+&lt;/pre&gt;
+&lt;p&gt;There's some Minikube-specific semantics in this post, but you can probably get by with whatever K8s back-end you want/have lying around.&lt;/p&gt;
+&lt;p&gt;Kubernetes version:&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl version
+Client Version: version.Info{Major:&amp;quot;1&amp;quot;, Minor:&amp;quot;4&amp;quot;, GitVersion:&amp;quot;v1.4.6&amp;quot;, GitCommit:&amp;quot;e569a27d02001e343cb68086bc06d47804f62af6&amp;quot;, GitTreeState:&amp;quot;clean&amp;quot;, BuildDate:&amp;quot;2016-11-12T05:22:15Z&amp;quot;, GoVersion:&amp;quot;go1.7.1&amp;quot;, Compiler:&amp;quot;gc&amp;quot;, Platform:&amp;quot;darwin/amd64&amp;quot;}
+Server Version: version.Info{Major:&amp;quot;1&amp;quot;, Minor:&amp;quot;4&amp;quot;, GitVersion:&amp;quot;v1.4.6&amp;quot;, GitCommit:&amp;quot;e569a27d02001e343cb68086bc06d47804f62af6&amp;quot;, GitTreeState:&amp;quot;clean&amp;quot;, BuildDate:&amp;quot;1970-01-01T00:00:00Z&amp;quot;, GoVersion:&amp;quot;go1.7.1&amp;quot;, Compiler:&amp;quot;gc&amp;quot;, Platform:&amp;quot;linux/amd64&amp;quot;}
+&lt;/pre&gt;
+&lt;p&gt;Between finishing editing and pushing this post the above versions will probably be out of date.
+&lt;em&gt;SHRUG&lt;/em&gt;.
+What are you gonna do.
+Software, amirite?&lt;/p&gt;
+&lt;p&gt;Virtualbox version:&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ virtualbox --help
+Oracle VM VirtualBox Manager 5.1.6
+...
+&lt;/pre&gt;
+&lt;p&gt;OSX Version and hardware:&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ sw_vers
+ProductName:    Mac OS X
+ProductVersion: 10.10.5
+BuildVersion:   14F1912
+$ system_profiler
+...
+    Hardware Overview:
+      Model Name: MacBook Pro
+      Model Identifier: MacBookPro11,1
+      Processor Name: Intel Core i5
+      Processor Speed: 2.6 GHz
+      Number of Processors: 1
+      Total Number of Cores: 2
+      ...
+      Memory: 16 GB
+      ...
+...
+&lt;/pre&gt;
+&lt;p&gt;The hardware and Virtualbox versions are a little less important, but might as well be included for completeness.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="first-pass"&gt;
+&lt;h2&gt;First Pass&lt;/h2&gt;
+&lt;p&gt;The Buildbot project is nice enough to provide &lt;a class="reference external" href="https://docs.buildbot.net/current/tutorial/docker.html"&gt;some Buidlbot Docker infrastructure&lt;/a&gt; to start working with.
+It uses a &lt;a class="reference external" href="https://docs.docker.com/compose/"&gt;Docker Compose&lt;/a&gt; YAML file to deploy one worker container, one master service, and one PostgreSQL service, each of which is linked together and &lt;em&gt;just works™&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Great!
+In theory &lt;a class="citation-reference" href="#theory-vs-practice" id="id2"&gt;[theory-vs-practice]&lt;/a&gt; we can just translate the options in &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;docker-compose.yml&lt;/span&gt;&lt;/tt&gt; to K8s options to get a simple cluster up and running.
+Which, to clarify, isn't an established &lt;strong&gt;thing&lt;/strong&gt;, it's just a process I'm guessing should work based on the fact that Docker Compose  and K8s are both orchestration tools.
+One is &lt;strong&gt;way&lt;/strong&gt; more complicated and robust, but At least &lt;strong&gt;some&lt;/strong&gt; of their features should over-lap in that Venn diagram.&lt;/p&gt;
+&lt;p&gt;Once we've got a nieve translated-docker-compose k8s setup running then we can (hopefully) tweak some knobs and get persistent storage and auto-scaling working &lt;a class="citation-reference" href="#id11" id="id3"&gt;[why]&lt;/a&gt;.&lt;/p&gt;
+&lt;div class="section" id="throw-some-containers-at-the-wall-and-see-what-sticks"&gt;
+&lt;h3&gt;Throw some containers at the wall and see what sticks&lt;/h3&gt;
+&lt;p&gt;Let's start really basic and just try to get something running with &lt;tt class="docutils literal"&gt;kubectl run&lt;/tt&gt;.
+We'll use K8s to deploy a Buildbot &lt;tt class="docutils literal"&gt;master&lt;/tt&gt; container mentioned in that &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;docker-compose.yml&lt;/span&gt;&lt;/tt&gt; with translated configuration options from that file.
+Remember, we're just mapping a &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;docker-compose.yml&lt;/span&gt;&lt;/tt&gt; into a K8s setup to begin.
+Nothing fancy, no pre-emptive optimizations, just this:&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl run master \
+    --image=buildbot/buildbot-master:master \
+    --env=&amp;quot;BUILDBOT_CONFIG_DIR=config&amp;quot; \
+    --env=&amp;quot;BUILDBOT_CONFIG_URL=https://github.com/buildbot/buildbot-docker-example-config/archive/master.tar.gz&amp;quot; \
+    --env=&amp;quot;BUILDBOT_WORKER_PORT=9989&amp;quot; \
+    --env=&amp;quot;BUILDBOT_WEB_URL=http://localhost:8080/&amp;quot; \
+    --env=&amp;quot;BUILDBOT_WEB_PORT=8080&amp;quot; \
+    --port=8080
+&lt;/pre&gt;
+&lt;p&gt;Some reading later and I can tell you that command started a &lt;em&gt;Deployment&lt;/em&gt; of &lt;em&gt;Pods&lt;/em&gt;.
+To see if it worked, let's run &lt;tt class="docutils literal"&gt;kubect get pods&lt;/tt&gt;.&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl get pods
+NAME                               READY     STATUS             RESTARTS   AGE
+master-4259088255-afsfk            1/1       Running            1          10s
+&lt;/pre&gt;
+&lt;p&gt;This looks pretty good...&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl get pods
+NAME                               READY     STATUS             RESTARTS   AGE
+master-4259088255-afsfk            0/1       CrashLoopBackOff   2          1m
+&lt;/pre&gt;
+&lt;p&gt;... nooo!
+The thing was at 1/1 and now it's at 0/1 &lt;strong&gt;and&lt;/strong&gt; it says &lt;strong&gt;CrashLoopBackOff&lt;/strong&gt;.
+Numbers going down when they're supposed to stay the same is never a good sign, and crashing is almost never what you want.&lt;/p&gt;
+&lt;p&gt;If I've learned &lt;em&gt;anything&lt;/em&gt; about fixing stuff that's broke it's &lt;em&gt;always check the logs&lt;/em&gt;.&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl logs po/master-4259088255-afsfk
+[...]
+2016-12-09 22:31:42+0000 [-] Setting up database with URL 'sqlite:'
+2016-12-09 22:31:42+0000 [-] The Buildmaster database needs to be upgraded before this version of
+[...]
+2016-12-09 22:31:42+0000 [-] BuildMaster startup failed
+2016-12-09 22:31:42+0000 [-] BuildMaster is stopped
+2016-12-09 22:31:42+0000 [-] Main loop terminated.
+2016-12-09 22:31:42+0000 [-] Server Shut Down.
+&lt;/pre&gt;
+&lt;p&gt;Gross, but probably useful. How? Good question:&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;I saw the word &lt;tt class="docutils literal"&gt;database&lt;/tt&gt;.&lt;/li&gt;
+&lt;li&gt;We &lt;em&gt;didn't&lt;/em&gt; deploy a database.&lt;/li&gt;
+&lt;li&gt;QED let's do that.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;div class="section" id="add-one-cup-of-postgres-to-the-mix"&gt;
+&lt;h3&gt;Add one cup of Postgres to the mix&lt;/h3&gt;
+&lt;p&gt;Just like with the &lt;tt class="docutils literal"&gt;master&lt;/tt&gt; container, we're just going to use CLI arguments to get a database running.&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl run postgres \
+    --image=postgres:9.4\
+    --env=&amp;quot;POSTGRES_PASSWORD=change_me&amp;quot; \
+    --env=&amp;quot;POSTGRES_USER=buildbot&amp;quot; \
+    --env=&amp;quot;POSTGRES_DB=buildbot&amp;quot; \
+    --env=&amp;quot;BUILDBOT_DB_URL=postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}&amp;#64;db/{POSTGRES_DB}&amp;quot;\
+    --port=5432
+&lt;/pre&gt;
+&lt;p&gt;Cross fingers aaand...&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl get pods
+NAME                               READY     STATUS             RESTARTS   AGE
+master-4259088255-afsfk            0/1       CrashLoopBackOff   6          9m
+postgres-2443857112-3ermh          0/1       ContainerCreating  0          15s
+&lt;/pre&gt;
+&lt;p&gt;&lt;em&gt;/me holds breath&lt;/em&gt;&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl get pods
+NAME                               READY     STATUS             RESTARTS   AGE
+master-4259088255-afsfk            0/1       CrashLoopBackOff   6          9m
+postgres-2443857112-3ermh          1/1       Running            0          54s
+&lt;/pre&gt;
+&lt;p&gt;Yuss! Wait, for real?&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl logs postgres-2443857112-3ermh
+[... hey look a bunch of useful Postgres garbage ...]
+PostgreSQL init process complete; ready for start up.
+[... some more useful Postgres garbage ...]
+&lt;/pre&gt;
+&lt;p&gt;Good 'nuff.
+Now how does this database plug into the master container?&lt;/p&gt;
+&lt;p&gt;Well, in the Docker Compose world, containers talked to one-another on a private network with the &lt;tt class="docutils literal"&gt;link&lt;/tt&gt; directive.
+There's probably some way to do we do that with K8s right?&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="welcome-yaml-config-files-to-the-class"&gt;
+&lt;h3&gt;Welcome YAML config files to the class&lt;/h3&gt;
+&lt;p&gt;Running Command-Line Interface (CLI) commands is fun, but the easiest way to get this system running seems to be with configuration files.
+I'm sure I &lt;em&gt;can&lt;/em&gt; use CLI commands to orchestrate this entire project, but... honestly all the tutorials talk about how to do things in YAML so we're doing it in YAML now.&lt;/p&gt;
+&lt;p&gt;Some research later it looks like declaring a &lt;a class="reference external" href="http://kubernetes.io/docs/user-guide/pods/"&gt;Pod&lt;/a&gt; is the way to go?
+For context, here's where I got the idea from the K8s docs:&lt;/p&gt;
+&lt;blockquote&gt;
+A pod (as in a pod of whales or pea pod) is a group of one or more containers (such as Docker containers), the shared storage for those containers, and options about how to run the containers.&lt;/blockquote&gt;
+&lt;p&gt;Well that sounds &lt;em&gt;roughly&lt;/em&gt; like what we're doing.
+I've got some containers, I want them to be able to talk to each other, and they're all logically connected to one another.
+Let's go down this rabbit hole.&lt;/p&gt;
+&lt;a class="reference external image-reference" href="http://wifflegif.com/gifs/272040-alice-in-wonderland-adventure-time-gif"&gt;&lt;img alt="Alice down the rabbit hole..." class="align-center" src="/assets/images/buildbot-on-k8s/alice-down.gif" style="width: 100%;" /&gt;&lt;/a&gt;
+&lt;p&gt;Here I have Frankensteined this config &lt;tt class="docutils literal"&gt;buildbot.yaml&lt;/tt&gt; from examples in the configs:&lt;/p&gt;
+&lt;pre class="code yaml literal-block"&gt;
+&lt;span class="nt"&gt;apiVersion&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'v1'&lt;/span&gt;
+&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'Pod'&lt;/span&gt;
+&lt;span class="nt"&gt;metadata&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'buildbot'&lt;/span&gt;
+  &lt;span class="nt"&gt;labels&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;app&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'buildbot'&lt;/span&gt;
+&lt;span class="nt"&gt;spec&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;containers&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'master'&lt;/span&gt;
+      &lt;span class="nt"&gt;image&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'buildbot/buildbot-master:master'&lt;/span&gt;
+      &lt;span class="nt"&gt;ports&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;containerPort&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;8080&lt;/span&gt;
+      &lt;span class="nt"&gt;env&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+      &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'BUILDBOT_CONFIG_DIR'&lt;/span&gt;
+        &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'config'&lt;/span&gt;
+      &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'BUILDBOT_CONFIG_URL'&lt;/span&gt;
+        &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'https://github.com/buildbot/buildbot-docker-example-config/archive/master.tar.gz'&lt;/span&gt;
+      &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'BUILDBOT_WORKER_PORT'&lt;/span&gt;
+        &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'9989'&lt;/span&gt;
+      &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'BUILDBOT_WEB_URL'&lt;/span&gt;
+        &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'http://localhost:8080/'&lt;/span&gt;
+      &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'BUILDBOT_WEB_PORT'&lt;/span&gt;
+        &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'8080'&lt;/span&gt;
+      &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'POSTGRES_PASSWORD'&lt;/span&gt;
+        &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'change_me'&lt;/span&gt;
+      &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'POSTGRES_USER'&lt;/span&gt;
+        &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'buildbot'&lt;/span&gt;
+      &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'POSTGRES_DB'&lt;/span&gt;
+        &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'buildbot'&lt;/span&gt;
+      &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'BUILDBOT_DB_URL'&lt;/span&gt;
+        &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}&amp;#64;db/{POSTGRES_DB}'&lt;/span&gt;
+    &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'postgres'&lt;/span&gt;
+      &lt;span class="nt"&gt;image&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'postgres:9.4'&lt;/span&gt;
+      &lt;span class="nt"&gt;ports&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;containerPort&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;5432&lt;/span&gt;
+      &lt;span class="nt"&gt;env&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+      &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'POSTGRES_PASSWORD'&lt;/span&gt;
+        &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'change_me'&lt;/span&gt;
+      &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'POSTGRES_USER'&lt;/span&gt;
+        &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'buildbot'&lt;/span&gt;
+      &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'POSTGRES_DB'&lt;/span&gt;
+        &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'buildbot'&lt;/span&gt;
+      &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'BUILDBOT_DB_URL'&lt;/span&gt;
+        &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}&amp;#64;db/{POSTGRES_DB}'&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;What happens when we run it?&lt;/p&gt;
+&lt;p&gt;Well first we need to clean up that CLI-created garbage we were doing earlier.&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl delete deployment master postgres
+deployment &amp;quot;master&amp;quot; deleted
+deployment &amp;quot;postgres&amp;quot; deleted
+&lt;/pre&gt;
+&lt;p&gt;Then deploy the new pod:&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl create -f buildbot.yaml
+pod &amp;quot;buildbot&amp;quot; created
+&lt;/pre&gt;
+&lt;p&gt;Aaaand:&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl get pods
+buildbot   2/2       Running   0          23s
+&lt;/pre&gt;
+&lt;p&gt;I'm suspicious...&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl logs po/buildbot master
+checking basedir
+/usr/lib/python2.7/site-packages/buildbot/config.py:85: ConfigWarning: [0.9.0 and later] `buildbotNetUsageData` is not configured and defaults to basic
+[...]
+Failure: sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) could not translate host name &amp;quot;db&amp;quot; to address: Try again
+[...]
+problem while upgrading!:
+Traceback (most recent call last):
+[... python traceback ...]
+OperationalError: (psycopg2.OperationalError) could not translate host name &amp;quot;db&amp;quot; to address: Try again
+&lt;/pre&gt;
+&lt;p&gt;Whelp let's play 'Where do I fix &lt;em&gt;that&lt;/em&gt;?'&lt;/p&gt;
+&lt;dl class="docutils"&gt;
+&lt;dt&gt;Is the problem in:&lt;/dt&gt;
+&lt;dd&gt;&lt;ol class="first last loweralpha simple"&gt;
+&lt;li&gt;The &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;buildbot-master&lt;/span&gt;&lt;/tt&gt; image&lt;/li&gt;
+&lt;li&gt;The &lt;tt class="docutils literal"&gt;postgres&lt;/tt&gt; image&lt;/li&gt;
+&lt;li&gt;The &lt;tt class="docutils literal"&gt;buildbot.yml&lt;/tt&gt; file&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;p&gt;If you guessed &lt;strong&gt;c&lt;/strong&gt; you would be right so let's start in &lt;tt class="docutils literal"&gt;buildbot.yaml&lt;/tt&gt;.&lt;/p&gt;
+&lt;p&gt;Based on my experience with databases, specifically the startup time of database containers like Postgres and MariaDB, I'd &lt;em&gt;guess&lt;/em&gt; that the database was taking too long to start.
+After some digging around, I found out that Pods were the entirely wrong way to go.
+Here's how that discovery went:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;strong&gt;Q&lt;/strong&gt;: Does K8s have anything like docker-compose's &lt;tt class="docutils literal"&gt;depends_on:&lt;/tt&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;A&lt;/strong&gt;: No.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Q&lt;/strong&gt;: Okay, so how... actually, is there anything like what I'm doing already out there?&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;A&lt;/strong&gt;: Yes.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Q&lt;/strong&gt;: ... Where?&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;A&lt;/strong&gt;: &lt;a class="reference external" href="https://github.com/kubernetes/kubernetes/tree/master/examples/mysql-wordpress-pd"&gt;https://github.com/kubernetes/kubernetes/tree/master/examples/mysql-wordpress-pd&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Q&lt;/strong&gt;: Noice. So the &lt;em&gt;Pods&lt;/em&gt; thing was the wrong rabbit hole to go down?&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;A&lt;/strong&gt;: Right.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Q&lt;/strong&gt;: Right like correct or right like...?&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;A&lt;/strong&gt;: Stop.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class="section" id="yay-examples"&gt;
+&lt;h3&gt;Yay examples&lt;/h3&gt;
+&lt;p&gt;So let's run that example to make sure it all works fine.&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;Clone repo&lt;/li&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;cd&lt;/tt&gt; to example&lt;/li&gt;
+&lt;li&gt;Follow README instructions&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl create -f local-volumes.yaml
+persistentvolume &amp;quot;local-pv-1&amp;quot; created
+persistentvolume &amp;quot;local-pv-2&amp;quot; created
+$ kubectl create -f mysql-deployment.yaml
+service &amp;quot;wordpress-mysql&amp;quot; created
+persistentvolumeclaim &amp;quot;mysql-pv-claim&amp;quot; created
+deployment &amp;quot;wordpress-mysql&amp;quot; created
+$ kubectl create -f wordpress-deployment.yaml
+service &amp;quot;wordpress&amp;quot; created
+persistentvolumeclaim &amp;quot;wp-pv-claim&amp;quot; created
+deployment &amp;quot;wordpress&amp;quot; created
+$ kubectl get all
+NAME                  CLUSTER-IP   EXTERNAL-IP   PORT(S)    AGE
+svc/kubernetes        10.0.0.1     &amp;lt;none&amp;gt;        443/TCP    2h
+svc/wordpress         10.0.0.28    &amp;lt;pending&amp;gt;     80/TCP     5s
+svc/wordpress-mysql   None         &amp;lt;none&amp;gt;        3306/TCP   17s
+NAME                                  READY     STATUS              RESTARTS   AGE
+po/buildbot                           2/2       Running             0          8m
+po/wordpress-1618093523-4if9k         0/1       ContainerCreating   0          5s
+po/wordpress-mysql-2379610080-mqvll   0/1       ContainerCreating   0          17s
+NAME                 STATUS    VOLUME       CAPACITY   ACCESSMODES   AGE
+pvc/mysql-pv-claim   Bound     local-pv-1   20Gi       RWO           17s
+pvc/wp-pv-claim      Bound     local-pv-2   20Gi       RWO           5s
+&lt;/pre&gt;
+&lt;p&gt;And I can go to the site?&lt;/p&gt;
+&lt;img alt="Wordpress working correctly." class="align-center" src="/assets/images/buildbot-on-k8s/wordpress-working.png" style="width: 100%;" /&gt;
+&lt;p&gt;Great.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="now-use-the-example"&gt;
+&lt;h3&gt;Now Use the example&lt;/h3&gt;
+&lt;p&gt;Now we need to morph &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;wordpress-deployment.yaml&lt;/span&gt;&lt;/tt&gt; into &lt;tt class="docutils literal"&gt;postgres.yaml&lt;/tt&gt;, and &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;wordpress-deployment.yaml&lt;/span&gt;&lt;/tt&gt; into &lt;tt class="docutils literal"&gt;master.yaml&lt;/tt&gt;
+Also, let's ignore &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;local-volumes.yaml&lt;/span&gt;&lt;/tt&gt; for now, just to be safe.
+Don't forget: we're not doing anything fancy yet.&lt;/p&gt;
+&lt;p&gt;&lt;tt class="docutils literal"&gt;master.yaml&lt;/tt&gt;:&lt;/p&gt;
+&lt;pre class="code yaml literal-block"&gt;
+&lt;span class="nt"&gt;apiVersion&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;v1&lt;/span&gt;
+&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;Service&lt;/span&gt;
+&lt;span class="nt"&gt;metadata&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;master&lt;/span&gt;
+  &lt;span class="nt"&gt;labels&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;app&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;buildbot&lt;/span&gt;
+&lt;span class="nt"&gt;spec&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;ports&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;port&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;8080&lt;/span&gt;
+      &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;frontend&lt;/span&gt;
+  &lt;span class="nt"&gt;selector&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;app&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;buildbot&lt;/span&gt;
+    &lt;span class="nt"&gt;tier&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;master&lt;/span&gt;
+  &lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;NodePort&lt;/span&gt;
+&lt;span class="nn"&gt;---&lt;/span&gt;
+&lt;span class="nt"&gt;apiVersion&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;extensions/v1beta1&lt;/span&gt;
+&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;Deployment&lt;/span&gt;
+&lt;span class="nt"&gt;metadata&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;master&lt;/span&gt;
+  &lt;span class="nt"&gt;labels&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;app&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;buildbot&lt;/span&gt;
+&lt;span class="nt"&gt;spec&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;strategy&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;Recreate&lt;/span&gt;
+  &lt;span class="nt"&gt;template&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;metadata&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+      &lt;span class="nt"&gt;labels&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="nt"&gt;app&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;buildbot&lt;/span&gt;
+        &lt;span class="nt"&gt;tier&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;master&lt;/span&gt;
+    &lt;span class="nt"&gt;spec&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+      &lt;span class="nt"&gt;containers&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+      &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;master&lt;/span&gt;
+        &lt;span class="nt"&gt;image&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;buildbot/buildbot-master:master&lt;/span&gt;
+        &lt;span class="nt"&gt;env&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;BUILDBOT_CONFIG_DIR&lt;/span&gt;
+          &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;config&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;BUILDBOT_CONFIG_URL&lt;/span&gt;
+          &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'https://raw.githubusercontent.com/buildbot/buildbot-docker-example-config/master/master.cfg'&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;BUILDBOT_WORKER_PORT&lt;/span&gt;
+          &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'9989'&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;BUILDBOT_WEB_URL&lt;/span&gt;
+          &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'http://localhost:8080/'&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;BUILDBOT_WEB_PORT&lt;/span&gt;
+          &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'8080'&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;POSTGRES_PASSWORD&lt;/span&gt;
+          &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;change_me&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;POSTGRES_USER&lt;/span&gt;
+          &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;buildbot&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;POSTGRES_DB&lt;/span&gt;
+          &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;buildbot&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;POSTGRES_DB_HOST&lt;/span&gt;
+          &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;postgres&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;BUILDBOT_DB_URL&lt;/span&gt;
+          &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}&amp;#64;{POSTGRES_DB_HOST}/{POSTGRES_DB}'&lt;/span&gt;
+        &lt;span class="nt"&gt;ports&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;containerPort&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;8080&lt;/span&gt;
+          &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;frontend&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;&lt;tt class="docutils literal"&gt;postgres.yaml:&lt;/tt&gt;&lt;/p&gt;
+&lt;pre class="code yaml literal-block"&gt;
+&lt;span class="nt"&gt;apiVersion&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;v1&lt;/span&gt;
+&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;Service&lt;/span&gt;
+&lt;span class="nt"&gt;metadata&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;postgres&lt;/span&gt;
+  &lt;span class="nt"&gt;labels&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;app&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;buildbot&lt;/span&gt;
+&lt;span class="nt"&gt;spec&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;ports&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;port&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;5432&lt;/span&gt;
+    &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;postgres&lt;/span&gt;
+  &lt;span class="nt"&gt;selector&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;app&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;buildbot&lt;/span&gt;
+    &lt;span class="nt"&gt;tier&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;postgres&lt;/span&gt;
+  &lt;span class="nt"&gt;clusterIP&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;None&lt;/span&gt;
+&lt;span class="nn"&gt;---&lt;/span&gt;
+&lt;span class="nt"&gt;apiVersion&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;extensions/v1beta1&lt;/span&gt;
+&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;Deployment&lt;/span&gt;
+&lt;span class="nt"&gt;metadata&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;postgres&lt;/span&gt;
+  &lt;span class="nt"&gt;labels&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;app&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;buildbot&lt;/span&gt;
+&lt;span class="nt"&gt;spec&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;strategy&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;Recreate&lt;/span&gt;
+  &lt;span class="nt"&gt;template&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;metadata&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+      &lt;span class="nt"&gt;labels&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="nt"&gt;app&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;buildbot&lt;/span&gt;
+        &lt;span class="nt"&gt;tier&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;postgres&lt;/span&gt;
+    &lt;span class="nt"&gt;spec&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+      &lt;span class="nt"&gt;containers&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+      &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;image&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;postgres:9.4&lt;/span&gt;
+        &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;postgres&lt;/span&gt;
+        &lt;span class="nt"&gt;env&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;POSTGRES_PASSWORD&lt;/span&gt;
+          &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;change_me&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;POSTGRES_USER&lt;/span&gt;
+          &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;buildbot&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;POSTGRES_DB&lt;/span&gt;
+          &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;buildbot&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;POSTGRES_DB_HOST&lt;/span&gt;
+          &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;postgres&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;BUILDBOT_DB_URL&lt;/span&gt;
+          &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}&amp;#64;{POSTGRES_DB_HOST}/{POSTGRES_DB}'&lt;/span&gt;
+        &lt;span class="nt"&gt;ports&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;containerPort&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;5432&lt;/span&gt;
+          &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;postgres&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;And with a flick of my wand:&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl delete pods,deployment,service --all  # cleanup the old stuff
+pod &amp;quot;buildbot&amp;quot; deleted
+pod &amp;quot;wordpress-1618093523-4if9k&amp;quot; deleted
+pod &amp;quot;wordpress-mysql-2379610080-mqvll&amp;quot; deleted
+deployment &amp;quot;wordpress&amp;quot; deleted
+deployment &amp;quot;wordpress-mysql&amp;quot; deleted
+service &amp;quot;kubernetes&amp;quot; deleted
+service &amp;quot;wordpress&amp;quot; deleted
+service &amp;quot;wordpress-mysql&amp;quot; deleted
+$ kubectl create -f postrges.yml
+service &amp;quot;postgres&amp;quot; created
+deployment &amp;quot;postgres&amp;quot; created
+$ kubectl create -f master.yml
+service &amp;quot;master&amp;quot; created
+deployment &amp;quot;master&amp;quot; created
+$ minikube service master
+&lt;/pre&gt;
+&lt;p&gt;Opens up this wonderful site:&lt;/p&gt;
+&lt;img alt="Buildbot working." class="align-center" src="/assets/images/buildbot-on-k8s/buildbot-working.png" style="width: 100%;" /&gt;
+&lt;p&gt;Great, they can talk &lt;a class="citation-reference" href="#same-app-note" id="id4"&gt;[same-app-note]&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="hire-a-worker"&gt;
+&lt;h3&gt;Hire a worker&lt;/h3&gt;
+&lt;p&gt;So we've got a website and a database, but we're not actually running any builds yet.
+Let's fix that.&lt;/p&gt;
+&lt;p&gt;Based on what the &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;docker-compose.yml&lt;/span&gt;&lt;/tt&gt; says we should be able to throw this together and have it work:&lt;/p&gt;
+&lt;p&gt;&lt;tt class="docutils literal"&gt;worker.yaml&lt;/tt&gt;:&lt;/p&gt;
+&lt;pre class="code yaml literal-block"&gt;
+&lt;span class="nt"&gt;apiVersion&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;v1&lt;/span&gt;
+&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;Service&lt;/span&gt;
+&lt;span class="nt"&gt;metadata&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;worker&lt;/span&gt;
+  &lt;span class="nt"&gt;labels&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;app&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;buildbot&lt;/span&gt;
+&lt;span class="nt"&gt;spec&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;ports&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;port&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;9989&lt;/span&gt;
+    &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;worker&lt;/span&gt;
+  &lt;span class="nt"&gt;selector&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;app&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;buildbot&lt;/span&gt;
+    &lt;span class="nt"&gt;tier&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;worker&lt;/span&gt;
+  &lt;span class="nt"&gt;clusterIP&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;None&lt;/span&gt;
+&lt;span class="nn"&gt;---&lt;/span&gt;
+&lt;span class="nt"&gt;apiVersion&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;extensions/v1beta1&lt;/span&gt;
+&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;Deployment&lt;/span&gt;
+&lt;span class="nt"&gt;metadata&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;worker&lt;/span&gt;
+  &lt;span class="nt"&gt;labels&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;app&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;buildbot&lt;/span&gt;
+&lt;span class="nt"&gt;spec&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;strategy&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;Recreate&lt;/span&gt;
+  &lt;span class="nt"&gt;template&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;metadata&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+      &lt;span class="nt"&gt;labels&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="nt"&gt;app&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;buildbot&lt;/span&gt;
+        &lt;span class="nt"&gt;tier&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;worker&lt;/span&gt;
+    &lt;span class="nt"&gt;spec&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+      &lt;span class="nt"&gt;containers&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+      &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;image&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;buildbot/buildbot-worker:master&amp;quot;&lt;/span&gt;
+        &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;worker&lt;/span&gt;
+        &lt;span class="nt"&gt;env&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;BUILDMASTER&lt;/span&gt;
+          &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;master&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;BUILDMASTER_PORT&lt;/span&gt;
+          &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'9989'&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;WORKERNAME&lt;/span&gt;
+          &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;example-worker&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;WORKERPASS&lt;/span&gt;
+          &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;pass&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;WORKER_ENVIRONMENT_BLACKLIST&lt;/span&gt;
+          &lt;span class="nt"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;'DOCKER_BUILDBOT*&lt;/span&gt;&lt;span class="nv"&gt; &lt;/span&gt;&lt;span class="s"&gt;BUILDBOT_ENV_*&lt;/span&gt;&lt;span class="nv"&gt; &lt;/span&gt;&lt;span class="s"&gt;BUILDBOT_1*&lt;/span&gt;&lt;span class="nv"&gt; &lt;/span&gt;&lt;span class="s"&gt;WORKER_ENVIRONMENT_BLACKLIST'&lt;/span&gt;
+        &lt;span class="nt"&gt;ports&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="nt"&gt;containerPort&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;9989&lt;/span&gt;
+          &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;worker&lt;/span&gt;
+&lt;/pre&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl create -f worker.yaml
+service &amp;quot;worker&amp;quot; created
+deployment &amp;quot;worker&amp;quot; created
+$ kubectl get -f worker.yaml
+NAME                  CLUSTER-IP   EXTERNAL-IP   PORT(S)    AGE
+svc/worker            None         &amp;lt;none&amp;gt;        9989/TCP   44s
+NAME                     DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+deploy/worker            1         1         1            0           44s
+&lt;/pre&gt;
+&lt;p&gt;Looks promising...&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl get pods -l tier=worker
+NAME                               READY     STATUS    RESTARTS   AGE
+worker-3607067131-qdpfd   1/1       Running   0          1m
+$ kubectl logs worker-3607067131-ke4zb -f
+2016-11-21 19:46:45+0000 [-] Loading buildbot.tac...
+2016-11-21 19:46:45+0000 [-] Loaded.
+2016-11-21 19:46:45+0000 [-] twistd 16.5.0 (/usr/bin/python 2.7.12) starting up.
+2016-11-21 19:46:45+0000 [-] reactor class: twisted.internet.epollreactor.EPollReactor.  2016-11-21 19:46:45+0000 [-] Starting Worker -- version: latest
+2016-11-21 19:46:45+0000 [-] recording hostname in twistd.hostname
+2016-11-21 19:46:45+0000 [-] Starting factory &amp;lt;buildbot_worker.pb.BotFactory instance at 0x7fd8c2339cf8&amp;gt;
+2016-11-21 19:46:45+0000 [-] Connecting to buildbot:9989
+2016-11-21 19:46:56+0000 [Uninitialized] Connection to buildbot:9989 failed: Connection Refused
+2016-11-21 19:46:56+0000 [Uninitialized] &amp;lt;twisted.internet.tcp.Connector instance at 0x7fd8c233a170&amp;gt; will retry in 2 seconds
+2016-11-21 19:46:56+0000 [-] Stopping factory &amp;lt;buildbot_worker.pb.BotFactory instance at 0x7fd8c2339cf8&amp;gt;
+2016-11-21 19:46:59+0000 [-] Starting factory &amp;lt;buildbot_worker.pb.BotFactory instance at 0x7fd8c2339cf8&amp;gt;
+2016-11-21 19:46:59+0000 [-] Connecting to buildbot:9989
+2016-11-21 19:47:29+0000 [-] Connection to buildbot:9989 failed: [Failure instance: Traceback (failure with no frames): &amp;lt;class 'twisted.internet.error.TimeoutError'&amp;gt;: User timeout caused connection failure.
+    ]
+2016-11-21 19:47:29+0000 [-] &amp;lt;twisted.internet.tcp.Connector instance at 0x7fd8c233a170&amp;gt; will retry in 5 seconds
+2016-11-21 19:47:29+0000 [-] Stopping factory &amp;lt;buildbot_worker.pb.BotFactory instance at 0x7fd8c2339cf8&amp;gt;
+&lt;/pre&gt;
+&lt;p&gt;Khaaaaaan!&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="connection-issues"&gt;
+&lt;h3&gt;Connection issues&lt;/h3&gt;
+&lt;p&gt;Fine, let's get to work debugging.
+First we'll login to the worker pod and try to ping the &lt;tt class="docutils literal"&gt;buildbot&lt;/tt&gt; pod since the output makes it seem like there was a timeout between the host and the worker.
+This usually means they can't reach each other.&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl exec -it worker-3607067131-qdpfd bash
+buildbot&amp;#64;worker-3607067131-qdpfd:/buildbot$ ping master
+bash: ping: command not found
+&lt;/pre&gt;
+&lt;p&gt;Uhh...&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+buildbot&amp;#64;worker-3607067131-ke4zb:/buildbot$ curl http://master:8080
+&amp;lt;!DOCTYPE html&amp;gt;[... definitely actually a webpage ...]
+&lt;/pre&gt;
+&lt;p&gt;So the worker can reach the master, but can the master reach the worker?&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl get pods -l tier=master
+NAME                                 READY     STATUS    RESTARTS   AGE
+master-2152810066-9ip8b              1/1       Running   0          21m
+$ kubectl exec -it master-2152810066-9ip8b sh
+/var/lib/buildbot # ping worker
+PING worker (172.17.0.6): 56 data bytes
+64 bytes from 172.17.0.6: seq=0 ttl=64 time=0.083 ms
+64 bytes from 172.17.0.6: seq=1 ttl=64 time=0.101 ms
+^C
+--- worker ping statistics ---
+2 packets transmitted, 2 packets received, 0% packet loss
+round-trip min/avg/max = 0.083/0.092/0.101 ms
+&lt;/pre&gt;
+&lt;p&gt;Okay, so they can connect to one-another.
+What's the problem then?
+My best guess is that the &lt;tt class="docutils literal"&gt;master&lt;/tt&gt; pod needs to have it's special worker port (&lt;tt class="docutils literal"&gt;9989&lt;/tt&gt;) exposed.
+So let's add those lines to &lt;tt class="docutils literal"&gt;master.yaml&lt;/tt&gt;:&lt;/p&gt;
+&lt;pre class="code diff literal-block"&gt;
+&lt;span class="gd"&gt;--- a/blogpost/updated-master.yaml
+&lt;/span&gt;&lt;span class="gi"&gt;+++ b/blogpost/updated-master.yaml
+&lt;/span&gt;&lt;span class="gu"&gt;&amp;#64;&amp;#64; -8,6 +8,8 &amp;#64;&amp;#64; spec:
+&lt;/span&gt;   ports:
+     - port: 8080
+       name: frontend
+&lt;span class="gi"&gt;+    - port: 9989
++      name: worker
+&lt;/span&gt;   selector:
+     app: buildbot
+     tier: master
+&lt;span class="gu"&gt;&amp;#64;&amp;#64; -55,3 +57,5 &amp;#64;&amp;#64; spec:
+&lt;/span&gt;         ports:
+         - containerPort: 8080
+           name: frontend
+&lt;span class="gi"&gt;+        - containerPort: 9989
++          name: worker&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;And after tearing everything down and bringing it back up:&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl get pods -l tier=worker
+NAME                               READY     STATUS    RESTARTS   AGE
+worker-2552724660-l4kmv            1/1       Running   0          12s
+$ kubectl logs worker-2552724660-l4kmv
+[... logs logs logs ...]
+2016-12-09 23:30:18+0000 [-] Connecting to master:9989
+2016-12-09 23:30:18+0000 [HangCheckProtocol,client] message from master: attached
+2016-12-09 23:30:18+0000 [HangCheckProtocol,client] message from master: attached
+2016-12-09 23:30:18+0000 [HangCheckProtocol,client] Connected to master:9989; worker is ready
+2016-12-09 23:30:18+0000 [HangCheckProtocol,client] sending application-level keepalives every 600 seconds
+&lt;/pre&gt;
+&lt;p&gt;Hey that looks like success to me!
+How does the front-end look?&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl get pods -l tier=master
+NAME                               READY     STATUS    RESTARTS   AGE
+master-3038604518-jim6q            1/1       Running   0          2m
+$ kubectl port-forward master-3038604518-jim6q 8080
+&lt;/pre&gt;
+&lt;p&gt;And in a browser:&lt;/p&gt;
+&lt;img alt="Buildbot still working." class="align-center" src="/assets/images/buildbot-on-k8s/build-success.png" style="width: 100%;" /&gt;
+&lt;p&gt;You may now do a happy dance.&lt;/p&gt;
+&lt;img alt="Happy Dance .gif" class="align-center" src="/assets/images/buildbot-on-k8s/happy-dance.gif" style="width: 100%;" /&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="storage"&gt;
+&lt;h2&gt;Storage&lt;/h2&gt;
+&lt;p&gt;We've got the three core moving parts of our system, next on our list is adding some persistent storage.
+Thankfully, we can recycle the MySQL+Wordpress example we used before.
+Yay examples.&lt;/p&gt;
+&lt;p&gt;So let's add the storage bits back in that we ignored before. This results in configs that look like so (abbreviated for your scrollbar's convenience):&lt;/p&gt;
+&lt;p&gt;&lt;tt class="docutils literal"&gt;volumes.yaml&lt;/tt&gt;:&lt;/p&gt;
+&lt;pre class="code yaml literal-block"&gt;
+&lt;span class="nt"&gt;apiVersion&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;v1&lt;/span&gt;
+&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;PersistentVolume&lt;/span&gt;
+&lt;span class="nt"&gt;metadata&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;local-pv-1&lt;/span&gt;
+  &lt;span class="nt"&gt;labels&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;local&lt;/span&gt;
+&lt;span class="nt"&gt;spec&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;capacity&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;storage&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;1Gi&lt;/span&gt;
+  &lt;span class="nt"&gt;accessModes&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;ReadWriteOnce&lt;/span&gt;
+  &lt;span class="nt"&gt;persistentVolumeReclaimPolicy&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;Recycle&lt;/span&gt;
+  &lt;span class="nt"&gt;hostPath&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;path&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;/data/pv-1&lt;/span&gt;
+&lt;span class="nn"&gt;---&lt;/span&gt;
+&lt;span class="nt"&gt;apiVersion&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;v1&lt;/span&gt;
+&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;PersistentVolume&lt;/span&gt;
+&lt;span class="nt"&gt;metadata&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;local-pv-2&lt;/span&gt;
+  &lt;span class="nt"&gt;labels&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;local&lt;/span&gt;
+&lt;span class="nt"&gt;spec&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;capacity&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;storage&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;5Gi&lt;/span&gt;
+  &lt;span class="nt"&gt;accessModes&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;ReadWriteOnce&lt;/span&gt;
+  &lt;span class="nt"&gt;persistentVolumeReclaimPolicy&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;Recycle&lt;/span&gt;
+  &lt;span class="nt"&gt;hostPath&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;path&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;/data/pv-2&lt;/span&gt;
+&lt;span class="nn"&gt;---&lt;/span&gt;
+&lt;span class="nt"&gt;apiVersion&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;v1&lt;/span&gt;
+&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;PersistentVolume&lt;/span&gt;
+&lt;span class="nt"&gt;metadata&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;local-pv-3&lt;/span&gt;
+  &lt;span class="nt"&gt;labels&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;local&lt;/span&gt;
+&lt;span class="nt"&gt;spec&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="nt"&gt;capacity&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;storage&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;5Gi&lt;/span&gt;
+  &lt;span class="nt"&gt;accessModes&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="p-Indicator"&gt;-&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;ReadWriteOnce&lt;/span&gt;
+  &lt;span class="nt"&gt;persistentVolumeReclaimPolicy&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;Recycle&lt;/span&gt;
+  &lt;span class="nt"&gt;hostPath&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;path&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l-Scalar-Plain"&gt;/data/pv-3&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;&lt;tt class="docutils literal"&gt;master.yaml&lt;/tt&gt;:&lt;/p&gt;
+&lt;pre class="code diff literal-block"&gt;
+&lt;span class="gh"&gt;diff --git a/blogpost/volumes-master.yaml b/blogpost/volumes-master.yaml
+index 7cbffd7..c7479e3 100644
+&lt;/span&gt;&lt;span class="gd"&gt;--- a/blogpost/volumes-master.yaml
+&lt;/span&gt;&lt;span class="gi"&gt;+++ b/blogpost/volumes-master.yaml
+&lt;/span&gt;&lt;span class="gu"&gt;&amp;#64;&amp;#64; -15,6 +15,19 &amp;#64;&amp;#64; spec:
+&lt;/span&gt;     tier: master
+   type: NodePort
+ ---
+&lt;span class="gi"&gt;+apiVersion: v1
++kind: PersistentVolumeClaim
++metadata:
++  name: master-pv-claim
++  labels:
++    app: buildbot
++spec:
++  accessModes:
++    - ReadWriteOnce
++  resources:
++    requests:
++      storage: 1Gi
++---
+&lt;/span&gt; apiVersion: extensions/v1beta1
+ kind: Deployment
+ metadata:
+&lt;span class="gu"&gt;&amp;#64;&amp;#64; -37,7 +50,7 &amp;#64;&amp;#64; spec:
+&lt;/span&gt;         - name: BUILDBOT_CONFIG_DIR
+           value: config
+         - name: BUILDBOT_CONFIG_URL
+&lt;span class="gd"&gt;-          value: 'https://raw.githubusercontent.com/buildbot/buildbot-docker-example-config/master/master.cfg'
+&lt;/span&gt;&lt;span class="gi"&gt;+          value: 'https://raw.githubusercontent.com/ElijahCaine/buildbot-on-kubernetes/master/simple/master.cfg'
+&lt;/span&gt;         - name: BUILDBOT_WORKER_PORT
+           value: '9989'
+         - name: BUILDBOT_WEB_URL
+&lt;span class="gu"&gt;&amp;#64;&amp;#64; -59,3 +72,10 &amp;#64;&amp;#64; spec:
+&lt;/span&gt;           name: frontend
+         - containerPort: 9989
+           name: worker
+&lt;span class="gi"&gt;+        volumeMounts:
++        - name: master-persistent-storage
++          mountPath: /var/lib/buildbot/builds
++      volumes:
++      - name: master-persistent-storage
++        persistentVolumeClaim:
++          claimName: master-pv-claim&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;&lt;tt class="docutils literal"&gt;postgres.yaml&lt;/tt&gt;:&lt;/p&gt;
+&lt;pre class="code diff literal-block"&gt;
+&lt;span class="gd"&gt;--- a/blogpost/volumes-postgres.yaml
+&lt;/span&gt;&lt;span class="gi"&gt;+++ b/blogpost/volumes-postgres.yaml
+&lt;/span&gt;&lt;span class="gu"&gt;&amp;#64;&amp;#64; -13,6 +13,19 &amp;#64;&amp;#64; spec:
+&lt;/span&gt;     tier: postgres
+   clusterIP: None
+ ---
+&lt;span class="gi"&gt;+apiVersion: v1
++kind: PersistentVolumeClaim
++metadata:
++  name: postgres-pv-claim
++  labels:
++    app: buildbot
++spec:
++  accessModes:
++    - ReadWriteOnce
++  resources:
++    requests:
++      storage: 5Gi
++---
+&lt;/span&gt; apiVersion: extensions/v1beta1
+ kind: Deployment
+ metadata:
+&lt;span class="gu"&gt;&amp;#64;&amp;#64; -45,3 +58,10 &amp;#64;&amp;#64; spec:
+&lt;/span&gt;         ports:
+         - containerPort: 5432
+           name: postgres
+&lt;span class="gi"&gt;+        volumeMounts:
++        - name: postgres-persistent-storage
++          mountPath: /var/lib/postgresql
++      volumes:
++      - name: postgres-persistent-storage
++        persistentVolumeClaim:
++          claimName: postgres-pv-claim&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;&lt;tt class="docutils literal"&gt;worker.yaml&lt;/tt&gt;:&lt;/p&gt;
+&lt;pre class="code diff literal-block"&gt;
+&lt;span class="gd"&gt;--- a/blogpost/volumes-worker.yaml
+&lt;/span&gt;&lt;span class="gi"&gt;+++ b/blogpost/volumes-worker.yaml
+&lt;/span&gt;&lt;span class="gu"&gt;&amp;#64;&amp;#64; -13,6 +13,19 &amp;#64;&amp;#64; spec:
+&lt;/span&gt;     tier: worker
+   clusterIP: None
+ ---
+&lt;span class="gi"&gt;+apiVersion: v1
++kind: PersistentVolumeClaim
++metadata:
++  name: worker-pv-claim
++  labels:
++    app: buidlbot
++spec:
++  accessModes:
++    - ReadWriteOnce
++  resources:
++    requests:
++      storage: 5Gi
++---
+&lt;/span&gt; apiVersion: extensions/v1beta1
+ kind: Deployment
+ metadata:
+&lt;span class="gu"&gt;&amp;#64;&amp;#64; -45,3 +58,10 &amp;#64;&amp;#64; spec:
+&lt;/span&gt;         ports:
+         - containerPort: 9989
+           name: worker
+&lt;span class="gi"&gt;+        volumeMounts:
++        - name: worker-persistent-storage
++          mountPath: /buildbot/builds
++      volumes:
++      - name: worker-persistent-storage
++        persistentVolumeClaim:
++          claimName: worker-pv-claim&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;And of lastly we edit the Buildbot &lt;tt class="docutils literal"&gt;master.cfg&lt;/tt&gt; to use our custom paths for storing and carrying out builds:&lt;/p&gt;
+&lt;pre class="code diff literal-block"&gt;
+&lt;span class="gh"&gt;diff --git a/blogpost/volumes-master.cfg b/blogpost/volumes-master.cfg
+index 06ad65b..36212ea 100644
+&lt;/span&gt;&lt;span class="gd"&gt;--- a/blogpost/volumes-master.cfg
+&lt;/span&gt;&lt;span class="gi"&gt;+++ b/blogpost/volumes-master.cfg
+&lt;/span&gt;&lt;span class="gu"&gt;&amp;#64;&amp;#64; -78,7 +78,9 &amp;#64;&amp;#64; c['builders'] = []
+&lt;/span&gt; c['builders'].append(
+     util.BuilderConfig(name=&amp;quot;runtests&amp;quot;,
+       workernames=[&amp;quot;example-worker&amp;quot;],
+&lt;span class="gd"&gt;-      factory=factory))
+&lt;/span&gt;&lt;span class="gi"&gt;+      factory=factory,
++      builddir='builds',
++      workerbuilddir='builds'))
+&lt;/span&gt;
+ ####### STATUS TARGETS
+&lt;/pre&gt;
+&lt;p&gt;This is just an edited version of the original &lt;tt class="docutils literal"&gt;master.cfg&lt;/tt&gt; you can find in the original Buildbot docker-compose example repository.&lt;/p&gt;
+&lt;p&gt;So this &lt;em&gt;should&lt;/em&gt; just work, right?
+We request a volume of a given size, the volume exists and is the correct size, badda bing badda boom, do the thing like this:&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl delete service,deployment,pods --all
+service &amp;quot;master&amp;quot; deleted
+service &amp;quot;postgres&amp;quot; deleted
+service &amp;quot;worker&amp;quot; deleted
+service &amp;quot;kubernetes&amp;quot; deleted
+deployment &amp;quot;master&amp;quot; deleted
+deployment &amp;quot;postgres&amp;quot; deleted
+deployment &amp;quot;worker&amp;quot; deleted
+$ kubectl create -f volumes.yaml
+persistentvolume &amp;quot;local-pv-1&amp;quot; created
+persistentvolume &amp;quot;local-pv-2&amp;quot; created
+persistentvolume &amp;quot;local-pv-3&amp;quot; created
+$ kubectl create -f postgres.yaml
+service &amp;quot;postgres&amp;quot; created
+persistentvolumeclaim &amp;quot;postgres-pv-claim&amp;quot; created
+deployment &amp;quot;postgres&amp;quot; created
+$ kubectl create -f master.yaml
+service &amp;quot;master&amp;quot; created
+persistentvolumeclaim &amp;quot;master-pv-claim&amp;quot; created
+deployment &amp;quot;master&amp;quot; created
+$ kubectl create -f worker.yaml
+service &amp;quot;-worker&amp;quot; created
+persistentvolumeclaim &amp;quot;worker-pv-claim&amp;quot; created
+deployment &amp;quot;worker&amp;quot; created
+$ kubectl get pods -l tier=master
+NAME                        READY     STATUS    RESTARTS   AGE
+master-3176013930-gvy2i   1/1       Running   0          1m
+$ kubectl port-forward master-3176013930-gvy2i 8080
+Forwarding from 127.0.0.1:8080 -&amp;gt; 8080
+Forwarding from [::1]:8080 -&amp;gt; 8080
+&lt;/pre&gt;
+&lt;p&gt;That kinda works, but it kept getting weird arbitrary errors which looked suspicious.&lt;/p&gt;
+&lt;img alt="Permissions fail in buildbot" class="align-center" src="/assets/images/buildbot-on-k8s/permissions-build-fail.png" style="width: 100%;" /&gt;
+&lt;p&gt;Since the only thing that had really changed was the volumes I figured I might as well login to the host and investigate.&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ minikube ssh
+docker&amp;#64;minikube:~$ ls -alh /data/
+total 20
+drwxr-xr-x    5 root     root        4.0K Dec 11 02:21 ./
+drwxr-xr-x    6 root     root        4.0K Dec 11 01:48 ../
+drwxr-xr-x    2 root     root        4.0K Dec 11 02:20 pv-1/
+drwxr-xr-x    2 root     root        4.0K Dec 11 02:33 pv-2/
+drwxr-xr-x    3 root     root        4.0K Dec 11 02:33 pv-3/
+&lt;/pre&gt;
+&lt;p&gt;Ahah!
+That's the problem, root owns everything but the builds are run by the &lt;tt class="docutils literal"&gt;buildbot&lt;/tt&gt; user (&lt;tt class="docutils literal"&gt;uid: 1000&lt;/tt&gt;)
+&lt;em&gt;/me shakes fist at permissions errors.&lt;/em&gt;
+The last first place you think to look.&lt;/p&gt;
+&lt;p&gt;So is there any way to change the permissions of a volume as you claim it (i.e., in &lt;tt class="docutils literal"&gt;volumes.yaml&lt;/tt&gt;)?
+We can both go through this journey together or I can share with you a quote from my coworker Barak Michener, the BAMF that works on &lt;a class="reference external" href="https://github.com/coreos/torus"&gt;Torus&lt;/a&gt;.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;div class="line-block"&gt;
+&lt;div class="line"&gt;&lt;em&gt;Barak Michener&lt;/em&gt;&lt;/div&gt;
+&lt;div class="line"&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div class="line"&gt;yeah, hostPath is completely hands-off from k8s perspective&lt;/div&gt;
+&lt;div class="line"&gt;so you just chmod the underlying dir&lt;/div&gt;
+&lt;div class="line"&gt;to whatever uid you're using inside the pod&lt;/div&gt;
+&lt;/div&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Turns out the problem was with my &lt;tt class="docutils literal"&gt;type&lt;/tt&gt; of storage in &lt;tt class="docutils literal"&gt;volumes.yaml&lt;/tt&gt;.
+As of yet there is no type-agnostic way to assign permissions for mounted volumes.
+Storage, why you gotta be like that?&lt;/p&gt;
+&lt;p&gt;So after digging around and asking Barak I finally concluded that I had to had to login to my host and set the correct permissions on the directories being reserved.
+Here's how you do that on Minikube:&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ minikube ssh
+docker&amp;#64;minikube$ sudo chown -R 1000:1000 /data/pv*
+&lt;/pre&gt;
+&lt;p&gt;In this case we could just chown the one volume that's going to be used by the &lt;tt class="docutils literal"&gt;worker&lt;/tt&gt; pod, since the other ones run their services as &lt;tt class="docutils literal"&gt;root&lt;/tt&gt;, but much like Debra from accounting, &lt;tt class="docutils literal"&gt;root&lt;/tt&gt; doesn't give a fuck.
+Might as well.&lt;/p&gt;
+&lt;p&gt;So if we try the build again with the correct permissions, what happens?&lt;/p&gt;
+&lt;img alt="Buildbot with permissions fixed." class="align-center" src="/assets/images/buildbot-on-k8s/build-success-perms.png" style="width: 100%;" /&gt;
+&lt;p&gt;Huzah&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="autoscaling"&gt;
+&lt;h2&gt;Autoscaling&lt;/h2&gt;
+&lt;p&gt;At last we have what I suspect will be the &lt;em&gt;hardest&lt;/em&gt; part of the project: autoscaling.
+Here's what we want in a perfect world:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;When a lot of builds get requested, spin up more &lt;tt class="docutils literal"&gt;worker&lt;/tt&gt; nodes.&lt;/li&gt;
+&lt;li&gt;When fewer builds are requested, destroy those extra &lt;tt class="docutils literal"&gt;worker&lt;/tt&gt; nodes.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="section" id="asking-the-question"&gt;
+&lt;h3&gt;Asking the question&lt;/h3&gt;
+&lt;p&gt;This task is actually a pretty tough cookie to crack.
+We want enough workers to each deal with 1/N requests in a queue of N builds, essentially scaling the building service to deal with usage spikes.
+It sounds straight forward enough, but how do we test it?&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="creating-a-test-case"&gt;
+&lt;h3&gt;Creating a test-case&lt;/h3&gt;
+&lt;p&gt;For this we need to add a few projects to our instance of Buildbot, each of which will have a hefty workload.
+To do this we need to host a Buildbot &lt;tt class="docutils literal"&gt;master.cfg&lt;/tt&gt; config file at some public location and refer to this in the &lt;tt class="docutils literal"&gt;master.yaml&lt;/tt&gt; config file.
+I used the GitHub repo that accompanies this blogpost &lt;a class="citation-reference" href="#accompanying-repo" id="id5"&gt;[accompanying-repo]&lt;/a&gt;, but you could use GitHub Gists or a pastebin; just make sure you're referring to the &lt;strong&gt;raw&lt;/strong&gt; file or a &lt;tt class="docutils literal"&gt;.tar.gz&lt;/tt&gt; with the &lt;tt class="docutils literal"&gt;master.cfg&lt;/tt&gt; file at the base of the tarball.&lt;/p&gt;
+&lt;p&gt;So let's pull a project out of a hat that takes a while to build, how about... &lt;a class="reference external" href="https://github.com/rust-lang/cargo"&gt;Cargo&lt;/a&gt;.
+Any objections?
+Great, let's roll.&lt;/p&gt;
+&lt;p&gt;To get started we'll need a custom &lt;tt class="docutils literal"&gt;worker&lt;/tt&gt; container can build Cargo.
+A small adventure later and we have this Dockerfile which has all of the dependencies to build what we want:&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+FROM buildbot/buildbot-worker:master
+
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
+RUN echo 'PATH=$PATH:$HOME/.cargo/bin' &amp;gt;&amp;gt; $HOME/.bashrc
+
+USER root
+RUN apt update -y
+RUN apt install -y cmake pkg-config
+
+USER buildbot
+&lt;/pre&gt;
+&lt;p&gt;I set this to auto-build on &lt;a class="reference external" href="https://quay.io/"&gt;quay.io&lt;/a&gt;, hosted at the docker-pull url &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;quay.io/elijahcaine/buidlbot-rust-worker&lt;/span&gt;&lt;/tt&gt;.&lt;/p&gt;
+&lt;p&gt;Now that we have a capable worker container, we need to create an arbitrary workload.
+To do that we'll use this Buildbot &lt;tt class="docutils literal"&gt;master.cfg&lt;/tt&gt;:&lt;/p&gt;
+&lt;pre class="code diff literal-block"&gt;
+&lt;span class="gh"&gt;diff --git a/blogpost/robust-master.cfg b/blogpost/robust-master.cfg
+index 06ad65b..892188b 100644
+&lt;/span&gt;&lt;span class="gd"&gt;--- a/blogpost/robust-master.cfg
+&lt;/span&gt;&lt;span class="gi"&gt;+++ b/blogpost/robust-master.cfg
+&lt;/span&gt;&lt;span class="gu"&gt;&amp;#64;&amp;#64; -18,7 +18,7 &amp;#64;&amp;#64; c = BuildmasterConfig = {}
+&lt;/span&gt; # a Worker object, specifying a unique worker name and password.  The same
+ # worker name and password must be configured on the worker.
+
+&lt;span class="gd"&gt;-c['workers'] = [worker.Worker(&amp;quot;example-worker&amp;quot;, 'pass')]
+&lt;/span&gt;&lt;span class="gi"&gt;+c['workers'] = [worker.Worker(&amp;quot;rust-worker&amp;quot;, 'pass')]
+&lt;/span&gt;
+ if 'BUILDBOT_MQ_URL' in os.environ:
+     c['mq'] = {
+&lt;span class="gu"&gt;&amp;#64;&amp;#64; -43,7 +43,7 &amp;#64;&amp;#64; c['protocols'] = {'pb': {'port': os.environ.get(&amp;quot;BUILDBOT_WORKER_PORT&amp;quot;, 9989)}}
+&lt;/span&gt;
+ c['change_source'] = []
+ c['change_source'].append(changes.GitPoller(
+&lt;span class="gd"&gt;-        'git://github.com/buildbot/pyflakes.git',
+&lt;/span&gt;&lt;span class="gi"&gt;+        'git://github.com/rust-lang/cargo.git',
+&lt;/span&gt;         workdir='gitpoller-workdir', branch='master',
+         pollinterval=300))
+
+&lt;span class="gu"&gt;&amp;#64;&amp;#64; -57,10 +57,10 &amp;#64;&amp;#64; c['schedulers'].append(schedulers.SingleBranchScheduler(
+&lt;/span&gt;                             name=&amp;quot;all&amp;quot;,
+                             change_filter=util.ChangeFilter(branch='master'),
+                             treeStableTimer=None,
+&lt;span class="gd"&gt;-                            builderNames=[&amp;quot;runtests&amp;quot;]))
+&lt;/span&gt;&lt;span class="gi"&gt;+                            builderNames=[&amp;quot;cargo1-runtests&amp;quot;, &amp;quot;cargo2-runtests&amp;quot;, &amp;quot;cargo3-runtests&amp;quot;]))
+&lt;/span&gt; c['schedulers'].append(schedulers.ForceScheduler(
+                             name=&amp;quot;force&amp;quot;,
+&lt;span class="gd"&gt;-                            builderNames=[&amp;quot;runtests&amp;quot;]))
+&lt;/span&gt;&lt;span class="gi"&gt;+                            builderNames=[&amp;quot;cargo1-runtests&amp;quot;, &amp;quot;cargo2-runtests&amp;quot;, &amp;quot;cargo3-runtests&amp;quot;]))
+&lt;/span&gt;
+ ####### BUILDERS
+
+&lt;span class="gu"&gt;&amp;#64;&amp;#64; -68,17 +68,30 &amp;#64;&amp;#64; c['schedulers'].append(schedulers.ForceScheduler(
+&lt;/span&gt; # what steps, and which workers can execute them.  Note that any particular build will
+ # only take place on one worker.
+
+&lt;span class="gd"&gt;-factory = util.BuildFactory()
+-# check out the source
+-factory.addStep(steps.Git(repourl='http://github.com/buildbot/pyflakes.git', mode='incremental'))
+-# run the tests (note that this will require that 'trial' is installed)
+-factory.addStep(steps.ShellCommand(command=[&amp;quot;trial&amp;quot;, &amp;quot;pyflakes&amp;quot;]))
+&lt;/span&gt;&lt;span class="gi"&gt;+f = {}
++f['cargo'] = util.BuildFactory()
++f['cargo'].addStep(steps.Git(repourl='git://github.com/rust-lang/cargo.git', mode='full', method='fresh'))
++f['cargo'].addStep(steps.ShellCommand(command=[&amp;quot;/home/buildbot/.cargo/bin/cargo&amp;quot;, &amp;quot;build&amp;quot;, &amp;quot;--release&amp;quot;]))
+&lt;/span&gt;
+ c['builders'] = []
+ c['builders'].append(
+&lt;span class="gd"&gt;-    util.BuilderConfig(name=&amp;quot;runtests&amp;quot;,
+-      workernames=[&amp;quot;example-worker&amp;quot;],
+-      factory=factory))
+&lt;/span&gt;&lt;span class="gi"&gt;+    util.BuilderConfig(name=&amp;quot;cargo1-runtests&amp;quot;,
++      workernames=[&amp;quot;rust-worker&amp;quot;],
++      factory=f['cargo'],
++      builddir='builds/cargo1',
++      workerbuilddir='builds/cargo1'))
++c['builders'].append(
++    util.BuilderConfig(name=&amp;quot;cargo2-runtests&amp;quot;,
++      workernames=[&amp;quot;rust-worker&amp;quot;],
++      factory=f['cargo'],
++      builddir='builds/cargo2',
++      workerbuilddir='builds/cargo2'))
++c['builders'].append(
++    util.BuilderConfig(name=&amp;quot;cargo3-runtests&amp;quot;,
++      workernames=[&amp;quot;rust-worker&amp;quot;],
++      factory=f['cargo'],
++      builddir='builds/cargo3',
++      workerbuilddir='builds/cargo3'))
+&lt;/span&gt;
+ ####### STATUS TARGETS
+
+&lt;span class="gu"&gt;&amp;#64;&amp;#64; -93,8 +106,8 &amp;#64;&amp;#64; c['status'] = []
+&lt;/span&gt; # the 'title' string will appear at the top of this buildbot installation's
+ # home pages (linked to the 'titleURL').
+
+&lt;span class="gd"&gt;-c['title'] = &amp;quot;Pyflakes&amp;quot;
+-c['titleURL'] = &amp;quot;https://launchpad.net/pyflakes&amp;quot;
+&lt;/span&gt;&lt;span class="gi"&gt;+c['title'] = &amp;quot;Rusty Stuffy&amp;quot;
++c['titleURL'] = &amp;quot;https://www.rust-lang.org/en-US/&amp;quot;
+&lt;/span&gt;
+ # the 'buildbotURL' string should point to the location where the buildbot's
+ # internal web server is visible. This typically uses the port number set in
+&lt;/pre&gt;
+&lt;p&gt;And deploy it with this &lt;tt class="docutils literal"&gt;master.yaml&lt;/tt&gt;:&lt;/p&gt;
+&lt;pre class="code diff literal-block"&gt;
+&lt;span class="gh"&gt;diff --git a/blogpost/robust-master.yaml b/blogpost/robust-master.yaml
+index c7479e3..f75b4d6 100644
+&lt;/span&gt;&lt;span class="gd"&gt;--- a/blogpost/robust-master.yaml
+&lt;/span&gt;&lt;span class="gi"&gt;+++ b/blogpost/robust-master.yaml
+&lt;/span&gt;&lt;span class="gu"&gt;&amp;#64;&amp;#64; -50,7 +50,7 &amp;#64;&amp;#64; spec:
+&lt;/span&gt;         - name: BUILDBOT_CONFIG_DIR
+           value: config
+         - name: BUILDBOT_CONFIG_URL
+&lt;span class="gd"&gt;-          value: 'https://raw.githubusercontent.com/ElijahCaine/buildbot-on-kubernetes/master/simple/master.cfg'
+&lt;/span&gt;&lt;span class="gi"&gt;+          value: 'https://raw.githubusercontent.com/ElijahCaine/buildbot-on-kubernetes/master/robust/master.cfg'
+&lt;/span&gt;         - name: BUILDBOT_WORKER_PORT
+           value: '9989'
+         - name: BUILDBOT_WEB_URL
+&lt;/pre&gt;
+&lt;p&gt;When we look at our setup in Buildbot it looks like this:&lt;/p&gt;
+&lt;img alt="Buildbot with ample workload." class="align-center" src="/assets/images/buildbot-on-k8s/ample-workload.png" style="width: 100%;" /&gt;
+&lt;p&gt;When each build is run it completely wipes away the old git clone and starts from scratch, which is &lt;em&gt;suuuper&lt;/em&gt; wasteful, but exactly what we want here.
+The purpose of this test is to create a heavy workload for our nodes to perform, and with this each build will &lt;em&gt;definitely&lt;/em&gt; be heavy.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="kubectl-autoscale"&gt;
+&lt;h3&gt;kubectl autoscale&lt;/h3&gt;
+&lt;p&gt;Now to start scaling that build.
+In a perfect world we'd get a request, that would start hogging our resources, and K8s would spin up a new worker instance to handle the next build in the queue.
+Based on the output of &lt;tt class="docutils literal"&gt;kubectl &lt;span class="pre"&gt;--help&lt;/span&gt;&lt;/tt&gt; it looks like &lt;tt class="docutils literal"&gt;kubectl autoscale deployment worker&lt;/tt&gt; is the command we want... so let's do that:&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl autoscale deployment worker --max=5 --min=1 --cpu-percent=50
+deployment &amp;quot;worker&amp;quot; autoscaled
+$ kubectl describe hpa
+Name:               worker
+Namespace:          default
+Labels:             &amp;lt;none&amp;gt;
+Annotations:            &amp;lt;none&amp;gt;
+CreationTimestamp:      Fri, 09 Dec 2016 11:13:15 -0800
+Reference:          Deployment/worker
+Target CPU utilization:     50%
+Current CPU utilization:    &amp;lt;unset&amp;gt;
+Min replicas:           1
+Max replicas:           5
+Events:
+  FirstSeen LastSeen    Count   From                SubobjectPath   Type        Reason          Message
+  --------- --------    -----   ----                -------------   --------    ------          -------
+  37s       11s     6   {horizontal-pod-autoscaler }            Warning     FailedGetMetrics    failed to get CPU consumption and request: failed to get pods metrics: the server could not find the requested resource (get services http:heapster:)
+  37s       11s     6   {horizontal-pod-autoscaler }            Warning     FailedComputeReplicas   failed to get CPU utilization: failed to get CPU consumption and request: failed to get pods metrics: the server could not find the requested resource (get services http:heapster:)
+&lt;/pre&gt;
+&lt;p&gt;Hmm... that output looks like things aren't working.
+Let's look around the internet and see if we find anything useful.
+I'll go East, you go West, and we'll meet back here in 20.&lt;/p&gt;
+&lt;p&gt;Great, what did you find?
+Me?
+Oh I found a bunch of Github issues &lt;a class="citation-reference" href="#hpa-gh" id="id6"&gt;[hpa-gh]&lt;/a&gt; and Stack Overflow posts &lt;a class="citation-reference" href="#hpa-so" id="id7"&gt;[hpa-so]&lt;/a&gt;; lot of people mentioned this Heapster thing.
+The &lt;a class="reference external" href="https://github.com/kubernetes/heapster"&gt;Heapster GitHub page&lt;/a&gt; says it does &lt;em&gt;Compute Resource Usage Analysis and Monitoring of Container Clusters&lt;/em&gt;, which sounds like what we want.
+I also found the &lt;a class="reference external" href="http://kubernetes.io/docs/user-guide/horizontal-pod-autoscaling/"&gt;K8s Autoscaling&lt;/a&gt; docs that point to a &lt;a class="reference external" href="http://kubernetes.io/docs/user-guide/horizontal-pod-autoscaling/"&gt;K8s Autoscaling Tutorial&lt;/a&gt;.
+That sounds super useful and confirms the suspicion that Heapster is useful.
+&lt;strong&gt;TLDR&lt;/strong&gt; things are pointing toward setting up Heapster.&lt;/p&gt;
+&lt;p&gt;As it turns out there is a &lt;a class="reference external" href="https://github.com/kubernetes/minikube/blob/master/README.md#add-ons"&gt;Heapster addon for Minikube&lt;/a&gt; &lt;a class="citation-reference" href="#heapster-release" id="id8"&gt;[heapster-release]&lt;/a&gt;, so let's get that setup.&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ minikube addons enable heapster
+heapster was successfully enabled
+$ minikube addons open heapster
+Opening kubernetes service kube-system/monitoring-grafana in default browser...
+&lt;/pre&gt;
+&lt;img alt="Heapster working" class="align-center" src="/assets/images/buildbot-on-k8s/hello-heapster.png" style="width: 100%;" /&gt;
+&lt;p&gt;Neato!&lt;/p&gt;
+&lt;p&gt;So now we've got Heapster running, what's next?&lt;/p&gt;
+&lt;p&gt;Well the tutorial runs this line:&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl run php-apache --image=gcr.io/google_containers/hpa-example --requests=cpu=200m --expose --port=80
+&lt;/pre&gt;
+&lt;p&gt;Which we can appropriate to get some YAML to shove in our &lt;tt class="docutils literal"&gt;worker.yaml&lt;/tt&gt; to get a good template for our Buildbot worker Deployment.&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl run test --image=busybox --requests=cpu=200m -o yaml
+apiVersion: extensions/v1beta1
+...
+spec:
+  ...
+  template:
+    ...
+    spec:
+      containers:
+      - args:
+        ...
+        resources:
+          requests:
+            cpu: 200m
+...
+&lt;/pre&gt;
+&lt;p&gt;So I added that section to &lt;tt class="docutils literal"&gt;worker.yaml&lt;/tt&gt;...&lt;/p&gt;
+&lt;pre class="code diff literal-block"&gt;
+&lt;span class="gh"&gt;diff --git a/blogpost/robust-worker.yaml b/blogpost/robust-worker.yaml
+index e57db12..de52320 100644
+&lt;/span&gt;&lt;span class="gd"&gt;--- a/blogpost/robust-worker.yaml
+&lt;/span&gt;&lt;span class="gi"&gt;+++ b/blogpost/robust-worker.yaml
+&lt;/span&gt;&lt;span class="gu"&gt;&amp;#64;&amp;#64; -42,15 +42,18 &amp;#64;&amp;#64; spec:
+&lt;/span&gt;         tier: worker
+     spec:
+       containers:
+&lt;span class="gd"&gt;-      - image: &amp;quot;buildbot/buildbot-worker:master&amp;quot;
+&lt;/span&gt;&lt;span class="gi"&gt;+      - image: &amp;quot;quay.io/elijahcaine/buildbot-rust-worker:master&amp;quot;
+&lt;/span&gt;         name: worker
+&lt;span class="gi"&gt;+        resources:
++          requests:
++            cpu: 200m
+&lt;/span&gt;         env:
+         - name: BUILDMASTER
+           value: master
+         - name: BUILDMASTER_PORT
+           value: '9989'
+         - name: WORKERNAME
+&lt;span class="gd"&gt;-          value: example-worker
+&lt;/span&gt;&lt;span class="gi"&gt;+          value: rust-worker
+&lt;/span&gt;         - name: WORKERPASS
+           value: pass
+         - name: WORKER_ENVIRONMENT_BLACKLIST
+&lt;/pre&gt;
+&lt;p&gt;... and ran &lt;tt class="docutils literal"&gt;kubectl replace &lt;span class="pre"&gt;-f&lt;/span&gt; worker.yaml&lt;/tt&gt;, but did it work?
+Well, if you're impatient like me you'll keep refreshing, it won't look like it's working, and then you'll pull your hair out.
+If that happens to you, just wait.
+Wait like... a minute.
+Just get some tea, stare out the window for a second, &lt;em&gt;then&lt;/em&gt; see if it worked or not.&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ kubectl get hpa worker
+NAME              REFERENCE                    TARGET    CURRENT   MINPODS   MAXPODS   AGE
+worker            Deployment/worker            50%       0%        1         5         2m
+&lt;/pre&gt;
+&lt;p&gt;There. That looks good. Let's throw some work at it!&lt;/p&gt;
+&lt;p&gt;A few builds:&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+NAME              REFERENCE                    TARGET    CURRENT   MINPODS   MAXPODS   AGE
+worker            Deployment/worker            50%       536%      1         5         6m
+&lt;/pre&gt;
+&lt;p&gt;Great! Let's check up on Buildbot:&lt;/p&gt;
+&lt;img alt="Replication failing." class="align-center" src="/assets/images/buildbot-on-k8s/replicas-didnt-work.png" style="width: 100%;" /&gt;
+&lt;p&gt;Ruh-roh that's not good...&lt;/p&gt;
+&lt;p&gt;Let's dig in a bit.&lt;/p&gt;
+&lt;img alt="Replication failing -- zoom, enhance." class="align-center" src="/assets/images/buildbot-on-k8s/failed-build.png" style="width: 100%;" /&gt;
+&lt;p&gt;That's not good...&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+[... end of git pull ...]
+75  security_updates_as_of=2016-10-07
+76  using PTY: False
+77  Cloning into '.'...
+78
+79  command interrupted, attempting to kill
+80  process killed by signal 15
+81  program finished with exit code -1
+82  elapsedTime=2.051445
+&lt;/pre&gt;
+&lt;pre class="code literal-block"&gt;
+[... entirety of 'cancelled' logs ...]
+0  no reason
+&lt;/pre&gt;
+&lt;p&gt;Well, it looks like that plan didn't work.&lt;/p&gt;
+&lt;p&gt;I did a bit more digging and I can say with certainty that the approach I took to scaling the workload did &lt;em&gt;not&lt;/em&gt; work.
+I can't say &lt;em&gt;why&lt;/em&gt; for sure, and I definitely can't say how to fix it, but honestly... it's late.
+I'm tired and right now I'm okay with throwing in the towel for now.
+Maybe we'll solve this in a &lt;strong&gt;Part 2&lt;/strong&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="debrief"&gt;
+&lt;h2&gt;Debrief&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;First: This blogpost has a repo associated with it: &lt;a class="reference external" href="https://github.com/elijahcaine/buildbot-on-kubernetes"&gt;https://github.com/elijahcaine/buildbot-on-kubernetes&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Please check that out, see what it has to offer, and make issues/pull requests.
+Right now it's just a copy of the configs used in this project and a little bit of documentation.&lt;/p&gt;
+&lt;p&gt;Happy hacking!&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;I'm terrible at endings so I'm just gonna braindump some stuff here and let you, the beautiful and charming reader, find your own closure from all of this.&lt;/p&gt;
+&lt;div class="section" id="failure-its-what-s-on-the-menu"&gt;
+&lt;h3&gt;Failure: its what's on the menu&lt;/h3&gt;
+&lt;p&gt;That's right, I didn't do what I set out to achieve.
+Is that a bad thing?
+&lt;strong&gt;Of course not!&lt;/strong&gt;
+To quote the great Jake the Dog:&lt;/p&gt;
+&lt;a class="reference external image-reference" href="https://www.reddit.com/r/QuotesPorn/comments/18a7m2/sucking_at_something_is_the_first_step_jake_the/"&gt;&lt;img alt="Sucking at something is just the first step to being kinda good at something..." class="align-center" src="/assets/images/buildbot-on-k8s/sucking-quote.jpg" /&gt;&lt;/a&gt;
+&lt;p&gt;Sure we didn't get the &lt;em&gt;perfect&lt;/em&gt; BuildBot+K8s but we learned a ton and got &lt;em&gt;really&lt;/em&gt; close!&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="some-stuff-we-learned"&gt;
+&lt;h3&gt;Some stuff we learned&lt;/h3&gt;
+&lt;p&gt;So what are some things we learned that we should probably write down?
+This is a pretty open question and if you followed along you'll &lt;em&gt;probably&lt;/em&gt; get a drastically different list than I have.
+Here's the big things I feel like I'm walking away with:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;cite&gt;kubectl &amp;lt;command&amp;gt; --dry-run -o yaml&lt;/cite&gt; is very useful for file-izing your infrastructure.&lt;/li&gt;
+&lt;li&gt;K8s is very well documented &lt;strong&gt;if&lt;/strong&gt; you are a very patient individual.&lt;/li&gt;
+&lt;li&gt;Storage in K8s is still not a perfectly solved problem &lt;a class="citation-reference" href="#storage" id="id9"&gt;[storage]&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;K8s applications share private networking.&lt;/li&gt;
+&lt;li&gt;K8s Pods are really just containers.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I'm sure there's a ton more I've internalized and can't recall.
+I tried to take thorough notes during this entire experience to capture the failures as well as the successes, which is a harder skill than I expected.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="useful-resources"&gt;
+&lt;h3&gt;Useful resources&lt;/h3&gt;
+&lt;p&gt;Beyond searching for specific answers these are &lt;em&gt;honestly&lt;/em&gt; the websites I kept going back to throughout this project.&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;a class="reference external" href="http://kubernetes.io/docs/"&gt;http://kubernetes.io/docs/&lt;/a&gt;
+The main K8s docs.
+A bit dense and sparse in key areas, a problem I'm actively I'm working on.
+Includes API docs and user-guides which are useful for those patient enough to read them.&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="http://k8s.info/"&gt;http://k8s.info/&lt;/a&gt;
+A community-run resource with some useful links and a 'cheat sheet'.&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://github.com/kubernetes/community"&gt;https://github.com/kubernetes/community&lt;/a&gt;
+Includes a bunch of very useful design documentation.
+I'm not usually the kind of person that enjoys reading design docs, but sometimes a feature is too new to have a usable user-guide.
+When it's the best you've got, take it.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;As far as Buildbot-specific stuff I honestly just used the &lt;a class="reference external" href="https://docs.buildbot.net/current/"&gt;official Buildbot docs&lt;/a&gt; which were more than enough.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="whats-next"&gt;
+&lt;h3&gt;Whats next?&lt;/h3&gt;
+&lt;p&gt;I'm sure I'll be posting more about K8s going forward.
+It is a very useful tool because of/despite it's complexities.
+As I use it I'll post more about it.&lt;/p&gt;
+&lt;p&gt;If you have any feedback on this post feel free to get in contact with me &lt;a class="reference external" href="https://twitter.com/pastywhitenoise"&gt;&amp;#64;PastyWhiteNoise&lt;/a&gt; on Twitter, &lt;tt class="docutils literal"&gt;pop&lt;/tt&gt; on &lt;a class="reference external" href="https://webchat.freenode.net/"&gt;irc.freenode.net&lt;/a&gt; &lt;a class="citation-reference" href="#irc" id="id10"&gt;[irc]&lt;/a&gt;, you can make an issue on &lt;a class="reference external" href="https://github.com/elijahcaine/elijahcaine.github.io"&gt;this website's Github Repository&lt;/a&gt;, and of course I can be reached by Carrier Pigeon..&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="errata"&gt;
+&lt;h2&gt;Errata&lt;/h2&gt;
+&lt;table class="docutils citation" frame="void" id="docs-should" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;&lt;a class="fn-backref" href="#id1"&gt;[docs-should]&lt;/a&gt;&lt;/td&gt;&lt;td&gt;&lt;p class="first"&gt;My job, at least a big part of it, is writing documentation.
+Docs are a notable part of my identify, and I have a belief in the power of good documentation, but at the end of the day they &lt;strong&gt;are&lt;/strong&gt; just a means to an end.&lt;/p&gt;
+&lt;p&gt;In a perfect world docs wouldn't &lt;em&gt;need&lt;/em&gt; to exist, so all docs should be enough to get whoever's readin them to the point where they can do cool shit on their own.
+Just like a great cinematographer is so good you don't notice the camera in a movie, great docs should be so good you don't &lt;strong&gt;notice&lt;/strong&gt; how good they are.&lt;/p&gt;
+&lt;p&gt;So that's why I like &lt;strong&gt;doing&lt;/strong&gt; cool shit over &lt;strong&gt;reading&lt;/strong&gt; about it.&lt;/p&gt;
+&lt;p class="last"&gt;It's also fun to play with toys! Even if those toys are software.&lt;/p&gt;
+&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils citation" frame="void" id="theory-vs-practice" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;&lt;a class="fn-backref" href="#id2"&gt;[theory-vs-practice]&lt;/a&gt;&lt;/td&gt;&lt;td&gt;If you read that and thought &amp;quot;You know what they say about theory versus practice!&amp;quot; then &lt;em&gt;yes&lt;/em&gt; -- but you're getting ahead of me.&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils citation" frame="void" id="same-app-note" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;&lt;a class="fn-backref" href="#id4"&gt;[same-app-note]&lt;/a&gt;&lt;/td&gt;&lt;td&gt;&lt;p class="first"&gt;It wasn't painfully obvious to me so it's worth elaborating that for K8s services to communicate with one-another they need to be part of the same &lt;tt class="docutils literal"&gt;app&lt;/tt&gt;.
+In the example the &lt;tt class="docutils literal"&gt;postgres&lt;/tt&gt;, &lt;tt class="docutils literal"&gt;worker&lt;/tt&gt;, and &lt;tt class="docutils literal"&gt;master&lt;/tt&gt; containers are all part of the same &lt;tt class="docutils literal"&gt;buildbot&lt;/tt&gt; app.&lt;/p&gt;
+&lt;p class="last"&gt;It's not a terribly well documented &lt;strong&gt;key&lt;/strong&gt; piece of information so it seemed worth mentioning.&lt;/p&gt;
+&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils citation" frame="void" id="hpa-gh" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;&lt;a class="fn-backref" href="#id6"&gt;[hpa-gh]&lt;/a&gt;&lt;/td&gt;&lt;td&gt;&lt;ul class="first last simple"&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://github.com/openshift/origin/issues/6239"&gt;https://github.com/openshift/origin/issues/6239&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://github.com/kubernetes/kubernetes/issues/18652"&gt;https://github.com/kubernetes/kubernetes/issues/18652&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils citation" frame="void" id="hpa-so" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;&lt;a class="fn-backref" href="#id7"&gt;[hpa-so]&lt;/a&gt;&lt;/td&gt;&lt;td&gt;&lt;ul class="first last simple"&gt;
+&lt;li&gt;&lt;a class="reference external" href="http://stackoverflow.com/questions/38874145/autoscaling-hpa-failed-to-get-cpu-consumption-cannot-unmarshal-object-into-go"&gt;http://stackoverflow.com/questions/38874145/autoscaling-hpa-failed-to-get-cpu-consumption-cannot-unmarshal-object-into-go&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="http://stackoverflow.com/questions/37631008/kubernetes-hpa-cannot-get-cpu-consumption"&gt;http://stackoverflow.com/questions/37631008/kubernetes-hpa-cannot-get-cpu-consumption&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils citation" frame="void" id="heapster-release" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;&lt;a class="fn-backref" href="#id8"&gt;[heapster-release]&lt;/a&gt;&lt;/td&gt;&lt;td&gt;&lt;div class="first last line-block"&gt;
+&lt;div class="line"&gt;Authors Note:&lt;/div&gt;
+&lt;div class="line"&gt;The heapster addon was added to Minikube &lt;strong&gt;during the writing of this post&lt;/strong&gt;.
+How convenient!&lt;/div&gt;
+&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils citation" frame="void" id="accompanying-repo" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;&lt;a class="fn-backref" href="#id5"&gt;[accompanying-repo]&lt;/a&gt;&lt;/td&gt;&lt;td&gt;&lt;a class="reference external" href="https://github.com/ElijahCaine/buildbot-on-kubernetes"&gt;https://github.com/ElijahCaine/buildbot-on-kubernetes&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils citation" frame="void" id="irc" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;&lt;a class="fn-backref" href="#id10"&gt;[irc]&lt;/a&gt;&lt;/td&gt;&lt;td&gt;I usually hang out in the &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;#osu-lug&lt;/span&gt;&lt;/tt&gt; channel.
+They're cool people, you should hang out with us!&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils citation" frame="void" id="id11" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;&lt;a class="fn-backref" href="#id3"&gt;[why]&lt;/a&gt;&lt;/td&gt;&lt;td&gt;&lt;p class="first"&gt;Might as well clarify &lt;em&gt;why&lt;/em&gt; we want persistent storage and auto-scaling since these are usually desired features in an orchestrator but nobody explains &lt;em&gt;why&lt;/em&gt; they're desireable.&lt;/p&gt;
+&lt;dl class="last docutils"&gt;
+&lt;dt&gt;Autoscaling:&lt;/dt&gt;
+&lt;dd&gt;&lt;p class="first"&gt;Autoscaling is important is because we've got a whole data-center (in theory) and we want to maximize how we use that data-center's computational abilities.
+In a perfect world we would use exactly as much of the data-center as is demanded by users, but in practice this is super hard!&lt;/p&gt;
+&lt;p&gt;Say your website gets linked on Hacker News, you get tons of requests pouring in, but your poor little 2004 server falls on it's face when you &lt;em&gt;look&lt;/em&gt; at it wrong, and &lt;strong&gt;that&lt;/strong&gt; is where the exact page was hosted.
+If you don't &lt;strong&gt;know&lt;/strong&gt; that server fell down you'll never fix the problem or even &lt;strong&gt;know&lt;/strong&gt; about the problem.&lt;/p&gt;
+&lt;p class="last"&gt;With an orchestrator we can (in theory) specify how much we want to utilize a our data-center's resources and under what conditions we want to use more or less resources.
+If our service is creating a light load, only have one container up; if it's got a metric fuck-ton then spin up 20 containers across our entire cluster.
+You say what you want and the load-balancer + scheduler + monitor take care of the rest.&lt;/p&gt;
+&lt;/dd&gt;
+&lt;dt&gt;Persistent Storage:&lt;/dt&gt;
+&lt;dd&gt;&lt;p class="first"&gt;The reason persistent storage is a useful feature is for two reasons&lt;/p&gt;
+&lt;p&gt;The first is that containers are ephemeral.
+They can be created, destroyed, and upgraded &lt;em&gt;all&lt;/em&gt; the time, basically making them the polar opposite of a 'Special Snowflake' service.&lt;/p&gt;
+&lt;p&gt;This is nice, but what about state?
+As nice as it'd be to make an entirely stateless data-center, cat pictures and builds aren't going to store themselves!&lt;/p&gt;
+&lt;p&gt;The solution to this problem is -- well it's not solved, but there's a clear direction things are going in.
+The TLDR is that we create some block device in the cloud and mount it to each identical container at the same mount-point, so each container (K8s 'Pod') shares some amount of state.
+Sorta like... I'm bad at examples actually. I'll think of one eventually.&lt;/p&gt;
+&lt;p&gt;Piggy-backing off of this, not only do we preserve state between container upgrades/deletes/additions, but we can also share state between scaled services (i.e., a set of identical containers across a datacenter).
+Essentially we can have one worker pod carry out a build and another pod perform some action on that build (uploading it, verify it, archive it, etc).
+When the first worker pod gets deleted the build lives on in the shared state.&lt;/p&gt;
+&lt;p class="last"&gt;This allows us to treat our state the same way we treat computing resources in the world of GIFFEE &lt;a class="citation-reference" href="#gifee" id="id12"&gt;[GIFEE]&lt;/a&gt;.
+Create some block device for the service, mount it to this point, and let your orchestrator take care of the rest.&lt;/p&gt;
+&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils citation" frame="void" id="gifee" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;&lt;a class="fn-backref" href="#id12"&gt;[GIFEE]&lt;/a&gt;&lt;/td&gt;&lt;td&gt;Google Infrastructure for Everyone Else&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils citation" frame="void" id="storge" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;[storge]&lt;/td&gt;&lt;td&gt;But neither is storage in general so who can blame 'em?&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+</content><category term="tech"></category><category term="CoreOS"></category><category term="Kubernetes"></category><category term="Buildbot"></category><category term="Adventure"></category></entry><entry><title>Conceptual hurdles in programming</title><link href="elijahcaine.me/programming-hurdles" rel="alternate"></link><published>2016-08-21T00:00:00-07:00</published><updated>2016-08-21T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2016-08-21:elijahcaine.me/programming-hurdles</id><summary type="html">&lt;p class="first last"&gt;Sage advice for myself in Freshman year.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;I've been actively learning programming for almost five years now. I started
+by taking a C++ class at Portland Community College.  That class was the best
+thing to happen to my engineering career because it taught me that
+&lt;em&gt;programming is very hard, and I am not naturally good at it&lt;/em&gt;, but it was also
+very rewarding so I stuck with it.&lt;/p&gt;
+&lt;p&gt;I'm not special either, most of us aren't very good at programming because
+it's so abstract and hard to grasp, like Math and Infinite Jest. There are of
+course the people that seem like &lt;em&gt;programming gods&lt;/em&gt;, but nine times out of ten
+those people have been programming since they were eight and it's really not
+fair to compare yourself to them.  That's like comparing your sporting
+abilities to &lt;em&gt;any olympic athlete&lt;/em&gt;.  Don't be so hard on yourself.&lt;/p&gt;
+&lt;p&gt;In learning to program, and now teaching others how to program, I've
+identified a few &lt;strong&gt;hurdles&lt;/strong&gt; (mountains, cliffs, obstacles, w/e) that folks
+tend to hit and have trouble crossing.  They always get past these hurdles
+eventually (or they quit CS ☹), but not without a bit of unnecessary struggle.
+Struggling builds character, and I don't want to cheat anybody out of that,
+but I do want to help those that want it.&lt;/p&gt;
+&lt;p&gt;This post will in no way guarantee your success in overcoming these obstacles
+but it should at least give you a head start to help you understand what you're
+learning and point you in the right direction when you want to ask a question.&lt;/p&gt;
+&lt;div class="section" id="data-structures"&gt;
+&lt;h2&gt;Data Structures&lt;/h2&gt;
+&lt;p&gt;Understanding that &lt;strong&gt;a lot of programming is basically manipulating data to
+fit a need&lt;/strong&gt; is pretty important.  A social network can be thought of as a
+bunch of people's personal information plugged into a bunch of algorithms to
+make connecting easier.  A word processor is really just a front-end for some
+&lt;a class="reference external" href="https://en.wikipedia.org/wiki/Microsoft_Office_XML_formats"&gt;XML under the hood&lt;/a&gt;, which is itself &lt;a class="reference external" href="https://en.wikipedia.org/wiki/XML"&gt;just a way to represent structured
+data&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;When handling data try to keep in mind what you are trying to accomplish and
+the best way to structure the data in the pursuit of that goal.&lt;/p&gt;
+&lt;dl class="docutils"&gt;
+&lt;dt&gt;&lt;a class="reference external" href="https://en.wikipedia.org/wiki/Array_data_structure"&gt;Arrays/Lists/Vectors&lt;/a&gt;&lt;/dt&gt;
+&lt;dd&gt;&lt;strong&gt;Arrays and Lists are an ordered data type&lt;/strong&gt;.  Use them when you need to
+keep track of the order things happened in, like queuing an event.  Try to
+keep them &lt;em&gt;relatively small&lt;/em&gt; since they are fast for retrieval but not
+inherently space efficient.&lt;/dd&gt;
+&lt;dt&gt;&lt;a class="reference external" href="https://en.wikipedia.org/wiki/Hash_table"&gt;Hash-table/Key-Value/Dictionary&lt;/a&gt;&lt;/dt&gt;
+&lt;dd&gt;&lt;p class="first"&gt;&lt;strong&gt;Hashes are useful for storing unordered data&lt;/strong&gt; with keys, like an address
+book or a small database. We use them to access data quickly and easily
+since data is retrieved using a key and always takes approximately the
+same amount of time.  When you get data out of a dictionary you provide a
+key and get back the associated data, just like (you guessed it) &lt;em&gt;a real
+dictionary&lt;/em&gt; where provided the word you get back a definition.&lt;/p&gt;
+&lt;p class="last"&gt;Hash-tables are useful tools but should only be used for &lt;em&gt;relatively
+small&lt;/em&gt; amounts of data.  There is a bit of overhead in creating the table
+for storing your data so if your data-set gets too big you'll run out of
+memory.&lt;/p&gt;
+&lt;/dd&gt;
+&lt;dt&gt;&lt;a class="reference external" href="https://en.wikipedia.org/wiki/Linked_list"&gt;Linked Lists/Sorted Trees&lt;/a&gt;&lt;/dt&gt;
+&lt;dd&gt;&lt;p class="first"&gt;Linked Lists and Sorted Trees aren't exactly the same thing but I'm
+lumping them together because they both deal with a lot of the same
+concepts and can be implemented in similar ways.  In learning about LL/ST
+you'll probably deal with Structs, Nodes, Pointers, and dynamic memory
+allocation, which if you're like me will totally break your brain and then
+become second-nature.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;One advantage to these structures is that they can be implemented to
+take up only the space they require&lt;/strong&gt;.  Where Hash-maps and lists are hard
+to make the &lt;em&gt;right size&lt;/em&gt;, LL/ST can only take up exactly as much room as
+they need.  The trade-off (a word you hear a lot when dealing choosing
+data structures) is that they're not always the &lt;em&gt;fastest&lt;/em&gt; way to
+store/retrieve data.  Just consider your use-case and think about what you
+need for the task at hand.&lt;/p&gt;
+&lt;p class="last"&gt;If you're interested in learning Rust though there's a great guide on
+&lt;a class="reference external" href="http://cglab.ca/~abeinges/blah/too-many-lists/book/README.html"&gt;Learning Rust With Entirely Too Many Linked Lists&lt;/a&gt;. I do suggest it.&lt;/p&gt;
+&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;p&gt;&lt;strong&gt;These are all just the structures you're giving your data&lt;/strong&gt; (a series of
+ones and zeros on disk and in memory).  Anybody that's done work with a
+sufficiently complicated project (e.g., the Linux Kernel) can tell you that
+one glob of data can be treated as a Linked List, Array, Hash -- or all three
+at the same time!  The structure you give your data is just so &lt;em&gt;you&lt;/em&gt; can work
+with it, the computer doesn't really care one way or another, so choose what
+makes the most sense.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Speaking of data structures...&lt;/em&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="objects-classes"&gt;
+&lt;h2&gt;Objects/Classes&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;Objects are logical groupings of data (variables) and functions that act on
+that data&lt;/strong&gt;.  They differ from structs in that they are (usually) private by
+default, meaning that variables declared in an object are not accessible from
+the &lt;em&gt;outside&lt;/em&gt; unless you explicitly say so. Variables are usually manipulated
+via a method called a &lt;em&gt;getter&lt;/em&gt; and &lt;em&gt;setter&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;Well... what I've actually described so far is creating a &lt;strong&gt;class: aka a
+blueprint for an object&lt;/strong&gt;.  This python is a pretty succinct way to describe
+classes and objects:&lt;/p&gt;
+&lt;pre class="code python literal-block"&gt;
+&lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;
+objects_example.py
+
+Declare a class named BazClass.
+&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;BazClass&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;object&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="fm"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;None&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;
+        The __init__ function sets class variables and sets up the object.
+        &amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;var1&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;var2&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;6&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;a&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;
+        a() acts on the object variables (accessed via `self`).
+        &amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+        &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Variable you set {}&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;var1&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+        &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Variable set by class definition {}&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;var2&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+
+&lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;
+Creating an instance of the class and call the `a()` function.
+&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+&lt;span class="n"&gt;foo_object&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;BazClass&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;7&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;foo_object&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;Objects are something that will &lt;em&gt;click&lt;/em&gt; after you use the for a while.
+There's some nuances and implementation quirks depending on the language
+you're using, but in the end they're just logical collections of private data
+and functions.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="functional-programming"&gt;
+&lt;h2&gt;Functional Programming&lt;/h2&gt;
+&lt;p&gt;&lt;a class="reference external" href="https://en.wikipedia.org/wiki/Functional_programming"&gt;Functional Programming&lt;/a&gt; (FP) was my first big paradigm shift in CS since
+functions.  FP includes concepts of variable immutability (once it's set it's
+set), callbacks (functions calling functions and propagating results up),
+program state -- the list goes on.  Here's an example to get us started.&lt;/p&gt;
+&lt;p&gt;Non-functional paradigm:&lt;/p&gt;
+&lt;pre class="code javascript literal-block"&gt;
+&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="nx"&gt;average_evens&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;x&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;avg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="nx"&gt;x&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;length&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;x&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="nx"&gt;avg&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="nx"&gt;x&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+
+    &lt;span class="nx"&gt;avg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;avg&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nx"&gt;x&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;length&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;avg&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;Functional Paradigm:&lt;/p&gt;
+&lt;pre class="code javascript literal-block"&gt;
+&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="nx"&gt;average_evens&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;x&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;x&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;reduce&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;x&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;x&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;x&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="p"&gt;})&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt; &lt;span class="nx"&gt;x&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;length&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;In the non-functional example one would create a variable, iterate with a
+for-loop, and return a variable at the end.  In the functional example you
+call functions which return data that you handle (callback) and that result is
+added to or replaces the original data.  I'm honestly not doing this topic
+justice but it's one of those things you either learn first or you learn the
+hard way.&lt;/p&gt;
+&lt;p&gt;This is just the tip of the ice-berg; many people prefer functional
+programming. If you are even remotely interested you should find one of
+those people and let them talk your ear off.&lt;/p&gt;
+&lt;p&gt;If you're learning functional programming I suggest either &lt;a class="reference external" href="http://learnyouahaskell.com/chapters"&gt;Learn You a
+Haskell for Great Good&lt;/a&gt; if you're interested in learning Haskell (which is
+interesting an interesting language if nothing else) or &lt;a class="reference external" href="http://www.oreilly.com/programming/free/functional-programming-python.csp"&gt;Functional
+Programming in Python&lt;/a&gt; for &lt;em&gt;pythonistas&lt;/em&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="frameworks"&gt;
+&lt;h2&gt;Frameworks&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;Frameworks are a collection of libraries, methods, and tools to accomplish a
+specific type of task&lt;/strong&gt;.  If you want to get something &lt;em&gt;complicated&lt;/em&gt; done
+&lt;em&gt;fast&lt;/em&gt;, you'll use a framework.  Take for instance a web-app like Facebook or
+Twitter: it needs to be able to &lt;em&gt;send/receive HTTP requests&lt;/em&gt;, &lt;em&gt;interface with
+a database&lt;/em&gt; / &lt;em&gt;craft database queries&lt;/em&gt;, &lt;em&gt;render web-pages&lt;/em&gt;, &lt;em&gt;and&lt;/em&gt; whatever the
+actual website is supposed to do.&lt;/p&gt;
+&lt;p&gt;Frameworks can be very small or very large but they are always a big hurdle
+for those of us that have never worked with one before.  A good starter
+framework I suggest is &lt;a class="reference external" href="http://flask.pocoo.org/"&gt;Flask&lt;/a&gt; for Python-based web-apps.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="testing"&gt;
+&lt;h2&gt;Testing&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;Testing is writing a program to test your program&lt;/strong&gt;.  There are many different
+&lt;em&gt;kinds&lt;/em&gt; of tests from &lt;em&gt;unit tests&lt;/em&gt; (checking single functions), to
+&lt;em&gt;integration tests&lt;/em&gt; (checking that your functions work &lt;em&gt;together&lt;/em&gt;), to &lt;em&gt;random
+tests&lt;/em&gt; (trying to break your program by telling a computer to break your
+functions by using they in weird ways).&lt;/p&gt;
+&lt;p&gt;Remember that first program you wrote for class?  You wrote one that prompted
+the user for data and then manipulated that input in some way?  Remember how
+you tested that?  Probably in the most tedious way imaginable: &lt;strong&gt;by hand&lt;/strong&gt;.
+Tests are much easier to write than your actual code and while they're a
+tedious investment up-front it's a small commitment relative to the &lt;em&gt;hours&lt;/em&gt;
+you'd spend checking your program every time you made a change.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="troubleshooting"&gt;
+&lt;h2&gt;Troubleshooting&lt;/h2&gt;
+&lt;p&gt;The last thing isn't really about programming but about &lt;em&gt;fixing&lt;/em&gt; your
+programming.  When you're learning a new paradigm, language, or framework
+you're going to spend a lot of time &lt;em&gt;fixing&lt;/em&gt; what doesn't currently work much
+more than you're going to actually be producing working code.  This skill can
+also be summed up as 'How to Read Error Messages and Google well'.&lt;/p&gt;
+&lt;p&gt;My troubleshooting advice is to &lt;em&gt;read&lt;/em&gt; the error message, don't give up,
+and search for anything that looks meaningful.  Once you find an answer try to
+&lt;em&gt;grok&lt;/em&gt; what the answer means so you can learn &lt;em&gt;why&lt;/em&gt; that worked instead of
+knowing &lt;em&gt;if I type this in a certain way it will not fall down&lt;/em&gt;.  Future you
+will appreciate the investment you put into &lt;em&gt;understanding&lt;/em&gt; the problem and
+it's solution.&lt;/p&gt;
+&lt;p&gt;Also don't be afraid to experiment. Make a copy of your program (or use
+&lt;a class="reference external" href="https://git-scm.com/"&gt;git&lt;/a&gt;) and see if some crazy idea is exactly what you need.&lt;/p&gt;
+&lt;hr class="docutils" /&gt;
+&lt;p&gt;This list is far from complete but it still felt worth sharing.  If you think
+I missed something, &lt;a class="reference external" href="/about/#contact"&gt;contact me&lt;/a&gt; and I might do a follow-up post.&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="tech"></category><category term="Programming"></category><category term="Reference"></category></entry><entry><title>Git Does a Lot of Things</title><link href="elijahcaine.me/git-does-a-lot-of-things" rel="alternate"></link><published>2016-07-27T00:00:00-07:00</published><updated>2016-07-27T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2016-07-27:elijahcaine.me/git-does-a-lot-of-things</id><summary type="html">&lt;p class="first last"&gt;The title is really an understatement...&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;I should make a tool that extends &lt;tt class="docutils literal"&gt;git&lt;/tt&gt; to delete all of the files matched
+by the &lt;tt class="docutils literal"&gt;.gitginore&lt;/tt&gt;.  I spend way too much time crafting &lt;tt class="docutils literal"&gt;find &lt;span class="pre"&gt;&amp;lt;...&amp;gt;&lt;/span&gt; |
+xargs rm&lt;/tt&gt; commands.  I know, I'll call it &lt;tt class="docutils literal"&gt;git clean&lt;/tt&gt;.&lt;/p&gt;
+&lt;p&gt;Well... before I get too far I'll just make sure it doesn't already exist.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ man git clean
+
+GIT-CLEAN(1)                  Git Manual                       GIT-CLEAN(1)
+
+NAME
+       git-clean - Remove untracked files from the working tree
+
+SYNOPSIS
+    git clean [-d] [-f] [-i] [-n] [-q] [-e &amp;lt;pattern&amp;gt;] [-x | -X] [--]
+    &amp;lt;path&amp;gt;...
+
+DESCRIPTION
+    Cleans the working tree by recursively removing files that are not
+    under version control, starting from the current directory.
+
+    ...
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Huh... well I... that's pretty much exactly how I would have done it...&lt;/p&gt;
+&lt;p&gt;&lt;tt class="docutils literal"&gt;git&lt;/tt&gt; &lt;em&gt;tab tab&lt;/em&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;add                  filter-branch        relink
+am                   format-patch         remote
+annotate             fsck                 repack
+apply                gc                   replace
+archive              get-tar-commit-id    request-pull
+bisect               grep                 reset
+blame                help                 revert
+branch               imap-send            review
+bundle               init                 rm
+checkout             instaweb             send-email
+cherry               interpret-trailers   shortlog
+cherry-pick          log                  show
+clean                merge                show-branch
+clone                mergetool            stage
+column               mv                   stash
+commit               name-rev             status
+config               notes                submodule
+credential           p4                   svn
+describe             pull                 tag
+diff                 push                 verify-commit
+difftool             rebase               whatchanged
+fetch                reflog               worktree
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Ah, okay. I get it now. Git &lt;em&gt;does&lt;/em&gt; do a lot of things.&lt;/p&gt;
+&lt;div class="admonition note"&gt;
+&lt;p class="first admonition-title"&gt;Note&lt;/p&gt;
+&lt;p class="last"&gt;The above output is from &lt;cite&gt;git 2.8.2&lt;/cite&gt;.&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="tech"></category><category term="Git"></category><category term="Fun Facts"></category></entry><entry><title>How to Get the Most out of Your Python Exceptions</title><link href="elijahcaine.me/python-exceptions" rel="alternate"></link><published>2016-04-03T00:00:00-07:00</published><updated>2016-04-03T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2016-04-03:elijahcaine.me/python-exceptions</id><summary type="html">&lt;p class="first last"&gt;One of the most useful features of Python are exceptions-- but how the heck do they work? Let's find out.&lt;/p&gt;
+</summary><content type="html">&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;var&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;input&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Please enter a number not equal to 0: &amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;try&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;var&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nb"&gt;float&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;var&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;except&lt;/span&gt; &lt;span class="ne"&gt;ZeroDivisionError&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Error: &amp;#39;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nb"&gt;str&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;You had one job!&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="admonition warning"&gt;
+&lt;p class="first admonition-title"&gt;Warning&lt;/p&gt;
+&lt;p class="last"&gt;This post does not cover &lt;em&gt;what&lt;/em&gt; python exceptions are. If the above
+code doesn't make sense you should check out this &lt;a class="reference external" href="https://wiki.python.org/moin/HandlingExceptions"&gt;Introduction to Python
+Exceptions&lt;/a&gt; from wiki.python.org before reading this post.&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;If you've fallen in love with Python you've no doubt discovered exceptions:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;try&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="c1"&gt;# do a thing&lt;/span&gt;
+&lt;span class="k"&gt;except&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="c1"&gt;# thing did not work,&lt;/span&gt;
+    &lt;span class="c1"&gt;# do something else&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;They are endlessly useful and help one to avoid writing checks upon checks upon
+checks before getting to the meat of your project. Just try a thing, catch the
+error, keep on rolling (or fail gracefully).&lt;/p&gt;
+&lt;p&gt;As powerful as they can be, I have found a lot of folks (past me included) who
+don't know how to find python exceptions and don't know how to write their own
+exceptions! So let's do that.&lt;/p&gt;
+&lt;div class="section" id="finding-exceptions"&gt;
+&lt;h2&gt;Finding Exceptions&lt;/h2&gt;
+&lt;p&gt;When writing exception handling code it's kosher to explicitly state &lt;em&gt;which&lt;/em&gt;
+error you expect.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Bad:&lt;/span&gt;
+&lt;span class="k"&gt;try&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="c1"&gt;# A thing that might not work&lt;/span&gt;
+&lt;span class="k"&gt;except&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="c1"&gt;# Something else&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Good:&lt;/span&gt;
+&lt;span class="k"&gt;try&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="c1"&gt;# A thing that might not work&lt;/span&gt;
+&lt;span class="k"&gt;except&lt;/span&gt; &lt;span class="n"&gt;SpecificError&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;err&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="c1"&gt;# Maybe print(err)&lt;/span&gt;
+    &lt;span class="c1"&gt;# Something else&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;When I first found this out I thought &lt;em&gt;Golly that does sound useful; I always
+try to be explicit in my error handling -- but how??&lt;/em&gt; Thankfully future me is
+here to answer questions like this.&lt;/p&gt;
+&lt;p&gt;The exception you are looking for (for instance, &lt;tt class="docutils literal"&gt;SpecificError&lt;/tt&gt; in the above
+pseudo-code) can be found in the python traceback:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ echo &amp;quot;open(&amp;#39;myfakefile.txt&amp;#39;, &amp;#39;r&amp;#39;).close()&amp;quot; &amp;gt; my-unhandled-script.py
+$ python my-unhandled-script.py
+Traceback (most recent call last):
+  File &amp;quot;/tmp/test.py&amp;quot;, line 1, in &amp;lt;module&amp;gt;
+    open(&amp;#39;myfakefile.txt&amp;#39;, &amp;#39;r&amp;#39;).close()
+IOError: [Errno 2] No such file or directory: &amp;#39;myfakefile.txt&amp;#39;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That bit on the last line &lt;tt class="docutils literal"&gt;IOError&lt;/tt&gt; is the exception you're looking for. So
+when you write your code you'll say something like the following:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;try&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;myfakefile.txt&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;r&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;close&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="k"&gt;except&lt;/span&gt; &lt;span class="ne"&gt;IOError&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;File `myfakefile.txt` does not exist&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;To recap, here is one way (and my preferred method for) 'doing' python
+exception handling:&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;Write breakable code.&lt;/li&gt;
+&lt;li&gt;Run breakable code, see what exceptions python spits out.&lt;/li&gt;
+&lt;li&gt;Wrap breakable code in explicit &lt;tt class="docutils literal"&gt;try/except&lt;/tt&gt; blocks.&lt;/li&gt;
+&lt;li&gt;???&lt;/li&gt;
+&lt;li&gt;Profit.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;div class="section" id="writing-your-own-exceptions"&gt;
+&lt;h2&gt;Writing Your Own Exceptions&lt;/h2&gt;
+&lt;p&gt;You (who me?), yes &lt;em&gt;you&lt;/em&gt; can write custom python exceptions. It's dead easy
+too.&lt;/p&gt;
+&lt;p&gt;The long and short of it is you define an exception class which either inherits
+from the &lt;tt class="docutils literal"&gt;Exception&lt;/tt&gt; class or another pre-existing exception.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;CusssstomError&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="ne"&gt;Exception&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="sd"&gt;&amp;#39;&amp;#39;&amp;#39;Raise when snakes&amp;#39;&amp;#39;&amp;#39;&lt;/span&gt;
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="fm"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;message&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;message&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;message&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;check_for_snakes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;snake&amp;#39;&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;foo&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;lower&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+        &lt;span class="k"&gt;raise&lt;/span&gt; &lt;span class="n"&gt;CusssstomError&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Snakes! I hate snakes!&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="k"&gt;try&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;foo&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;input&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Just don&amp;#39;t mention snakes: &amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;check_for_snakes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;except&lt;/span&gt; &lt;span class="n"&gt;CusssstomError&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;message&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Thanks. I appreciate it.&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The above code defines the &lt;tt class="docutils literal"&gt;CusssstomError&lt;/tt&gt; exception class which you can
+&lt;tt class="docutils literal"&gt;raise&lt;/tt&gt;. Very neat and &lt;a class="reference external" href="https://docs.python.org/2/glossary.html#term-pythonic"&gt;pythonic&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="further-reading"&gt;
+&lt;h2&gt;Further Reading&lt;/h2&gt;
+&lt;p&gt;Here are a few references I suggest you check out to get an even better grasp
+on exception handling and custom exceptions:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;This Stack Overflow post: &lt;a class="reference external" href="http://stackoverflow.com/questions/1319615/proper-way-to-declare-custom-exceptions-in-modern-python"&gt;Proper way to declare custom exceptions in modern
+Python?&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;This Python doc: &lt;a class="reference external" href="https://docs.python.org/2/library/exceptions.html"&gt;Built-in Exceptions&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;And as always, search engines are your friends.&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="tech"></category><category term="Technical"></category><category term="Pythonic"></category><category term="Guide"></category></entry><entry><title>How to develop a site for the web</title><link href="elijahcaine.me/how-to-develop-a-site-for-the-web" rel="alternate"></link><published>2016-03-25T00:00:00-07:00</published><updated>2016-03-25T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2016-03-25:elijahcaine.me/how-to-develop-a-site-for-the-web</id><summary type="html">&lt;p class="first last"&gt;Testing your website with a web-server is important! Here's how to start testing &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;http://localhost:8000&lt;/span&gt;&lt;/tt&gt; and stop testing &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;file:///home/me/projects/website/site.html&lt;/span&gt;&lt;/tt&gt;.&lt;/p&gt;
+</summary><content type="html">&lt;div class="admonition note"&gt;
+&lt;p class="first admonition-title"&gt;Note&lt;/p&gt;
+&lt;p&gt;This post does not deal with the basics of HTML, CSS, or Javascript, but
+rather a simple and often overlooked part of the web-dev toolchain.&lt;/p&gt;
+&lt;p class="last"&gt;If you would like help with the basics of HTML, CSS, and Javascript I suggest
+&lt;a class="reference external" href="https://codecademy.com/learn/make-a-website"&gt;Codecademy&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;Web Development, especially the front-endy stuff, is a great way to understand
+how computers &lt;em&gt;think&lt;/em&gt; and can be a wonderful foray into computer programming.
+Anybody that's made a website probably remembers their first time:&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;Open up a text editor.&lt;/li&gt;
+&lt;li&gt;Type something like the following in:&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;h1&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;Hello world!&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;h1&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;p&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;This is so cool!&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;h1&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ol class="arabic simple" start="3"&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;Save As index.html&lt;/tt&gt;.&lt;/li&gt;
+&lt;li&gt;Right click and open the file in your browser.&lt;/li&gt;
+&lt;li&gt;Marvel at what you've created and hack away at it all night long.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;And there you go! You've got a website made and ready to roll. It's not on a
+server, and you can't tell your friends to go to it from &lt;em&gt;their&lt;/em&gt; computer --
+but those are just technicalities. You can still celebrate doing a thing &lt;em&gt;like a
+boss&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;Unfortunately, when you test your website by viewing local files you're missing
+out on a lot of advantages and quirks that you get when you host a website on a
+&lt;em&gt;real server&lt;/em&gt; using something like &lt;a class="reference external" href="https://en.wikipedia.org/wiki/Web_server"&gt;Apache or Nginx&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;For instance, when you run check your website by clicking through
+&lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;file///home/username/project/files.html&lt;/span&gt;&lt;/tt&gt; all of your hyperlinks that should
+point to &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;http://mywebsite.ext/somepage/&lt;/span&gt;&lt;/tt&gt; will take you to &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;file:////somepage&lt;/span&gt;&lt;/tt&gt;
+when they should take you to
+&lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;file:///home/username/projects/myawesomesite/somepage/index.html&lt;/span&gt;&lt;/tt&gt;.&lt;/p&gt;
+&lt;div class="section" id="run-a-development-server-it-s-easy"&gt;
+&lt;h2&gt;Run A Development Server (it's easy!)&lt;/h2&gt;
+&lt;div class="section" id="the-short-answer"&gt;
+&lt;h3&gt;The Short Answer&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;Use Python!&lt;/strong&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ python2 -m SimpleHTTPServer
+Serving HTTP on 0.0.0.0 port 8000 ...
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="the-longer-answer"&gt;
+&lt;h3&gt;The Longer Answer&lt;/h3&gt;
+&lt;p&gt;You can run your own local webserver to serve files &lt;em&gt;locally&lt;/em&gt;. This gets you
+all of the developmental advantages of running a webserver without having to
+rent or run a server in the cloud. The best part is that it's very easy to run
+a development web server.&lt;/p&gt;
+&lt;p&gt;Here's how:&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://python.org/downloads/"&gt;Install Python&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Navigate to &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;your-awesome-website&lt;/span&gt;&lt;/tt&gt; directory/folder.&lt;/li&gt;
+&lt;li&gt;Run &lt;tt class="docutils literal"&gt;python &lt;span class="pre"&gt;-m&lt;/span&gt; SimpleHTTPServer&lt;/tt&gt; if you installed &lt;tt class="docutils literal"&gt;python2&lt;/tt&gt; or run
+&lt;tt class="docutils literal"&gt;python &lt;span class="pre"&gt;-m&lt;/span&gt; http.server&lt;/tt&gt; if you installed &lt;tt class="docutils literal"&gt;python3&lt;/tt&gt;.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="admonition note"&gt;
+&lt;p class="first admonition-title"&gt;Note&lt;/p&gt;
+&lt;p class="last"&gt;These instructions assume you are doing things in a Unix environment (OSX
+or Linux) thought the commandline. If you are using Windows you should
+check out this &lt;a class="reference external" href="http://stackoverflow.com/questions/17351016/set-up-python-simplehttpserver-on-windows"&gt;stack overflow post&lt;/a&gt; for Windows-specific help.&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;Then in your web browser go to the address &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;http://localhost:8000&lt;/span&gt;&lt;/tt&gt; and bam!
+&lt;strong&gt;Your&lt;/strong&gt; Website.&lt;/p&gt;
+&lt;img alt="'High Five' gif" class="align-center" src="/assets/images/gifs/high-five.gif" style="width: 100%;" /&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+</content><category term="tech"></category><category term="Development"></category><category term="Guide"></category><category term="Pro-Tip"></category><category term="Technical"></category></entry><entry><title>Running Firefox in Docker</title><link href="elijahcaine.me/running-firefox-in-docker" rel="alternate"></link><published>2016-03-05T00:00:00-08:00</published><updated>2016-03-05T00:00:00-08:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2016-03-05:elijahcaine.me/running-firefox-in-docker</id><summary type="html">&lt;p class="first last"&gt;You got Firefox in my Docker! You got Docker in my Firefox!&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;Turns out you can run Firefox in Docker. It's actually pretty easy:&lt;/p&gt;
+&lt;div class="section" id="code"&gt;
+&lt;h2&gt;Code&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;From&lt;/strong&gt; &lt;a class="reference external" href="https://gist.github.com/ElijahCaine/29e7e829341d58abe370"&gt;my github gist&lt;/a&gt;.&lt;/p&gt;
+&lt;script src="https://gist.github.com/ElijahCaine/29e7e829341d58abe370.js"&gt;&lt;/script&gt;&lt;p&gt;Installation instructions (on Linux):&lt;/p&gt;
+&lt;pre class="code text literal-block"&gt;
+# install docker and start the docker daemon
+$ git clone https://gist.github.com/29e7e829341d58abe370.git docker-firefox
+$ ln docker-firefox/ff-docker /some/path/for/binaries
+$ ff-docker -b  # -b pulls &amp;amp; builds container, etc used for first time startup.
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div class="section" id="notes"&gt;
+&lt;h2&gt;Notes&lt;/h2&gt;
+&lt;p&gt;I attempted to use &lt;a class="reference external" href="http://alpinelinux.org/"&gt;Alpine Linux&lt;/a&gt; as a proof-of-usability, since it's the hip
+new kid on the containerization block &lt;a class="footnote-reference" href="#id3" id="id1"&gt;[1]&lt;/a&gt;, but as it turns out Alpine's
+Firefox package is pretty fucked &lt;a class="footnote-reference" href="#id4" id="id2"&gt;[2]&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;I use &lt;a class="reference external" href="https://wiki.archlinux.org/index.php/Dmenu"&gt;dmenu&lt;/a&gt;, this means I can run &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;ff-docker&lt;/span&gt;&lt;/tt&gt; from my desktop without
+opening a terminal, effectively making it a super-private-yet-convenient
+drop-in for Firefox.  Pretty neat right?&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="conclusion"&gt;
+&lt;h2&gt;Conclusion&lt;/h2&gt;
+&lt;p&gt;This was pretty simple but effective in terms of giving me the option to have
+more privacy. I can see it being extended to add even more security; e.g.,
+routing all of the traffic in the container through a VPN would be easy enough.
+Food for thought [citation needed].&lt;/p&gt;
+&lt;table class="docutils footnote" frame="void" id="id3" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;&lt;a class="fn-backref" href="#id1"&gt;[1]&lt;/a&gt;&lt;/td&gt;&lt;td&gt;5mb containers sounds pretty nice to me.
+&lt;a class="reference external" href="http://gliderlabs.viewdocs.io/docker-alpine/"&gt;http://gliderlabs.viewdocs.io/docker-alpine/&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils footnote" frame="void" id="id4" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;&lt;a class="fn-backref" href="#id2"&gt;[2]&lt;/a&gt;&lt;/td&gt;&lt;td&gt;I get a segfault every time I try to start Firefox. More info here:
+&lt;a class="reference external" href="https://bugzilla.mozilla.org/show_bug.cgi?id=724227#c11"&gt;https://bugzilla.mozilla.org/show_bug.cgi?id=724227#c11&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+</content><category term="tech"></category><category term="Docker"></category><category term="Guide"></category></entry><entry><title>Covertly Installing Packages with Docker</title><link href="elijahcaine.me/covertly-install-packages-with-docker" rel="alternate"></link><published>2015-10-07T00:00:00-07:00</published><updated>2015-10-07T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2015-10-07:elijahcaine.me/covertly-install-packages-with-docker</id><summary type="html">&lt;p class="first last"&gt;A simple guide on install $PACKAGE with $CONTAINER_RUNTIME.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;a class="reference external" href="#the-deets-dockerfile-and-commands"&gt;Jump to the codey bits&lt;/a&gt;&lt;/p&gt;
+&lt;div class="section" id="the-problem-workstations"&gt;
+&lt;h2&gt;The Problem: Workstations&lt;/h2&gt;
+&lt;p&gt;At the OSL I use workstations which are provisioned by &lt;a class="reference external" href="https://en.wikipedia.org/wiki/Chef_%28software%29"&gt;Chef&lt;/a&gt; to look more or
+less identical (packages are the same and global config files are consistent
+from machine to machine). This is nice because it allows everybody at the lab
+to jump from workstation to workstation without dreading the inevitable setup
+that usually comes with going to a new computer.&lt;/p&gt;
+&lt;p&gt;The only downside here is that to install a package you have to make a pull
+request to a GitHub Repository in which you modify a JSON file. This is almost
+always for my own good, but as a dev I am prone to avoiding things that the
+admins say are good for me (like broccoli, milk, and consistent workstation
+environments).&lt;/p&gt;
+&lt;p&gt;For instance, yesterday I wanted to use &lt;a class="reference external" href="http://rg3.github.io/youtube-dl/"&gt;youtube-dl&lt;/a&gt; to grab a video I was
+watching on repeat*. I could have made a pull request to add the package,
+waited until 30 after for the workstations to refresh, used the package, and
+went about my day. This would have been the correct and bureaucratic way to do
+things.&lt;/p&gt;
+&lt;p&gt;I &lt;em&gt;could&lt;/em&gt; have, and probably &lt;em&gt;should&lt;/em&gt; have, done that... but I didn't.&lt;/p&gt;
+&lt;p&gt;* firefox kept crashing, I wasn't just stealing music for the sake of it.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="enter-docker"&gt;
+&lt;h2&gt;Enter: Docker&lt;/h2&gt;
+&lt;p&gt;In this case the solution to the 'problem' was &lt;a class="reference external" href="https://en.wikipedia.org/wiki/Docker_%28software%29"&gt;Docker&lt;/a&gt;. I wrote a Dockerfile
+which provisioned a container to have &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;youtube-dl&lt;/span&gt;&lt;/tt&gt; installed, spun up the
+container with a shared directory (&lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;$PWD:/home/&lt;/span&gt;&lt;/tt&gt;), and executed the
+youtube-dl command. The .mp4 video was downloaded to my current working
+directory and I was able to play it with my media player of choice, all without
+installing &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;youtube-dl&lt;/span&gt;&lt;/tt&gt; locally.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="the-deets-dockerfile-and-commands"&gt;
+&lt;h2&gt;The Deets: Dockerfile and Commands&lt;/h2&gt;
+&lt;p&gt;&lt;tt class="docutils literal"&gt;Dockerfile&lt;/tt&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;FROM ubuntu:latest
+
+RUN apt-get -y update
+RUN apt-get -y upgrade
+RUN apt-get -y install python-pip
+RUN pip install youtube-dl
+
+WORKDIR /home
+RUN alias youtube-dl=&amp;#39;/usr/local/bin/youtube-dl&amp;#39;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If you are in the directory containing the above Dockerfile, build the
+container with:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ docker build -t yt-dl .
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;and run it with:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ docker run -v $PWD:/home/ yt-dl youtube-dl &amp;lt;YOUTUBE-VID-URL&amp;gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This will download any url's video into the current working directory.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="pro-tip-add-an-alias"&gt;
+&lt;h2&gt;Pro-Tip: Add an &lt;tt class="docutils literal"&gt;Alias&lt;/tt&gt;&lt;/h2&gt;
+&lt;p&gt;Add the following content to your &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;~/.bashrc&lt;/span&gt;&lt;/tt&gt; file and then run &lt;tt class="docutils literal"&gt;source
+&lt;span class="pre"&gt;~/.bashrc&lt;/span&gt;&lt;/tt&gt; to get rid the of long Docker bits of the above command.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nb"&gt;export&lt;/span&gt; &lt;span class="nv"&gt;$VID_DIR&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;/path/to/downloaded/videos/
+&lt;span class="nb"&gt;alias&lt;/span&gt; yt-dl&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;docker run -v $VID_DIR:/home/ yt-dl youtube-dl&amp;#39;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="wait-this-is-overly-complicated"&gt;
+&lt;h2&gt;Wait This is Overly Complicated&lt;/h2&gt;
+&lt;p&gt;You're probably thinking: &amp;quot;Hey, couldn't you have just run &lt;tt class="docutils literal"&gt;pip install &lt;span class="pre"&gt;--user&lt;/span&gt;
+&lt;span class="pre"&gt;youtube-dl&lt;/span&gt;&lt;/tt&gt;?&lt;/p&gt;
+&lt;p&gt;Yes. I could have. But that wouldn't be fun and wouldn't have given me an
+excuse to write a blog, post now would it Ms. Smarty Pantz.&lt;/p&gt;
+&lt;hr class="docutils" /&gt;
+&lt;p&gt;&lt;strong&gt;drink the coolaid. come to the docker side.&lt;/strong&gt;&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="tech"></category><category term="Docker"></category><category term="Guide"></category></entry></feed>

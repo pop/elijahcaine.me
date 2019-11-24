@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>elijahcaine.me - europe-2015</title><link href="elijahcaine.me/" rel="alternate"></link><link href="elijahcaine.me/feeds/europe-2015.atom.xml" rel="self"></link><id>elijahcaine.me/</id><updated>2015-09-03T00:00:00-07:00</updated><entry><title>Travel travel travel...</title><link href="elijahcaine.me/2015-09-03" rel="alternate"></link><published>2015-09-03T00:00:00-07:00</published><updated>2015-09-03T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2015-09-03:elijahcaine.me/2015-09-03</id><summary type="html">&lt;p class="first last"&gt;Tuesday August 03, 2015. Travel travel travel travel travel travel... PRG -&amp;gt; NYC -&amp;gt; PDX&lt;/p&gt;
+</summary><content type="html">&lt;div class="section" id="id1"&gt;
+&lt;h2&gt;Travel Travel Travel&lt;/h2&gt;
+&lt;p&gt;Travel travel travel travel travel travel travel travel travel travel travel
+travel travel travel travel travel travel travel travel travel travel travel.
+travel. Travel travel travel travel travel travel travel travel travel travel
+travel travel travel travel travel travel travel travel travel travel travel.&lt;/p&gt;
+&lt;p&gt;Travel travel travel travel travel travel travel travel travel travel travel
+travel travel travel travel travel travel travel travel travel travel travel.
+travel. Travel travel travel travel travel travel travel travel travel travel
+travel travel travel travel travel travel travel travel travel travel travel
+travel travel travel travel travel travel travel travel travel travel travel.
+travel. Travel travel travel travel travel travel travel travel travel travel
+travel travel travel travel travel travel travel travel travel travel travel.
+travel travel travel travel travel travel travel travel travel travel travel.&lt;/p&gt;
+&lt;p&gt;Travel travel travel travel travel travel. Travel travel travel travel travel
+travel travel. Travel travel travel travel travel travel travel travel travel.&lt;/p&gt;
+&lt;p&gt;Sleep.&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="europe-2015"></category><category term="Europe 2015"></category><category term="Travel"></category><category term="Portland"></category><category term="Prague"></category></entry><entry><title>A Personal Day in Prague: (Almost) Just Pictures*</title><link href="elijahcaine.me/2015-09-02" rel="alternate"></link><published>2015-09-02T00:00:00-07:00</published><updated>2015-09-02T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2015-09-02:elijahcaine.me/2015-09-02</id><summary type="html">&lt;p class="first last"&gt;Wednesday September 02, 2015. I adventure Prague alone. I enjoy it quite a bit!&lt;/p&gt;
+</summary><content type="html">&lt;img alt="Charles Bridge." class="align-center" src="/assets/images/europe-2015/prague-charles-bridge.jpg" style="width: 100%;" /&gt;
+&lt;img alt="Pilot Statue." class="align-center" src="/assets/images/europe-2015/prague-pilot-statute.jpg" style="width: 100%;" /&gt;
+&lt;img alt="View of Prague with some trees in the way." class="align-center" src="/assets/images/europe-2015/prague-view.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;I went on a hike, found a great view at the top of a hill.&lt;/p&gt;
+&lt;img alt="Oldtown Prague" class="align-center" src="/assets/images/europe-2015/prague-oldtown.jpg" style="width: 100%;" /&gt;
+&lt;img alt="Panorama with bridge" class="align-center" src="/assets/images/europe-2015/prague-panorama-with-bridge.jpg" style="width: 100%;" /&gt;
+&lt;img alt="'Eli' Starbucks Coffee" class="align-center" src="/assets/images/europe-2015/prague-creative-spelling.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;'Eli'&lt;/p&gt;
+&lt;img alt="Stunning sunset" class="align-center" src="/assets/images/europe-2015/prague-stunning-sunset.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;* I swear it's not because I'm lazy and don't want to write. The pictures just
+capture it better.&lt;/p&gt;
+</content><category term="europe-2015"></category><category term="Europe 2015"></category><category term="Travel"></category><category term="Prague"></category></entry><entry><title>Write the Docs Day 2</title><link href="elijahcaine.me/2015-09-01" rel="alternate"></link><published>2015-09-01T00:00:00-07:00</published><updated>2015-09-01T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2015-09-01:elijahcaine.me/2015-09-01</id><summary type="html">&lt;p class="first last"&gt;Tuesday September 01, 2015. Write the docs Day 2 is just as educational as the first.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;Just like yesterday, I spent most of today enjoying some wonderful talks as
+well as stressing out -- I mean totally not stressing out -- about my own talk.&lt;/p&gt;
+&lt;img alt="Write the Docs Staff Picture" class="align-center" src="/assets/images/europe-2015/wtd-day-2.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;The Write the Docs Staff saying thanks.&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;The first talk of the day was titled &amp;quot;Judas Priest Ate My Scrum Master&amp;quot;,
+which has almost nothing to do with Judas Priest or eating or scrum masters;
+instead it talked about things that are well known issues and a lot of laws
+(&lt;a class="reference external" href="https://en.wikipedia.org/wiki/Brooks%E2%80%99_law"&gt;Brooks' Law&lt;/a&gt;, &lt;a class="reference external" href="https://en.wikipedia.org/wiki/Lehman's_laws_of_software_evolution"&gt;Lehmann's Laws&lt;/a&gt;, &lt;a class="reference external" href="https://en.wikipedia.org/wiki/Pareto_principle"&gt;Pareto Principle&lt;/a&gt;, &lt;a class="reference external" href="https://en.wikipedia.org/wiki/Conway's_law"&gt;Conway's Law&lt;/a&gt;,
+etc) that nobody talks about that much but can be super helpful to consider
+when working in an industry.&lt;/li&gt;
+&lt;li&gt;The second talk covered different types of user interfaces and what to
+consider when writing error messages, troubleshooting pages, product tours.
+It was something I hadn't considered having primarily written command line
+tools with pretty limited and well established interface guidelines.&lt;/li&gt;
+&lt;li&gt;Then I gave a talk. It was a talk. I'll post a video of it once those
+get put up online and you can decide if it was good or bad.&lt;/li&gt;
+&lt;li&gt;The talk after mine was a nice history lesson and wanted the audience to
+reflect on what documentations can learn from documentation practices of the
+past. The TLDR on that one is that it used to suck to write technical docs
+even more than it sucks now.&lt;/li&gt;
+&lt;li&gt;Then there were a bunch of lightning talks. One talk from a twitter employee
+(there's a fun name for them I'm sure) mentioned that gathering metrics are
+is important because without metrics everything you do is just guess and
+check.&lt;/li&gt;
+&lt;li&gt;The next talk &amp;quot;MacGyvering your docs&amp;quot; brought up the fact that the best
+documentation toolchain will (should?) only help existing developers. A
+better toolchain won't attract new devs. That was something I think a lot of
+projects can lose sight of.&lt;/li&gt;
+&lt;li&gt;The talk after that covered a team of scientists studying clouds (water
+clouds not internet clouds) using computer simulations. They wrote and
+documented a piece of software and they ended up publishing their program's
+documentation in a scientific journal. It's already been sited and
+everything. I hadn't even considered that as a possibility (publishing docs
+as a scientific paper).&lt;/li&gt;
+&lt;li&gt;The next two talks were pretty short (15 minute) talks about putting the data
+where the users need it and an introduction to screen-casting. The first was
+good for documenting things like an API and the second was good if I ever
+need to make a screen-cast. I doubt that will happen, but you never know!&lt;/li&gt;
+&lt;li&gt;The last talk &amp;quot;All roads might not lead to docs&amp;quot; held too main takeaways for
+me: The quote &lt;em&gt;The Purpose of this document is ________&lt;/em&gt; and the &lt;a class="reference external" href="http://voiceandtone.com/"&gt;mailchimp
+voice &amp;amp; tone guide&lt;/a&gt;, which is a very good document I suggest you read it
+(the title is pretty self explanatory I think).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;For a full list of talks given at the conference, check out the &lt;a class="reference external" href="http://www.writethedocs.org/conf/eu/2015/schedule/"&gt;event's
+schedule&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The after party ended up happening at two venues since we got pre-maturely
+kicked out of the first one; we made the best of it and I got to talk to Anna
+Jaruga (the cloud research scientist) as well as a &lt;a class="reference external" href="https://developer.mozilla.org/en-US/"&gt;Mozilla Development
+Network&lt;/a&gt; writer, both very interesting people.&lt;/p&gt;
+</content><category term="europe-2015"></category><category term="Europe 2015"></category><category term="Travel"></category><category term="Prague"></category></entry><entry><title>Write the Docs Day 1</title><link href="elijahcaine.me/2015-08-31" rel="alternate"></link><published>2015-08-31T00:00:00-07:00</published><updated>2015-08-31T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2015-08-31:elijahcaine.me/2015-08-31</id><summary type="html">&lt;p class="first last"&gt;Monday August 31, 2015.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;I spent most of today enjoying the Write the Docs talks and (air
+conditioned) venue. I took some notes.&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;The keynote about the imposter syndrome was very relatable. The coping
+mechanism of framing goals in &amp;quot;I want to do...&amp;quot; instead of &amp;quot;I want to be...&amp;quot;
+seems like it could be effective. I liked the quote &amp;quot;Make better mistakes
+tomorrow&amp;quot;.&lt;/li&gt;
+&lt;li&gt;The second talk about naming things was very good and got me to think about
+the structure of documentation metadata (using labels vs taxonomy vs
+thesaurus, etc). This will be useful someday I'm sure.&lt;/li&gt;
+&lt;li&gt;The third talk about [emojii] and the use of emoji was [emojii]. I
+never considered using them before, but I will going forward.&lt;/li&gt;
+&lt;li&gt;The fourth talk mentioned using &lt;a class="reference external" href="https://en.wikipedia.org/wiki/Selenium_%28software%29?wprov=sfia1"&gt;Selenium&lt;/a&gt; to test docs, that just makes
+sense. It's so obvious I wish it was easier.&lt;/li&gt;
+&lt;li&gt;The API Docs talk mentioned that you should give your user the data they will
+be working with as a top level priority instead of an after thought. This
+will definitely be a priority for me. I already try to give plenty of
+examples (since I speak example natively), but I'll be more Conscience of it.&lt;/li&gt;
+&lt;li&gt;The Design Docs with Disability in Mind was interesting. The big takeaway for
+me was keeping the elderly in mind.&lt;/li&gt;
+&lt;li&gt;The meta talk about crafting a presentation was delivered very well and
+mentioned adding contrast slide decks... I should have listened to this
+advice...&lt;/li&gt;
+&lt;li&gt;The second to the last talk of the day covered the plethora of rules we place
+on documentation. Having just recently helped established some style guides
+for the OSL docs I think we did a good job of giving some leeway to the
+writers.  The extreme example of 'Limited rules docs' (e.g., the Python
+Documentation) does not really work well for the reader in my experience.&lt;/li&gt;
+&lt;li&gt;The final talk by some &lt;a class="reference external" href="https://developer.mozilla.org/en-US/"&gt;MDN&lt;/a&gt; writers equated docs to a garden.  The metaphor
+worked surprisingly well.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;For a full list of the talks and their descriptions, visit the &lt;a class="reference external" href="http://www.writethedocs.org/conf/eu/2015/schedule/"&gt;event's
+schedule&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Day 1 was pretty emojii. We ended the night with emojii at a venue called The
+Pub. Many conversations and laughs were had. I like this crowd.&lt;/p&gt;
+</content><category term="europe-2015"></category><category term="Europe 2015"></category><category term="Travel"></category><category term="Prague"></category><category term="Write the Docs"></category></entry><entry><title>Prague Day 1</title><link href="elijahcaine.me/2015-08-30" rel="alternate"></link><published>2015-08-30T00:00:00-07:00</published><updated>2015-08-30T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2015-08-30:elijahcaine.me/2015-08-30</id><summary type="html">&lt;p class="first last"&gt;Sunday, August 30. Prague day 1 in which I meet the other speakers of Write the Docs EU 2015.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;I went on a wonderful &lt;a class="reference external" href="http://www.writethedocs.org/conf/eu/2015/#events"&gt;city tour&lt;/a&gt; of Prague provided by Write The Docs. We
+crossed some bridges, saw some castles, and experienced many wonderful parts of
+the city.&lt;/p&gt;
+&lt;img alt="My dumb face and a delicious gelato." class="align-center" src="/assets/images/europe-2015/prague-gelato.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;&lt;em&gt;Here's me in front of a church eating some gelato.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;After the tour I was very hungry and tagged along with some folks from my tour
+group on a journey to get food. We went to a restaurant that brought us beer on
+a model train.&lt;/p&gt;
+&lt;img alt="Choo choo. Here comes the beer train." class="align-center" src="/assets/images/europe-2015/prague-beer-train.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;&lt;em&gt;This is the train that brought us beer.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Here are some picture I took of the buildings in the city. I like the
+architecture a lot.&lt;/p&gt;
+&lt;img alt="Classic architecture in the Prague city center." class="align-center" src="/assets/images/europe-2015/prague-city-center.jpg" style="width: 100%;" /&gt;
+&lt;img alt="Even the small regular old streets in Prague are breathtaking." class="align-center" src="/assets/images/europe-2015/prague-street.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;&lt;em&gt;They are so cool. I haven't found the words to describe why, but the asthetics
+please me.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;After the tour and food there was a &lt;em&gt;Write the Docs Conference Reception&lt;/em&gt; (aka
+meet &amp;amp; greet) where I got to hang out with many of the attendees of the
+conference. There was food and fabulous people.&lt;/p&gt;
+&lt;p&gt;I did not have a hard time falling asleep that night.&lt;/p&gt;
+</content><category term="europe-2015"></category><category term="Europe 2015"></category><category term="Travel"></category><category term="Prague"></category></entry><entry><title>To Prague!</title><link href="elijahcaine.me/2015-08-29" rel="alternate"></link><published>2015-08-29T00:00:00-07:00</published><updated>2015-08-29T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2015-08-29:elijahcaine.me/2015-08-29</id><summary type="html">&lt;p class="first last"&gt;Saturday August 29, 2015. AMS -&amp;gt; PRG.&lt;/p&gt;
+</summary><content type="html">&lt;div class="section" id="i-strongly-dislike-travel"&gt;
+&lt;h2&gt;I Strongly Dislike Travel&lt;/h2&gt;
+&lt;p&gt;I would say I hate travel, but that level of hyperbole is literally the worst
+thing on the planet...&lt;/p&gt;
+&lt;p&gt;My strong dislike for travel comes mostly from my personal inability to trust
+the systems that will get me to where I am going. If I have a flight in one
+week and I have to take a bus or train to the airport, I will spend the entire
+week running through my head &amp;quot;When is my flight? Umm days, yeesh hours, and ack
+minutes. How am I getting there? The oh God bus leaving at some time, somewhere
+bound.  Once you get there you will go through security which will take between
+5 minutes and 2 hours. Budget your time appropriately.  Any of these systems
+can fail and based on experience they have&amp;quot; over and over and over. The stress
+is compounded when people don't always speak your language and you forgot to
+eat a proper meal the morning of.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;That&lt;/em&gt; is why I am 3 hours early to my flight from Amsterdam to Prague. I
+regret nothing.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="currency-is-weird"&gt;
+&lt;h2&gt;Currency is Weird&lt;/h2&gt;
+&lt;img alt="1 USD = 24.17 Czech Republic Koruna" class="align-center" src="/assets/images/europe-2015/prague-conversion-rate.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;It is going to take me forever to remember &lt;em&gt;25 here monies is about 1 home
+monies&lt;/em&gt;. Everything is gonna feel really expensive I bet...&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="i-made-it-to-prague"&gt;
+&lt;h2&gt;I Made it to Prague&lt;/h2&gt;
+&lt;p&gt;I made it to Prague just fine. They have a cool train system.&lt;/p&gt;
+&lt;img alt="The MUSTEK stop in the Prague underground transit system. Very Soviet-era design." class="align-center" src="/assets/images/europe-2015/prague-mustek-stop.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;Way cooler than the underground train systems I'm used to...&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="europe-2015"></category><category term="Europe 2015"></category><category term="Travel"></category><category term="Prague"></category><category term="Amserdam"></category></entry><entry><title>A very long bike ride</title><link href="elijahcaine.me/2015-08-28" rel="alternate"></link><published>2015-08-28T00:00:00-07:00</published><updated>2015-08-28T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2015-08-28:elijahcaine.me/2015-08-28</id><summary type="html">&lt;p class="first last"&gt;Friday August 28, 2015. I rent a bike and try to go all the way to the coast. It looked so much closer on the map...&lt;/p&gt;
+</summary><content type="html">&lt;div class="section" id="my-butt-hurts"&gt;
+&lt;h2&gt;My Butt Hurts...&lt;/h2&gt;
+&lt;p&gt;Today I went on an awesome bike ride all the way to Haarlem (15km west of
+Amsterdam). I didn't actually do anything there; I just went, picked up snacks,
+and headed back. I'm 99% sure I missed out on an awesome Haarlem exclusive
+cultural experience, but if was really more about the journey (I originally set
+out to bike to the coast and Haarlem was my compromise to that).&lt;/p&gt;
+&lt;img alt="I don't recall where this park is exactly. I remember it was east of the city center, many kilometers." class="align-center" src="/assets/images/europe-2015/amsterdam-huge-park.jpg" style="width: 100%;" /&gt;
+&lt;img alt="Another view of the park, this time with a play structure." class="align-center" src="/assets/images/europe-2015/amsterdam-huge-park-2.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;&lt;em&gt;I found a very neat park near the Western edge of Amsterdam; I ended
+up spending an hour or so there having a picnic.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Dilapidated&lt;/p&gt;
+&lt;img alt="An old and dilapiddated building. It's hard to tell the building original purpose..." class="align-center" src="/assets/images/europe-2015/amserdam-dilapidated-building.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;&lt;em&gt;This was a cool abandoned building I found. I like abandoned
+buildings.&lt;/em&gt;&lt;/p&gt;
+&lt;img alt="A large ice-cream cone shaped trashcan at a 45 degree angle for cyclists to dispose of trash into." class="align-center" src="/assets/images/europe-2015/amserdam-travelers-trash-can.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;&lt;em&gt;I also found this awesome trash can for people riding bikes. It's
+genius.&lt;/em&gt;&lt;/p&gt;
+&lt;img alt="Ponies!" class="align-center" src="/assets/images/europe-2015/amsterdam-ponies.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;&lt;em&gt;PONIES&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;After the bike ride I was very tired. I slept a lot. And yet not enough...&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="small-and-large-appreciations"&gt;
+&lt;h2&gt;Small (and Large) Appreciations&lt;/h2&gt;
+&lt;p&gt;Here is a list of some of the traits of Amsterdam (and what I have experienced
+of the Netherlands at large) which I appreciate.&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;They have signs that tell you you're going the wrong direction.&lt;/li&gt;
+&lt;li&gt;You can bike to another city and be on bike paths the whole time!&lt;/li&gt;
+&lt;li&gt;Bikes are easy to use and aren't shoe-horned in as a second class mode of
+transportation.&lt;/li&gt;
+&lt;li&gt;The trains are so quiet. Why can't America have quiet trains?&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This list will probably grow as I remember things. All in all I like the city
+and the country. You should visit if you haven't already.&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="europe-2015"></category><category term="Europe 2015"></category><category term="Travel"></category><category term="Amsterdam"></category></entry><entry><title>Van Vough museum</title><link href="elijahcaine.me/2015-08-27" rel="alternate"></link><published>2015-08-27T00:00:00-07:00</published><updated>2015-08-27T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2015-08-27:elijahcaine.me/2015-08-27</id><summary type="html">&lt;p class="first last"&gt;Thursday August 27, 2015. I visit the Van Gough museum and to be completely honest, I am nonplussed.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;Today I visited the Van Gough museum. I tried to get in using my mom's
+Amsterdam Museum Pass, but it didn't fly there like it did at the Rijks.&lt;/p&gt;
+&lt;p&gt;It was pretty fun, but the entire experience felt very artificial and plastic.
+The paintings were great to see in person, but everything around the pieces
+felt a little tacky. My opinion will likely change about it, but I did not
+enjoy the Van Gough museum nearly as much as I enjoyed the Rijks Museum,
+despite my love for Van Gough and his works.&lt;/p&gt;
+&lt;p&gt;I spent the rest of the day walking around and cashed in early. Jetlag + lots
+of walking = ready for bed by 3pm.&lt;/p&gt;
+</content><category term="europe-2015"></category><category term="Europe 2015"></category><category term="Travel"></category><category term="Amsterdam"></category></entry><entry><title>The Rijks museum and travel tips</title><link href="elijahcaine.me/2015-08-26" rel="alternate"></link><published>2015-08-26T00:00:00-07:00</published><updated>2015-08-26T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2015-08-26:elijahcaine.me/2015-08-26</id><summary type="html">&lt;p class="first last"&gt;Wednesday August 26, 2015. I've been to a lot of museums in my day, and this is definitely a condender for the best.&lt;/p&gt;
+</summary><content type="html">&lt;div class="section" id="the-rijks-museum"&gt;
+&lt;h2&gt;The Rijks Museum&lt;/h2&gt;
+&lt;img alt="A panorama of an Amsterdam canal." class="align-center" src="/assets/images/europe-2015/amsterdam-canal.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;&lt;em&gt;I'm not sure which street I took this panorama on, but I think it looks
+awesome. It captures the Amsterdam canal street pretty well.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Today I went to the Rijks Museum and had a bit of a culture overload.&lt;/p&gt;
+&lt;img alt="Chilling with the milk maid." class="align-center" src="/assets/images/europe-2015/amsterdam-milk-maid.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;Everybody got selfies with Van Gough, so I got a selfie The Milkmaid.  I
+realize in retrospect that it doesn't work as well.&lt;/p&gt;
+&lt;p&gt;In other news, this is my face when I realized the bathroom stalls go from
+floor to ceiling.&lt;/p&gt;
+&lt;img alt="Surprise and joy." class="align-center" src="/assets/images/europe-2015/amsterdam-all-the-way.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;&lt;em&gt;Yes, this photo was taken in the bathroom stall.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;And this is a classy restaurant I found with classy lamps.&lt;/p&gt;
+&lt;img alt="A lamp with a cute switch." class="align-center" src="/assets/images/europe-2015/amsterdam-cute-lamp.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;&lt;em&gt;They were closed, otherwise I would have gone in.&lt;/em&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="some-travel-tips"&gt;
+&lt;h2&gt;Some Travel Tips&lt;/h2&gt;
+&lt;p&gt;Although I have not completed my trip, I have some tips to share
+with you about travel.&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Always bring a 'Go Bag' when you go out for the day. Fill it with snacks and
+necessities and leave plenty of room for memorabilia you get while out and
+about.&lt;/li&gt;
+&lt;li&gt;Try something new before defaulting to your comfort zone. This is true for
+food as well as experiences.&lt;/li&gt;
+&lt;li&gt;Always being plenty of snacks and water. You will regret it if you don't.&lt;/li&gt;
+&lt;li&gt;Be patient. You invested a lot to get here, make it count.&lt;/li&gt;
+&lt;li&gt;At a museum, take a picture of the plackard after taking a picture of the
+piece so you don't forget what it's called.&lt;/li&gt;
+&lt;li&gt;Don't be afraid to sit in a café and just read for a bit. Sometimes that's as
+culturally diversifying as a day in a museum or city tour.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+</content><category term="europe-2015"></category><category term="Europe 2015"></category><category term="Travel"></category><category term="Amsterdam"></category></entry><entry><title>To Amsterdam!</title><link href="elijahcaine.me/2015-08-25" rel="alternate"></link><published>2015-08-25T00:00:00-07:00</published><updated>2015-08-25T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2015-08-25:elijahcaine.me/2015-08-25</id><summary type="html">&lt;p class="first last"&gt;Tuesday August 25, 2015. PDX -&amp;gt; AMS.&lt;/p&gt;
+</summary><content type="html">&lt;div class="section" id="pdx-ams"&gt;
+&lt;h2&gt;PDX -&amp;gt; AMS&lt;/h2&gt;
+&lt;p&gt;The flight was uneventful. It was the longest one I've ever been on, which is
+always a rough milestone to overcome, but actually one of the better flights
+I've taken. TIL Delta's service does not suck.&lt;/p&gt;
+&lt;p&gt;I usually sleep the entire way to &amp;lt;insert location here&amp;gt;, but I managed to stay
+productive (coding, reading, writing) for the majority of flight. I must say,
+it was nice to have my own personal screen to catch up on Last Week Tonight.
+I've wanted to watch that show for ages...&lt;/p&gt;
+&lt;p&gt;[&lt;em&gt;Lazy bliss not pictured&lt;/em&gt;]&lt;/p&gt;
+&lt;p&gt;So good.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="day-0-part-1"&gt;
+&lt;h2&gt;Day 0: Part 1&lt;/h2&gt;
+&lt;p&gt;So I wrote down some thoughts about Amsterdam thus far:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;People keep using fake made up words. What's up with that?&lt;/li&gt;
+&lt;li&gt;The roads are tiny but people keep driving on them. It looks like chaos but I
+haven't seen an accident yet. I'm kinda impressed. People aren't even yelling
+at each other about almost getting hit.&lt;/li&gt;
+&lt;li&gt;The toilet paper squares are actually rectangles. It might just be the toilet
+paper at the place I am staying. Either way, I can't deal with this aspect
+ratio change. I might not be able to poop in Amsterdam.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;COFFEE COFFEE COFFEE COFFEE COFFEE COFFEE COFFEE COFFEE COFFEE&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;The trains are so quiet. I didn't want to get off...&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;BIKES BIKES BIKES BIKES BIKES BIKES BIKES BIKES BIKES BIKES&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Here's some pictures I took:&lt;/p&gt;
+&lt;img alt="Mostly trees and sky." class="align-center" src="/assets/images/europe2015/amsterdam-view.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;&lt;em&gt;The view from the location I am staying at.&lt;/em&gt;&lt;/p&gt;
+&lt;img alt="Panorama of an Amsterdam park." class="align-center" src="/assets/images/europe2015/amsterdam-park-panorama.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;&lt;em&gt;A panorama from the park outside of where I am staying.&lt;/em&gt;&lt;/p&gt;
+&lt;img alt="Goats!" class="align-center" src="/assets/images/europe2015/amsterdam-goats.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;&lt;em&gt;Some goats I found.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Aaaaaaaand naptime.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="day-0-part-2"&gt;
+&lt;h2&gt;Day 0: Part 2&lt;/h2&gt;
+&lt;p&gt;I finished today by going to the Red Light District. There
+were a lot of half naked ladies in windows. They kept winking
+at me. I'm pretty sure they liked me; it's not like they
+&lt;em&gt;definitely&lt;/em&gt; have a monetary incentive to get my attention or
+anything.&lt;/p&gt;
+&lt;p&gt;I ended up finding a bar and enjoying a Belgian White Beer.
+It tasted &lt;a class="reference external" href="https://xkcd.com/1534/"&gt;surprisingly good&lt;/a&gt;&lt;/p&gt;
+&lt;img alt="A Belgium white beer." class="align-center" src="/assets/images/europe2015/amsterdam-beer.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;&lt;em&gt;So this is what it feels like to drink in a bar... neat.&lt;/em&gt;&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="europe-2015"></category><category term="Europe 2015"></category><category term="Travel"></category></entry><entry><title>Packed and Ready to Fly</title><link href="elijahcaine.me/2015-08-23" rel="alternate"></link><published>2015-08-23T00:00:00-07:00</published><updated>2015-08-23T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2015-08-23:elijahcaine.me/2015-08-23</id><summary type="html">&lt;p class="first last"&gt;Sunday August 23, 2015. Packing for a three-ish week trip isn't that bad.&lt;/p&gt;
+</summary><content type="html">&lt;div class="section" id="all-packed"&gt;
+&lt;h2&gt;All Packed&lt;/h2&gt;
+&lt;p&gt;So I'm all packed up and ready to go.&lt;/p&gt;
+&lt;img alt="Three weeks of supplies neatly displayed on a pink bed." class="align-center" src="/assets/images/europe-2015/packed.jpg" style="width: 100%;" /&gt;
+&lt;p&gt;&lt;strong&gt;Left:&lt;/strong&gt; Chargers, electronics, entertainment, toiletries, water bottle,
+wallet, etc.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Center:&lt;/strong&gt; The bag, the &lt;em&gt;Write the Docs&lt;/em&gt; shirt I'll be wearing.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Right:&lt;/strong&gt; Clothing. Gameboy SP at the top.&lt;/p&gt;
+&lt;p&gt;Not the &lt;em&gt;perfect&lt;/em&gt; bag of things to bring to Europe, but certainly solid and
+most of it practical. I'm packing an extra bag for all of the trinkets I'll
+bring back.&lt;/p&gt;
+&lt;p&gt;Let me know if you want anything (if you know how to contact me we're close
+enough for you to ask.)&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="europe-2015"></category><category term="Europe 2015"></category><category term="Travel"></category><category term="Portland"></category></entry><entry><title>Dominos are setup</title><link href="elijahcaine.me/2015-08-02" rel="alternate"></link><published>2015-08-02T00:00:00-07:00</published><updated>2015-08-02T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2015-08-02:elijahcaine.me/2015-08-02</id><summary type="html">&lt;p class="first last"&gt;Sunday August 02, 2015. This post won't add much to your life. You can definitely skip it. No really. It's only here for posterity.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;All of my travel is booked, plane tickets are bought, and vacation time gotten.&lt;/p&gt;
+&lt;p&gt;The only thing left to do now is to write the talk. Easy-peasy.&lt;/p&gt;
+</content><category term="europe-2015"></category><category term="Europe 2015"></category><category term="Travel"></category><category term="Portland"></category></entry><entry><title>About the blog (this is a test)</title><link href="elijahcaine.me/2015-08-01" rel="alternate"></link><published>2015-08-01T00:00:00-07:00</published><updated>2015-08-01T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2015-08-01:elijahcaine.me/2015-08-01</id><summary type="html">&lt;p class="first last"&gt;Is this thing on? Starting the travel blog strong.&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;This blog was created in preparation for my trip to Europe in about 3 weeks. I
+wanted to see how difficult it would be to make a blog that could be updated on
+the go, version controlled with git, and would not require me to log into a
+laptop or server to make changes.&lt;/p&gt;
+&lt;p&gt;I ended up using PageUp (link in the footer), along with Github Gists (also
+linked in the footer) to make a mostly useful platform. New changes are pushed
+to Github, my personal server pulls those changes every 10 minutes, and this
+page is rebuilt pretty painlessly.&lt;/p&gt;
+&lt;p&gt;Best of all: with a git client on my phone I can make updates anywhere that has
+a signal and I don't need to bust my laptop out. I wrote this post while I was
+on the toilet!&lt;/p&gt;
+&lt;p&gt;It wasn't as easy as using an established platform like Twitter, but just like
+with everything I try to make, I put something together I would want to use and
+interact with. If a friend started a liveblog for a specific event I would
+follow it over their Twitter feed any day. Plus I don't have to deal with the
+character limit of Twitter.&lt;/p&gt;
+&lt;img alt="Evergreen trees into the distace." class="align-center" src="/assets/images/europe-2015/pre-travel-view.png" style="width: 100%;" /&gt;
+</content><category term="europe-2015"></category><category term="Europe 2015"></category><category term="Travel"></category><category term="Portland"></category></entry></feed>

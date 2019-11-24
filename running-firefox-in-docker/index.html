@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="author" content="Elijah Voigt">
+    <link rel="stylesheet" type="text/css" href="../theme/css/styles.css"/>
+        <link href="/rss.xml" type="application/rss+xml"   rel="alternate" title="elijahcaine.me RSS Feed" />
+        <link href="/atom.xml" type="application/atom+xml" rel="alternate" title="elijahcaine.me Atom Feed" />
+  </head>
+
+  <body>
+    <div class="site">
+      <header>
+        <a href="/">(🏠 elijahcaine.me)</a>
+        <a href="https://github.com/pop/">(🐙 github 🐱)</a>
+        <a href="/resume.pdf">(👔 resume)</a>
+      </header>
+
+      <div id="content">
+
+<div class="post">
+  <h1 class="posttitle">
+    Running Firefox in Docker
+  </h1>
+
+  <div class="postinfo">
+    <p class="published" title="2016-03-05T00:00:00-08:00">
+      Sat 05 March 2016
+    </p>
+  </div>
+</div>
+
+<div class="article">
+  <p>Turns out you can run Firefox in Docker. It's actually pretty easy:</p>
+<div class="section" id="code">
+<h2>Code</h2>
+<p><strong>From</strong> <a class="reference external" href="https://gist.github.com/ElijahCaine/29e7e829341d58abe370">my github gist</a>.</p>
+<script src="https://gist.github.com/ElijahCaine/29e7e829341d58abe370.js"></script><p>Installation instructions (on Linux):</p>
+<pre class="code text literal-block">
+# install docker and start the docker daemon
+$ git clone https://gist.github.com/29e7e829341d58abe370.git docker-firefox
+$ ln docker-firefox/ff-docker /some/path/for/binaries
+$ ff-docker -b  # -b pulls &amp; builds container, etc used for first time startup.
+</pre>
+</div>
+<div class="section" id="notes">
+<h2>Notes</h2>
+<p>I attempted to use <a class="reference external" href="http://alpinelinux.org/">Alpine Linux</a> as a proof-of-usability, since it's the hip
+new kid on the containerization block <a class="footnote-reference" href="#id3" id="id1">[1]</a>, but as it turns out Alpine's
+Firefox package is pretty fucked <a class="footnote-reference" href="#id4" id="id2">[2]</a>.</p>
+<p>I use <a class="reference external" href="https://wiki.archlinux.org/index.php/Dmenu">dmenu</a>, this means I can run <tt class="docutils literal"><span class="pre">ff-docker</span></tt> from my desktop without
+opening a terminal, effectively making it a super-private-yet-convenient
+drop-in for Firefox.  Pretty neat right?</p>
+</div>
+<div class="section" id="conclusion">
+<h2>Conclusion</h2>
+<p>This was pretty simple but effective in terms of giving me the option to have
+more privacy. I can see it being extended to add even more security; e.g.,
+routing all of the traffic in the container through a VPN would be easy enough.
+Food for thought [citation needed].</p>
+<table class="docutils footnote" frame="void" id="id3" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>5mb containers sounds pretty nice to me.
+<a class="reference external" href="http://gliderlabs.viewdocs.io/docker-alpine/">http://gliderlabs.viewdocs.io/docker-alpine/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>I get a segfault every time I try to start Firefox. More info here:
+<a class="reference external" href="https://bugzilla.mozilla.org/show_bug.cgi?id=724227#c11">https://bugzilla.mozilla.org/show_bug.cgi?id=724227#c11</a></td></tr>
+</tbody>
+</table>
+</div>
+
+</div>
+
+
+      </div>
+
+      <footer>
+        <p>
+        © 2019 Elijah Voigt, <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="/assets/images/CCA4IL.png" /> Creative Commons Attribution 4.0 International</a>.
+        </p>
+        <p>
+        This website made with locally sourced bits, built with Python 🐍 via Pelican 🐦, developed on Fedora 👒 GNU/Linux 🐃🐧, <a href='https://github.com/pop/elijahcaine.me'>hosted</a> and deployed on GitHub 🐙🐱, and served from clouds ⛅.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="author" content="Elijah Voigt">
+    <link rel="stylesheet" type="text/css" href="../theme/css/styles.css"/>
+        <link href="/rss.xml" type="application/rss+xml"   rel="alternate" title="elijahcaine.me RSS Feed" />
+        <link href="/atom.xml" type="application/atom+xml" rel="alternate" title="elijahcaine.me Atom Feed" />
+  </head>
+
+  <body>
+    <div class="site">
+      <header>
+        <a href="/">(🏠 elijahcaine.me)</a>
+        <a href="https://github.com/pop/">(🐙 github 🐱)</a>
+        <a href="/resume.pdf">(👔 resume)</a>
+      </header>
+
+      <div id="content">
+
+<div class="post">
+  <h1 class="posttitle">
+    Remote Timing Attacks
+  </h1>
+
+  <div class="postinfo">
+    <p class="published" title="2017-11-20T00:00:00-08:00">
+      Mon 20 November 2017
+    </p>
+  </div>
+</div>
+
+<div class="article">
+  <div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This is a part of a series of blog posts I wrote for an Independent Study on cryptography at Oregon State University.
+To read all of the posts, check out the 'Independent Crypto' tag.</p>
+</div>
+<p>Fade in.</p>
+<p>It is 2002.</p>
+<p>You are a Linux system administrator.
+You and thousands of other admins are running OpenSSL on you battle tested Linux servers.
+You trust that your data is transfered securely from host to host because... why wouldn't it be?!
+OpenSSL makes things secure.
+Duh.</p>
+<p>A few months into running that server you figure out that your private keys have been compromised!
+They were stolen somehow but you can't figure out what happened.
+You check the logs to see if somebody hacked into your system, but nothing obvious catches your eye.</p>
+<p>Combing through the logs you do see an IP address that tried (and failed) hundreds of thousands of times to authenticate with your OpenSSL server.
+It attempted authentication over and over and failed relentlessly until suddenly, after about two days, it stopped.
+Weird.</p>
+<p>A year later you read an academic paper from Stanford. <a class="footnote-reference" href="#id24" id="id1">[3]</a>
+It clicks.
+You've you've been Remote Timing Attacked!</p>
+<div class="section" id="definition">
+<h2>Definition</h2>
+<p>Remote Timing Attacks are a special brand of Side Channel Attack where adversaries use differences in response times to determine private information.
+Creepy I know.</p>
+<p>A lot of code and Statistics<sup>TM</sup> goes into figuring out secret information based on this, but let's start small.
+Take the following comparison which lives in a hypothetical SSL library:</p>
+<pre class="code python literal-block">
+<span class="k">if</span> <span class="n">length</span><span class="p">(</span><span class="n">recieved_key</span><span class="p">)</span> <span class="o">!=</span> <span class="n">PRIVATE_KEY_LENGTH</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">KeyLengthError</span>
+
+<span class="k">if</span> <span class="n">recieved_key</span> <span class="o">==</span> <span class="n">expected_key</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">Thing</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">UnknownKeyError</span>
+</pre>
+<p>This might seem innocent enough but as it turns out this leaks information!
+The <tt class="docutils literal">==</tt> operator does not <em>always</em> take the same amount of time to return a response.
+In fact, this operator tends to compare two inputs bit-by-bit.
+When it finds a difference it short-circuits and returns True or False.
+If <tt class="docutils literal">recieved_key</tt> shares the first N bits with <tt class="docutils literal">expected_key</tt>, the program will return slightly sooner than if they only shared the first N-1 bits.</p>
+<p>What's the timing difference if it's just returning one or two cycles earlier; does it really matter?
+As it turns out, there is <em>enough</em> of a difference to break security and enable an adversary to decrypt entire private keys! <a class="footnote-reference" href="#id24" id="id2">[3]</a>
+This is put well by an article on chosenplaintext.ca: <a class="footnote-reference" href="#id25" id="id3">[4]</a></p>
+<blockquote>
+Now, it may not seem significant that an attacker can see how many bytes of their key were a match, but it can actually be <strong>fatal</strong> to security.
+The attacker can crack the first byte of the key by trying all 256 possibilities, and observing which one caused the comparison to take longer.
+Now, armed with the first byte, they can do the same with the second byte, and the third, and so on, until they have recovered the entire key.</blockquote>
+<p>With a lot of patience an adversary can recover secret information from an OpenSSL processes on the same host OS, an OpenSSL processes on a Virtual Machine on the same host OS, and even an OpenSSL on a separate host processes across a network.
+It gets harder (read: more time consuming) to hack the farther away adversary, but they're all possible with sufficient patience, compute power, and Statistics<sup>TM</sup>.</p>
+</div>
+<div class="section" id="oh-god-fix-it-please">
+<h2>Oh god fix it please</h2>
+<p>Clam down!
+We've come a long way since 2003 when this was proven to be a viable attack.
+Most SSL libraries have fixed this vulnerability so you're fine as long as you updated in the past decade.</p>
+<p>If you <em>haven't</em> updated in the past decade... burn that server.
+Even the silicon atoms are compromised.
+It's not even worth trying a fresh install.
+The thing is just too far gone, start fresh.
+Goodnight, sweet prince.</p>
+</div>
+<div class="section" id="constant-time-algorithms">
+<h2>Constant-time Algorithms</h2>
+<blockquote>
+<p>How did the crypto libraries solve this problem?</p>
+<blockquote>
+<strong>Constant-time Algorithms</strong></blockquote>
+<p>Oh fancy, tell me more.</p>
+</blockquote>
+<p>Constant-time Algorithms are a way of implementing an algorithm in a way that always takes the same amount of time to compute regardless of the input.</p>
+<p>Specifically, these perform in constant-time while processing <em>secret</em> information.
+This distinction means processing a secret key <em>always</em> takes N cycles while checking that a configuration file is correctly formatted might take a M cycles or maybe M+5.</p>
+<p>There are a lot of coding practices to be aware of in crypto which help us to avoid leaking information for Remote Timing Attacks.
+Let's go over a few.</p>
+</div>
+<div class="section" id="limit-conditionals-on-secrets">
+<h2>Limit conditionals on secrets</h2>
+<blockquote>
+Avoid conditioning on secret information to avoid (among other things) CPU branch predictions.</blockquote>
+<p>Take this code for example:</p>
+<pre class="code python literal-block">
+<span class="k">if</span> <span class="n">usually_true</span><span class="p">:</span>
+    <span class="n">do_usual_thing</span><span class="p">()</span> <span class="c1"># Path A</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">do_weird_thing</span><span class="p">()</span> <span class="c1"># Path B</span>
+</pre>
+<p>The CPU eventually will recognize that Path A is going to happen more than Path B so it will try to optimize for that path, making the &quot;usual thing&quot; faster.
+This makes sense from a CPU designer standpoint <a class="footnote-reference" href="#id27" id="id4">[6]</a>, but it leaks information about which branch is being taken.
+When the &quot;unusual thing&quot; happens the CPU has to backpedal before continuing, which takes a notable amount of time.
+This backpedaling gives an adversary enough information to craft an attack the path they're on and extrapolate secret information based on that path-awareness.</p>
+<p><em>This type of attack (conditioning on private information) is explored in the Constnat Time Algorithm example and Remote Timing Attack demo near the end of the post.</em></p>
+</div>
+<div class="section" id="division-multiplication-tricky-stuff">
+<h2>Division/Multiplication: tricky stuff</h2>
+<blockquote>
+Multiplication is not always constant-time.</blockquote>
+<p>Take this piece of code.</p>
+<pre class="code text literal-block">
+t1_a = current_time
+small_number_a * small_number_b
+t2_a = current_time
+
+t1_b = current_time
+big_number_a * big_number_b
+t2_b = current_time
+
+assert(t2_a - t1_a == t2_b - t1_b)
+</pre>
+<p>Believe it or not, even though the first and second blocks are just multiplying two numbers together they can take different amounts of time depending on your CPU and compiler.</p>
+<p>This is triggered by some CPUs just not being equipped to handle large numbers, so they have to perform the large number multiplication in software.
+Other CPUs optimize for small numbers since those get handled more frequently than large numbers.
+These are pretty old hardware limitations, and the issue has mostly been resolved in newer 64-bit CPUs.
+That said... you know... still something to lookout for.</p>
+<p>The same goes for division.
+Many CPUs don't have hardware support for division so the compiler needs to handle the operation in software.</p>
+<p>TLDR: the same piece of code which is constant-time on one architecture (X86_64) might not be constant-time on another piece of hardware (x86_32 for example). <a class="footnote-reference" href="#id22" id="id5">[1]</a></p>
+</div>
+<div class="section" id="compilers-and-undefined-behavior">
+<h2>Compilers and undefined behavior</h2>
+<blockquote>
+Watch out for compiler's &quot;undefined behavior&quot;.</blockquote>
+<p>The C programming language, and <em>most</em> programming languages, have a formal specification of some kind.
+This formal specification gives the programmer a good idea about what their code will do when they compile and run it.</p>
+<p>For example if I wrote the following C:</p>
+<pre class="code c literal-block">
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="mi">10</span> <span class="o">+</span> <span class="mi">20</span>
+<span class="p">}</span>
+</pre>
+<p>it <em>should</em> run and return <tt class="docutils literal">30</tt>, because the specification tells us that the <tt class="docutils literal">+</tt> operator adds two numbers and <tt class="docutils literal">return</tt> returns a given value from a function.
+It also says that <tt class="docutils literal">main</tt> returns a given integer as the exit status.</p>
+<p>If I ran that code and it returned <tt class="docutils literal"><span class="pre">-1</span></tt> I'd be very confused; that breaks specification!
+Compiler authors know this and follow the specification of the C language very carefully to make sure specified inputs produce specified outputs.</p>
+<p>But what about behavior the specification <em>doesn't</em> mention?</p>
+<p>Take for instance this:</p>
+<pre class="code c literal-block">
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span> <span class="mi">214748300</span> <span class="o">*</span> <span class="mi">214745000</span><span class="p">);</span>
+<span class="p">}</span>
+</pre>
+<p>This might not be explicitly covered by the specification because it's pretty weird.
+214748300 and 214745000 are close to the signed integer maximum, so when multiplied together what happens?
+Will the program print an unsigned integer value of 4611686014132420609 or does it return a signed integer which has overflowed but is still signed?</p>
+<p>This kind headache is called Undefined Behavior and it basically means the compiler, or rather the compiler's authors, <em>choose</em> which behavior they think is best because the language spec didn't say what should happen.</p>
+<p>Another side effect hinted at is that while you can be confident what the end behavior of your code will be you can't predict how that behavior is achieved.
+This didn't used to be an issue when C compilers were just 1:1 mapping your C loops and functions to sane assembly.
+Fortunately compilers have gotten much better at producing fast and efficient executables.
+<strong>Unfortunately</strong>, we aren't easily able to predict the runtime of our code because our compilers are liable to pour some black-magic voodoo on any and all binaries it produces.</p>
+<p>These points are condensed really well by the BearSSL website:</p>
+<blockquote>
+The C programming language is defined to run in an abstract machine under the &quot;as if&quot; rule, so the compiler is free to translate your code in any sequence of instructions that yield the expected result, with execution time not being part of the observable elements that must be preserved.</blockquote>
+<p>Even though we know that a function will always <em>work</em>, the C language (and compiler spec) doesn't care about <em>how</em> it gets done.</p>
+<p>When you're trying to write crypto code this can feel like you're a parent telling your kid to clean their room.
+They'll make it look clean, but they just shoved everything under the bed.
+Technically they did what you wanted, the room looks cleaner, but they missed the point.
+Something about building character in constant-time.</p>
+<p>So what do we do?
+We need to trick the compiler.</p>
+<p>There are a handful of tricks to <a class="footnote-reference" href="#id26" id="id6">[5]</a> to get the compiler to (a) avoid unknown behavior and (b) enforce a specific assembly output.
+These are tricks include:</p>
+<ul class="simple">
+<li>Using a bit-wise operations instead of the equivalent mathematical operation.</li>
+<li>Mark important [secret] variables as volatile.</li>
+<li>Manually zero out important [secret filled] memory.</li>
+<li>Use multiple sources of entropy; as many as you can get your hands on.</li>
+<li>Read the output assembly and become a Jedi.</li>
+</ul>
+<p>These are very high-level solutions to some of the problems, solutions I'm only going to hand-wavily describe, but honestly that's because I don't really grok the solutions and don't want to lead you astray.
+Check out the end of this post for further reading by really smart people that get paid to do this stuff.</p>
+</div>
+<div class="section" id="why-can-t-i-just">
+<h2>&quot;Why can't I just...&quot;</h2>
+<p>Just <em>wait</em>?
+If only.</p>
+<p>So the first thought I had (and every other crypto novice has) is something like this:</p>
+<pre class="code text literal-block">
+do time sensitive operation
+sleep N seconds
+</pre>
+<p>This doesn't work because this just shifts the amount of time it takes to do an operation, literally <em>just</em> making your crypto take longer.
+Then the <em>second</em> thought I and every other crypto novice has is something like:</p>
+<pre class="code text literal-block">
+record start time
+do time sensitive operation
+record end time
+sleep (expected time - elapsed time) seconds
+</pre>
+<p>This is <em>better</em> but you'll never <em>nail</em> the expected time.
+It'll either be too long or too short
+This means that either some amount of information is leaked, when <tt class="docutils literal">expected time</tt> is too short, or the crypto is needlessly slow, which is just a silly compromise. <a class="footnote-reference" href="#id25" id="id7">[4]</a></p>
+<p>We <em>can</em> make it algorithmically secure without this <tt class="docutils literal">sleep</tt> hack, so we <em>will</em>.</p>
+</div>
+<div class="section" id="practical-solutions-to-timing-attacks">
+<h2>Practical Solutions to Timing Attacks</h2>
+<p>If you're implementing crypto, STOP.</p>
+<p>If you're implementing crypto and you know what you're doing, your language of choice <em>probably</em> has a constant-time library which implements some primitives that you can take advantage of for simple tasks like comparisons.
+Those can be found at the end of this post in Errata. <a class="citation-reference" href="#ctlibs" id="id8">[CTLibs]</a></p>
+<p>After looking into constant-time-ifying your code, do some reading and testing!
+There have been a lot of developments in analyzing program constant-time-ness and much of this work is Open Source!
+These are implemented using a lot of Statistics<sup>TM</sup>, code inspection, and even Valgrind. <a class="footnote-reference" href="#id31" id="id9">[10]</a> <a class="footnote-reference" href="#id28" id="id10">[7]</a> <a class="footnote-reference" href="#id32" id="id11">[11]</a>
+If you're really concerned that <em>Your Crypto Library</em> isn't secure against Remote Timing Attacks, take one of those tools on a test drive and see what happens.
+It's pretty likely that you'll find a <em>notable</em> timing difference based on different inputs and you'll probably need to make changes for your library to be secure against timing attacks.</p>
+<p>It's for the greater good.
+Because of your contributions the crypto community is even stronger.</p>
+<div class="section" id="a-crazy-idea-constant-time-language-spec">
+<h3>A crazy idea: constant time language spec</h3>
+<p>My crazy idea, for my <em>very</em> hypothetical grad-school studies would be to implement a Constant-time <em>compiler</em> and/or <em>language</em>.
+This would perform transformations to your code in an attempt to make it constant-time or warning you when your code isn't going to run in constant-time when it ought to.</p>
+<p>Of course this would take a very long time, and honestly I haven't thought it through entirely, but I imagine something like this:</p>
+<pre class="code text literal-block">
+regular code
+
+ct {
+    thing that needs to be constant-time.
+}
+
+regular code
+</pre>
+<p>Where you tell the compiler &quot;This needs to be constant-time&quot;.
+The compiler does it's best to convert loops and statements into constant-time and when it's done it tells you if it was able to convert your code into constant-time execution or not.</p>
+<p>It's probably overkill; you don't usually just willy-nilly write constant-time code.
+That said, just like C and Python help produce less error prone code than writing straight Assembly, so too might a constant-time language help produce code that hits less of the tricky pitfalls of implementing Constant-time algorithms.</p>
+</div>
+</div>
+<div class="section" id="constant-time-algorithm-example">
+<h2>Constant-time Algorithm example</h2>
+<p>Take our code block from the beginning, the one that did the leaky comparison.
+That takes different amounts of time when processing a given key against a known private key.
+How would we write <em>that</em> in constant-time?</p>
+<p>Something like this:</p>
+<pre class="code python literal-block">
+<span class="c1"># Short circuit based on user input, does not leak private information</span>
+<span class="k">if</span> <span class="n">length</span><span class="p">(</span><span class="n">recieved_key</span><span class="p">)</span> <span class="o">!=</span> <span class="n">PRIVATE_KEY_LENGTH</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">KeyLengthError</span>
+
+<span class="n">recvied_bits</span>  <span class="o">=</span> <span class="n">bits</span><span class="p">(</span><span class="n">recieved_key</span><span class="p">)</span> <span class="c1"># Taken to be constant-time</span>
+<span class="n">expected_bits</span> <span class="o">=</span> <span class="n">bits</span><span class="p">(</span><span class="n">expected_key</span><span class="p">)</span> <span class="c1"># Taken to be constant-time</span>
+
+<span class="n">ret</span> <span class="o">=</span> <span class="n">Thing</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">PRIVATE_KEY_LENGTH</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">recieved_bits</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">expected_bits</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">KeyLengthError</span> <span class="c1"># This sets the output, but the loop does not break</span>
+
+<span class="k">return</span> <span class="n">ret</span>
+</pre>
+<p>This is similar to our original code but it does a few things differently:</p>
+<ol class="arabic simple">
+<li>We convert our keys to a variable which can be operated on bit-wise.</li>
+<li>We manually compare each bit of the inputs. This is what the <tt class="docutils literal">==</tt> operator does, but instead of returning when we get a difference we essentially set a switch. <tt class="docutils literal">ret = Error</tt> from <tt class="docutils literal">ret = Thing</tt>.</li>
+<li>Outside of the loop we return our response after processing all of our bits.</li>
+</ol>
+<p>Behaviorally this is almost identical to our original code, but it does not return earlier or later depending on the user's input.</p>
+<p>Yet another implementation avoids the direct comparison:</p>
+<pre class="code python literal-block">
+<span class="c1"># Short circuit based on user input, does not leak private information</span>
+<span class="k">if</span> <span class="n">length</span><span class="p">(</span><span class="n">recieved_key</span><span class="p">)</span> <span class="o">!=</span> <span class="n">PRIVATE_KEY_LENGTH</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">KeyLengthError</span>
+
+<span class="n">recvied_bits</span>  <span class="o">=</span> <span class="n">bits</span><span class="p">(</span><span class="n">recieved_key</span><span class="p">)</span> <span class="c1"># Taken to be constant-time</span>
+<span class="n">expected_bits</span> <span class="o">=</span> <span class="n">bits</span><span class="p">(</span><span class="n">expected_key</span><span class="p">)</span> <span class="c1"># Taken to be constant-time</span>
+
+<span class="n">matching_bits</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">PRIVATE_KEY_LENGTH</span><span class="p">):</span>
+    <span class="n">matching_bits</span> <span class="o">+=</span> <span class="nb">int</span><span class="p">(</span><span class="n">xor</span><span class="p">(</span><span class="n">recieved_bits</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">expected_bits</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+
+<span class="k">if</span> <span class="n">matching_bits</span> <span class="o">==</span> <span class="n">PRIVATE_KEY_LENGTH</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">thing</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">KeyLengthError</span>
+</pre>
+</div>
+<div class="section" id="remote-timing-attack-demo">
+<h2>Remote Timing Attack demo</h2>
+<blockquote>
+Examples are fine, but what about a demo!
+You said this was a real threat!</blockquote>
+<p>True, I did say that... so we'll do a small demonstration.</p>
+<p>Below is a bit of Python code that checks a user's input against some hard-coded secret.</p>
+<pre class="code python literal-block">
+<span class="c1"># secret.py</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">sleep</span> <span class="c1"># Used to exaggerate time difference.</span>
+<span class="kn">from</span> <span class="nn">sys</span> <span class="kn">import</span> <span class="n">argv</span>   <span class="c1"># Used to read user input.</span>
+
+<span class="k">def</span> <span class="nf">is_equal</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Custom `==` operator&quot;&quot;&quot;</span>
+    <span class="c1"># Fail if the strings aren't the right length</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)):</span>
+        <span class="c1"># Short-circuit if the strings don't match</span>
+        <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="n">sleep</span><span class="p">(</span><span class="mf">0.15</span><span class="p">)</span> <span class="c1"># This exaggerates it just enough for our purposes</span>
+
+    <span class="k">return</span> <span class="bp">True</span>
+
+<span class="c1"># Hard-coded secret globals FOR DEMONSTRATIONS ONLY</span>
+<span class="n">secret</span> <span class="o">=</span> <span class="s1">'l33t'</span>
+
+<span class="c1"># This is python for &quot;If someone uses you as a script, do this&quot;</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">'__main__'</span><span class="p">:</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># The user got it right!</span>
+        <span class="k">if</span> <span class="n">is_equal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">secret</span><span class="p">):</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">'You got the secret!'</span><span class="p">)</span>
+
+        <span class="c1"># The user got it wrong</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">'Try again!'</span><span class="p">)</span>
+
+    <span class="c1"># The user forgot to enter a guess.</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">'Usage: python secret.py yourguess</span><span class="se">\n</span><span class="s1">'</span> \
+             <span class="o">+</span><span class="s1">'The secret may consist of characters in [a-z0-9] '</span>\
+             <span class="o">+</span><span class="s1">'and is {} characters long.'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">secret</span><span class="p">)))</span>
+</pre>
+<p>The thing that makes the above code particularly useful for our purposes is that it exaggerates the time it takes to evaluate the <tt class="docutils literal">is_equal</tt> function.
+Think of this as the 'backpedaling' the CPU does... turned up to 11.
+Most important [for the author] we don't need to use Statistics<sup>TM</sup> to figure the secret, evaluating each input multiple times and collecting/processing that timing data, it already takes about one magnitude longer to evaluate a matching letter than it does to evaluate a non-matching letter.</p>
+<p>Next we've got the attack code.</p>
+<pre class="code python literal-block">
+<span class="c1"># attack.py</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span> <span class="c1"># Used to get a timing difference.</span>
+<span class="kn">from</span> <span class="nn">string</span> <span class="kn">import</span> <span class="n">ascii_lowercase</span> <span class="c1"># All lowercase characters</span>
+<span class="kn">from</span> <span class="nn">string</span> <span class="kn">import</span> <span class="n">digits</span> <span class="c1"># All digits as strings</span>
+<span class="kn">from</span> <span class="nn">subprocess</span> <span class="kn">import</span> <span class="n">call</span> <span class="c1"># used to exec a secret.py</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">devnull</span>  <span class="c1"># Suppress output of secret.py</span>
+
+<span class="n">current</span>     <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="s1">'aaaa'</span><span class="p">)</span>  <span class="c1"># Initial guess</span>
+<span class="n">characters</span>  <span class="o">=</span> <span class="n">ascii_lowercase</span><span class="o">+</span><span class="n">digits</span> <span class="c1"># All possible characters in the secret</span>
+
+<span class="c1"># We know the string is the same length as our initial guess</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">current</span><span class="p">)):</span>
+    <span class="n">guess_times</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># Keep track of execution times</span>
+
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">characters</span><span class="p">:</span>
+        <span class="n">current</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span> <span class="c1"># Swap the current letter with the current guess</span>
+
+        <span class="c1"># Uncomment the following line for fun debug output</span>
+        <span class="c1"># print('Making guess {}'.format(''.join(current)))</span>
+
+        <span class="c1"># Execute `secret.py` and time it</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">call</span><span class="p">([</span><span class="s1">'python'</span><span class="p">,</span> <span class="s1">'secret.py'</span><span class="p">,</span> <span class="s1">''</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current</span><span class="p">)],</span> <span class="n">stdout</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="n">devnull</span><span class="p">,</span> <span class="s1">'wb'</span><span class="p">))</span>
+        <span class="n">end</span>   <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+
+        <span class="c1"># Add that time to the list</span>
+        <span class="n">guess_times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">end</span><span class="o">-</span><span class="n">start</span><span class="p">)</span>
+
+    <span class="c1"># Uncomment the following line for fun debug output</span>
+    <span class="c1"># print('max {} min {}'.format(max(guess_times), min(guess_times)))</span>
+
+    <span class="c1"># This is a hackey-looking way of getting the outlier time.</span>
+    <span class="n">current</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">characters</span><span class="p">[</span><span class="n">guess_times</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">guess_times</span><span class="p">))]</span>
+    <span class="k">print</span><span class="p">(</span><span class="s1">'character {} is {}'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">current</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+
+    <span class="c1"># Uncomment the following line for fun debug output</span>
+    <span class="c1"># print(guess_times.index(max(guess_times)))</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s1">'Final guess is {}'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">''</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current</span><span class="p">)))</span>
+</pre>
+<p>It's a bit convoluted in parts but if you stare at it for a while and read the enlightening comments you should see why this gets the right answer.</p>
+<p>I encourage you to copy that code into two files, <tt class="docutils literal">secret.py</tt> and <tt class="docutils literal">attack.py</tt> and run it like so:</p>
+<pre class="code text literal-block">
+$ time python attack.py
+character 0 is l
+character 1 is 3
+character 2 is 3
+character 3 is t
+Final guess is l33t
+
+real  0m35.176s
+user  0m1.300s
+sys 0m0.485s
+
+$ python secret.py l33t
+You got the secret!
+</pre>
+<p>You'll need a working Python installation and probably a shell of some kind.
+I'm on CentOS Linux but any *nix system will <em>probably</em> work.
+With some fiddling you can probably get it to work on Windows ;-)</p>
+<blockquote>
+This isn't a real threat!
+You exaggerated the problem!</blockquote>
+<p>Hush now.
+It demonstrates the principles of the attack.
+Besides, the post is over.
+We've only got time for the conclusion and then you're off to bed.</p>
+</div>
+<div class="section" id="constant-time-blogpost">
+<h2>Constant-time blogpost</h2>
+<p>This topic has been a break from the theory/math-heavy term thus far.
+Honestly I'm jazzed about it.</p>
+<p>We learned that something as small as a comparison (a <em>comparison</em>!) can leak information to an adversary.
+Your algorithm might be secure, but if you're not careful you can leak information in the most menial code.</p>
+<p>This isn't a lost cause.
+We don't need to throw this <em>security</em> thing out the window.
+If we're aware of the gotchas we can craft code that solves these problems.
+It's hard work but the peace of mind should make it worth it.</p>
+<p>Learning about this seemingly obscure (<em>terrifying</em>) exploit in algorithmically secure code is just the kind of headache I enjoy in Computer Science.
+Although I don't feel like I did Remote Timing Attacks justice, I could probably spend weeks on it, I had to call it quits.
+I could keep working on this for <em>another 10 weeks</em>, but it's over.
+Just walk away.</p>
+</div>
+<div class="section" id="annotated-bibliography">
+<h2>Annotated Bibliography</h2>
+<dl class="docutils">
+<dt>BearSSL <a class="footnote-reference" href="#id22" id="id12">[1]</a> <a class="footnote-reference" href="#id23" id="id13">[2]</a></dt>
+<dd>BearSSL is a project which aims to make an architecture-independent constant-time implementation of various Crypto Libraries, largely mirroring compatibility with OpenSSL and related Open Source crypro libraries.
+Not only is the project interesting but a handful of blogposts and analysis are posted on the website covering topics like how to implement RSA in constant-time to the compatibility of various CPU models with assumptions about constant-time operations (e.g., multiplication).</dd>
+<dt>Remote Timing Attacks are Practical <a class="footnote-reference" href="#id24" id="id14">[3]</a></dt>
+<dd>This paper was very easy to read for an academic article and covered the creation of various timing attacks in practical conditions (e.g., hacking an RSA private key across a network).</dd>
+<dt>Beginner focused blogs <a class="footnote-reference" href="#id25" id="id15">[4]</a> <a class="footnote-reference" href="#id29" id="id16">[8]</a></dt>
+<dd>These were two blogposts which laid out what timing attack, why they were viable, and how you can avoid them.
+Protip: never assume a library you're using is constant-time.</dd>
+<dt>Adam Langley's blog <a class="footnote-reference" href="#id30" id="id17">[9]</a> <a class="footnote-reference" href="#id32" id="id18">[11]</a></dt>
+<dd>Adam Langley has great Intermediate-level blogposts about the Lucky13 attack and analyzing code for constant-time execution.
+These aren't for the weak of heart, but are much more accessible than a lot of academic articles on similar topics.</dd>
+<dt>CryptoCoding.net Coding Rules <a class="footnote-reference" href="#id26" id="id19">[5]</a></dt>
+<dd>This wiki outlines some common pitfalls when writing constant-time code and how to avoid it.
+It assumes you're writing C code, but many of the principles carry to more exotic languages.</dd>
+<dt>Constant Time Testing Papers <a class="footnote-reference" href="#id28" id="id20">[7]</a> <a class="footnote-reference" href="#id31" id="id21">[10]</a></dt>
+<dd>These academic papers outline tools developed for studying how constant-time a program is and analyzes various programs with these tools.
+They're a great (surprisingly recent) survey of this topic.</dd>
+</dl>
+</div>
+<div class="section" id="errata">
+<h2>Errata</h2>
+<table class="docutils footnote" frame="void" id="id22" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id5">1</a>, <a class="fn-backref" href="#id12">2</a>)</em> BearSSL: Constant Time Multiplication
+<a class="reference external" href="https://bearssl.org/ctmul.html">https://bearssl.org/ctmul.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id23" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id13">[2]</a></td><td>BearSSL: Why Consant-Time Crypto?
+<a class="reference external" href="https://bearssl.org/constanttime.html">https://bearssl.org/constanttime.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id24" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[3]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>, <a class="fn-backref" href="#id14">3</a>)</em> Remote Timing Attacks are Pratical;
+David Brumley, Dan Boneh; <a class="reference external" href="http://crypto.stanford.edu/~dabo/pubs/papers/ssl-timing.pdf">http://crypto.stanford.edu/~dabo/pubs/papers/ssl-timing.pdf</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id25" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[4]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id7">2</a>, <a class="fn-backref" href="#id15">3</a>)</em> Chosen Plaintext: A beginner's guide to contant-time cryptography;
+<a class="reference external" href="https://www.chosenplaintext.ca/articles/beginners-guide-constant-time-cryptography.html">https://www.chosenplaintext.ca/articles/beginners-guide-constant-time-cryptography.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id26" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[5]</td><td><em>(<a class="fn-backref" href="#id6">1</a>, <a class="fn-backref" href="#id19">2</a>)</em> Cryptography Coding Standards: Coding rules;
+<a class="reference external" href="https://cryptocoding.net/index.php/Coding_rules">https://cryptocoding.net/index.php/Coding_rules</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id27" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[6]</a></td><td>As Sonic the Hedgehog always says, Gotta Go Fast!</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id28" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[7]</td><td><em>(<a class="fn-backref" href="#id10">1</a>, <a class="fn-backref" href="#id20">2</a>)</em> Veryfying Constnat-Time Implementations, via Usenix;
+<a class="reference external" href="http://haslab.uminho.pt/jba/files/16usenix.pdf">http://haslab.uminho.pt/jba/files/16usenix.pdf</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id29" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id16">[8]</a></td><td>A Lesson In Timing Attacks (or, Don't use <tt class="docutils literal">MessageDigest.isEquals</tt>);
+Coda Hale; <a class="reference external" href="https://codahale.com/a-lesson-in-timing-attacks/">https://codahale.com/a-lesson-in-timing-attacks/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id30" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id17">[9]</a></td><td>Checking that functions are constant-time with Valgrind;
+Adam langley via ImperialViolet;
+<a class="reference external" href="https://www.imperialviolet.org/2010/04/01/ctgrind.html">https://www.imperialviolet.org/2010/04/01/ctgrind.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id31" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[10]</td><td><em>(<a class="fn-backref" href="#id9">1</a>, <a class="fn-backref" href="#id21">2</a>)</em> Dude, is my code constant-time?
+Oscar Reparaz, josep Balasch, Ingrid Vebauwhede;
+<a class="reference external" href="https://eprint.iacr.org/2016/1123.pdf">https://eprint.iacr.org/2016/1123.pdf</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id32" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[11]</td><td><em>(<a class="fn-backref" href="#id11">1</a>, <a class="fn-backref" href="#id18">2</a>)</em> Lucky Thirteen attack on TLS CBC
+Adam langley via ImperialViolet;
+<a class="reference external" href="https://www.imperialviolet.org/2013/02/04/luckythirteen.html">https://www.imperialviolet.org/2013/02/04/luckythirteen.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="ctlibs" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id8">[CTLibs]</a></td><td><ul class="first last simple">
+<li><a class="reference external" href="https://golang.org/pkg/crypto/subtle/">https://golang.org/pkg/crypto/subtle/</a></li>
+<li><a class="reference external" href="https://cryptography.io/en/latest/hazmat/primitives/constant-time/">https://cryptography.io/en/latest/hazmat/primitives/constant-time/</a></li>
+<li><a class="reference external" href="https://github.com/isislovecruft/subtle">https://github.com/isislovecruft/subtle</a></li>
+</ul>
+</td></tr>
+</tbody>
+</table>
+</div>
+
+</div>
+
+
+      </div>
+
+      <footer>
+        <p>
+        © 2019 Elijah Voigt, <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="/assets/images/CCA4IL.png" /> Creative Commons Attribution 4.0 International</a>.
+        </p>
+        <p>
+        This website made with locally sourced bits, built with Python 🐍 via Pelican 🐦, developed on Fedora 👒 GNU/Linux 🐃🐧, <a href='https://github.com/pop/elijahcaine.me'>hosted</a> and deployed on GitHub 🐙🐱, and served from clouds ⛅.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

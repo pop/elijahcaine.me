@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="author" content="Elijah Voigt">
+    <link rel="stylesheet" type="text/css" href="../theme/css/styles.css"/>
+        <link href="/rss.xml" type="application/rss+xml"   rel="alternate" title="elijahcaine.me RSS Feed" />
+        <link href="/atom.xml" type="application/atom+xml" rel="alternate" title="elijahcaine.me Atom Feed" />
+  </head>
+
+  <body>
+    <div class="site">
+      <header>
+        <a href="/">(🏠 elijahcaine.me)</a>
+        <a href="https://github.com/pop/">(🐙 github 🐱)</a>
+        <a href="/resume.pdf">(👔 resume)</a>
+      </header>
+
+      <div id="content">
+
+<div class="post">
+  <h1 class="posttitle">
+    Git Does a Lot of Things
+  </h1>
+
+  <div class="postinfo">
+    <p class="published" title="2016-07-27T00:00:00-07:00">
+      Wed 27 July 2016
+    </p>
+  </div>
+</div>
+
+<div class="article">
+  <p>I should make a tool that extends <tt class="docutils literal">git</tt> to delete all of the files matched
+by the <tt class="docutils literal">.gitginore</tt>.  I spend way too much time crafting <tt class="docutils literal">find <span class="pre">&lt;...&gt;</span> |
+xargs rm</tt> commands.  I know, I'll call it <tt class="docutils literal">git clean</tt>.</p>
+<p>Well... before I get too far I'll just make sure it doesn't already exist.</p>
+<div class="highlight"><pre><span></span>$ man git clean
+
+GIT-CLEAN(1)                  Git Manual                       GIT-CLEAN(1)
+
+NAME
+       git-clean - Remove untracked files from the working tree
+
+SYNOPSIS
+    git clean [-d] [-f] [-i] [-n] [-q] [-e &lt;pattern&gt;] [-x | -X] [--]
+    &lt;path&gt;...
+
+DESCRIPTION
+    Cleans the working tree by recursively removing files that are not
+    under version control, starting from the current directory.
+
+    ...
+</pre></div>
+<p>Huh... well I... that's pretty much exactly how I would have done it...</p>
+<p><tt class="docutils literal">git</tt> <em>tab tab</em></p>
+<div class="highlight"><pre><span></span>add                  filter-branch        relink
+am                   format-patch         remote
+annotate             fsck                 repack
+apply                gc                   replace
+archive              get-tar-commit-id    request-pull
+bisect               grep                 reset
+blame                help                 revert
+branch               imap-send            review
+bundle               init                 rm
+checkout             instaweb             send-email
+cherry               interpret-trailers   shortlog
+cherry-pick          log                  show
+clean                merge                show-branch
+clone                mergetool            stage
+column               mv                   stash
+commit               name-rev             status
+config               notes                submodule
+credential           p4                   svn
+describe             pull                 tag
+diff                 push                 verify-commit
+difftool             rebase               whatchanged
+fetch                reflog               worktree
+</pre></div>
+<p>Ah, okay. I get it now. Git <em>does</em> do a lot of things.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The above output is from <cite>git 2.8.2</cite>.</p>
+</div>
+
+</div>
+
+
+      </div>
+
+      <footer>
+        <p>
+        © 2019 Elijah Voigt, <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="/assets/images/CCA4IL.png" /> Creative Commons Attribution 4.0 International</a>.
+        </p>
+        <p>
+        This website made with locally sourced bits, built with Python 🐍 via Pelican 🐦, developed on Fedora 👒 GNU/Linux 🐃🐧, <a href='https://github.com/pop/elijahcaine.me'>hosted</a> and deployed on GitHub 🐙🐱, and served from clouds ⛅.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

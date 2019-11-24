@@ -1,211 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-        <title>elijahcaine.me - CoreOS</title>
-        <meta charset="utf-8" />
-        <link rel="stylesheet" href="../theme/css/main.css" type="text/css" />
-        <link href="elijahcaine.me/atom.xml" type="application/atom+xml" rel="alternate" title="elijahcaine.me ATOM Feed" />
 
-        <!--[if IE]>
-                <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <head>
+    <meta charset="utf-8" />
+    <meta name="author" content="Elijah Voigt">
+    <link rel="stylesheet" type="text/css" href="../theme/css/styles.css"/>
+        <link href="/rss.xml" type="application/rss+xml"   rel="alternate" title="elijahcaine.me RSS Feed" />
+        <link href="/atom.xml" type="application/atom+xml" rel="alternate" title="elijahcaine.me Atom Feed" />
+  </head>
 
-        <!--[if lte IE 7]>
-                <link rel="stylesheet" type="text/css" media="all" href="../css/ie.css"/>
-                <script src="../js/IE8.js" type="text/javascript"></script><![endif]-->
+  <body>
+    <div class="site">
+      <header>
+        <a href="/">(🏠 elijahcaine.me)</a>
+        <a href="https://github.com/pop/">(🐙 github 🐱)</a>
+        <a href="/resume.pdf">(👔 resume)</a>
+      </header>
 
-        <!--[if lt IE 7]>
-                <link rel="stylesheet" type="text/css" media="all" href="../css/ie6.css"/><![endif]-->
+      <div id="content">
 
-</head>
+<div id="postlist">
+  <div class="post">
+    <h3><a href="/chef-dynamic-attributes" title="Permalink to this article">Dynamic Attributes in Chef</a></h3>
 
-<body>
+    <div class="postinfo">
+      <p class="published" title="2018-06-23T00:00:00-07:00"> Sat 23 June 2018 </p>
+    </div>
+  </div>
+  <div class="post">
+    <h3><a href="/buildbot-on-kubernetes" title="Permalink to this article">Deploying Buildbot on Kubernetes</a></h3>
 
-        <!-- header>
-            <nav>
-                <ul>
-                    <li><a href="../about/">About</a> ::</li>
-                    <li><a href="../contact/">Contact</a></li>
-                    <li>:: <a href="../categories.html">Categories</a></li>
-                    <li>:: <a href="../tags.html">Tags</a></li>
-                </ul>
-            </nav>
-        </header -->
-
-        
-        
-
-            <header>
-                <h1><a href=".." id="site-title">elijahcaine.me </a> : <a href="../tech/chef-dynamic-attributes" id="page-title">Dynamic Attributes in Chef</a></h1>
-<time datetime="2018-06-23T00:00:00-07:00">Sat 23 June 2018</time>            </header>
-
-            <article>
-                <p>So you want to set a node attribute in a resource block?
-Good luck --
-oh wait you don't need luck because you have this blogpost!</p>
-<div class="section" id="problem">
-<h2>Problem</h2>
-<p>You are trying to set a node attribute in a resource block but it isn't working.</p>
-<p>For example you have the following code:</p>
-<pre class="code ruby literal-block">
-<span class="n">ruby_block</span> <span class="s1">'foo'</span> <span class="k">do</span>
-  <span class="n">block</span> <span class="k">do</span>
-    <span class="c1"># some ruby</span>
-    <span class="n">node</span><span class="o">.</span><span class="n">override</span><span class="o">[</span><span class="s1">'var'</span><span class="o">]</span> <span class="o">=</span> <span class="s1">'value'</span>
-  <span class="k">end</span>
-  <span class="n">action</span> <span class="ss">:run</span>
-<span class="k">end</span>
-
-<span class="k">if</span> <span class="n">node</span><span class="o">[</span><span class="s1">'var'</span><span class="o">]</span> <span class="o">==</span> <span class="s1">'value'</span>
-  <span class="n">notifies</span> <span class="ss">:run</span><span class="p">,</span> <span class="n">some_resource</span><span class="o">[</span><span class="nb">name</span><span class="o">]</span>
-<span class="k">else</span>
-  <span class="n">notifies</span> <span class="ss">:run</span><span class="p">,</span> <span class="n">other_resource</span><span class="o">[</span><span class="n">whatever</span><span class="o">]</span>
-<span class="k">end</span>
-</pre>
-<p>Even though you're setting <tt class="docutils literal"><span class="pre">node['var']</span></tt>, <tt class="docutils literal">other_resource[whatever]</tt> is getting notified to <tt class="docutils literal">:run</tt>.
-What gives?</p>
+    <div class="postinfo">
+      <p class="published" title="2016-12-12T00:00:00-08:00"> Mon 12 December 2016 </p>
+    </div>
+  </div>
 </div>
-<div class="section" id="solution">
-<h2>Solution</h2>
-<p>To jump ahead, because you're skimming this post for the answer, you're going to want to do something like this:</p>
-<pre class="code diff literal-block">
-# go-go-gadget diffs
-# Chef Version 13.5.8
 
-  ruby_block 'foo' do
-    block do
-      # some ruby
-      node.override['var'] = 'value'
-    end
-<span class="gd">-   action :run
-</span><span class="gi">+   action :nothing
-</span><span class="gd">- end
-</span><span class="gi">+ end.run_action(:run)
-</span>
-if node['var'] == 'value'
-  notifies :run, some_resource[name]
-else
-  notifies :run, other_resource[whatever]
-end
-</pre>
-<p>Basically you want to execute the <tt class="docutils literal">ruby_block</tt> that sets your attribute <strong>now</strong> so the rest of your code can consume the value either later in the compilation phase or during the execution phase of the Chef run.</p>
-</div>
-<div class="section" id="how-why-did-that-work">
-<h2>How/why did that work?</h2>
-<p>If you've read his far you're actually reading.
-Welcome to the post!
-Let's begin.</p>
-<p>Let's dig into <em>exactly</em> what my problem was, because sometimes examples aren't good enough.
-You know... for fun.</p>
-<p>I was trying to trigger an application upgrade based on the current installed version.
-I was <em>not</em> installing a package-manager-managed package <a class="footnote-reference" href="#id4" id="id1">[2]</a> so I couldn't just pin the version a <tt class="docutils literal">yum</tt> resource, I had to do this kludge of a solution.</p>
-<p>So for me <tt class="docutils literal">some_resource[name]</tt> was downloading the latest version of the app (a <tt class="docutils literal">.tar.gz2</tt> file from GitHub) and <tt class="docutils literal">other_resource[whatever]</tt> was a no-op.
-The as part of the package download I unconditionally trigger a <tt class="docutils literal">:delayed</tt> service restart.
-Chef was 'upgrading' and restarting my app every thirty minutes which broke core functionality. <a class="footnote-reference" href="#id3" id="id2">[1]</a></p>
-</div>
-<div class="section" id="shit-i-tried-before-stumbling-upon-the-solution">
-<h2>Shit I tried before stumbling upon the solution</h2>
-<p>I tried a bunch of things, but they can all kinda be summed up in this:</p>
-<pre class="code diff literal-block">
-# yay more diffs
-  ruby_block 'foo' do
-    block do
-      # some ruby
-      node.override['var'] = 'value'
-    end
-    notifies :create, 'tar[my-app]', :immediately # Triggers tar[my-app] to run now
-  end
+      </div>
 
-<span class="gd">- if node['var'] == 'value'
--   notify :run, some_resource[name]
-- else
--   notify :run, other_resource[whatever]
-- end
-</span>
-  tar 'my-app' do
-    action  :nothing # Unless triggered this does nothing
-<span class="gi">+   only_if { node['var'] == 'value' } # This should also do nothing if this isn't true
-</span>    # The rest of the resource block
-  end
-</pre>
-<p>Which ultimately didn't work either.</p>
-<p>I... I have no idea why this didn't work.</p>
-<p>Something something Chef is complicated.</p>
-</div>
-<div class="section" id="why-the-solution-works-and-the-other-stuff-didn-t">
-<h2>Why the solution works (and the other stuff didn't)</h2>
-<p>The reason my ultimate solution <em>did</em> work is best summed up by this quote from the <a class="reference external" href="https://docs.chef.io/resource_common.html#run-action">Chef Docs</a>:</p>
-<blockquote>
-Use <tt class="docutils literal"><span class="pre">.run_action(:some_action)</span></tt> at the end of a resource block to run the specified action during the compile phase.</blockquote>
-<p>My original code (read: broken code) was running the <tt class="docutils literal">if</tt> block during the compilation phase (happens earlier) and running the <tt class="docutils literal">ruby_block</tt> in the execution phase (happens later).
-By telling it to run my <tt class="docutils literal">ruby_block</tt> during the compilation phase we were ensuring it happened before the <tt class="docutils literal">if</tt> block, and in a way running it like you would 'expect' a script to run.</p>
-<p>It ain't idiomatic but it gets the job done.</p>
-</div>
-<div class="section" id="errata">
-<h2>Errata</h2>
-<table class="docutils footnote" frame="void" id="id3" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[1]</a></td><td>The service was in question was Prometheus.
-When Chef ran every 30 minutes, it killed the Prometheus process and thus killed all of our pending alerts.
-TLDR we didn't get any alerts that took more than 30 minutes to trigger
-We also <em>kept</em> getting alerts that should taken a few hours to re-notify.</td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="id4" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[2]</a></td><td>Say that three times fast.</td></tr>
-</tbody>
-</table>
-</div>
-            </article>
-                <section id="article-list">
-                    <h2>All posts</h2>
-                    <ol>
-    </ol>
-    </section><!-- #article-list -->
-        
-
- 
-            <li><a href="../tech/buildbot-on-kubernetes" rel="bookmark" title="Permalink to Deploying Buildbot on Kubernetes">Deploying Buildbot on Kubernetes</a></li>
-    </ol>
-    </section><!-- #article-list -->
-
-        <footer>
-            <nav>
-                <ul>
-                    <li><a href="../about/">About</a> ::</li>
-                    <li><a href="../contact/">Contact</a></li>
-                    <li>:: <a href="../categories.html">Categories</a></li>
-                    <li>:: <a href="../tags.html">Tags</a></li>
-                </ul>
-                </nav>
-				<p>
-					<span id="copyright">
-						Creative Commons Attribution 4.0 International License<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/80x15.png"></a>
-					</span>
-					<span id="banter">
-						This website made with locally sourced bits,
-						hand crafted with Python 🐍 via Pelican 🐦,
-						developed on Linux 🐧,
-						deployed with containers 📦,
-						and hosted on clouds ⛅.
-					</span>
-				</p>
-				<p id="theme-credit">
-					<a href="http://mathieu.agopian.info/mnmlist/theme.html">Thème mnmlist</a>
-					(Well... a fork, but close)
-				</p>
-        </footer>
-
-    <script type="text/javascript">
-    var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-    document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-    </script>
-    <script type="text/javascript">
-    try {
-        var pageTracker = _gat._getTracker("UA-48615202-3");
-    pageTracker._trackPageview();
-    } catch(err) {}</script>
-</body>
+      <footer>
+        <p>
+        © 2019 Elijah Voigt, <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="/assets/images/CCA4IL.png" /> Creative Commons Attribution 4.0 International</a>.
+        </p>
+        <p>
+        This website made with locally sourced bits, built with Python 🐍 via Pelican 🐦, developed on Fedora 👒 GNU/Linux 🐃🐧, <a href='https://github.com/pop/elijahcaine.me'>hosted</a> and deployed on GitHub 🐙🐱, and served from clouds ⛅.
+        </p>
+      </footer>
+    </div>
+  </body>
 </html>
