@@ -1,5 +1,650 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>elijahcaine.me</title><link href="elijahcaine.me/" rel="alternate"></link><link href="elijahcaine.me/feeds/all-en.atom.xml" rel="self"></link><id>elijahcaine.me/</id><updated>2018-10-13T00:00:00-07:00</updated><entry><title>Kubernetes as an external service proxy</title><link href="elijahcaine.me/kubernetes-as-an-external-service-proxy" rel="alternate"></link><published>2018-10-13T00:00:00-07:00</published><updated>2018-10-13T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2018-10-13:elijahcaine.me/kubernetes-as-an-external-service-proxy</id><summary type="html">&lt;p class="first last"&gt;An adventure where we learn [Kubernetes] by doing [a very straight forward project]; documenting every success, failure, and quip along the way.&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>elijahcaine.me</title><link href="elijahcaine.me/" rel="alternate"></link><link href="elijahcaine.me/feeds/all-en.atom.xml" rel="self"></link><id>elijahcaine.me/</id><updated>2020-11-13T00:00:00-08:00</updated><entry><title>Let's Build a Game with Rust</title><link href="elijahcaine.me/seagl-2020-lets-build-a-game-with-rust" rel="alternate"></link><published>2020-11-13T00:00:00-08:00</published><updated>2020-11-13T00:00:00-08:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2020-11-13:elijahcaine.me/seagl-2020-lets-build-a-game-with-rust</id><summary type="html">&lt;p class="first last"&gt;A talk I gave at Seattle GNU Linux Conference 2020&lt;/p&gt;
+</summary><content type="html">&lt;div class="admonition note"&gt;
+&lt;p class="first admonition-title"&gt;Note&lt;/p&gt;
+&lt;p class="last"&gt;This is the outline for a talk I gave at the Seattle GNU Linux conference (SeaGL) 2020.
+Once the video is posted I will link it here.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="admonition note"&gt;
+&lt;p class="first admonition-title"&gt;Note&lt;/p&gt;
+&lt;p class="last"&gt;The code for this post can be found at &lt;a class="reference external" href="https://github.com/pop/lets-make-games-with-rust"&gt;https://github.com/pop/lets-make-games-with-rust&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;Like many of you, I really like games.
+I enjoy playing games, talking about games, and a few times I've even tried making games.
+I enjoy making games for a few reasons:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Games are an interesting technical challenge.&lt;/li&gt;
+&lt;li&gt;They are a flexible artistic outlet.&lt;/li&gt;
+&lt;li&gt;I don't make games in my day-job (yay hobbies).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I'm also interested in this programming language called Rust!
+You might have heard of it.
+Rust is a maturing systems programming language which aims to be performant, reliable, and productive.&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Performant in that it often goes head to head with C and C++ in benchmarks.&lt;/li&gt;
+&lt;li&gt;Reliable in that it refuses to compile memory unsafe code.&lt;/li&gt;
+&lt;li&gt;Productive because it includes &amp;quot;zero cost abstractions&amp;quot; (link &lt;tt class="docutils literal"&gt;filter&lt;/tt&gt; and &lt;tt class="docutils literal"&gt;map&lt;/tt&gt;) and awesome tooling.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The community is pretty good too!&lt;/p&gt;
+&lt;p&gt;This post is about bringing those two interests together.
+Let's learn how to build a videogame with the Rust programming language.&lt;/p&gt;
+&lt;div class="admonition warning"&gt;
+&lt;p class="first admonition-title"&gt;Warning&lt;/p&gt;
+&lt;p&gt;This post is for folks who have a passing familiarity with Rust.
+If Rust is new to you, you get a little confused.&lt;/p&gt;
+&lt;p class="last"&gt;You're a smart cookie though, I'm sure you'll keep up.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="making-games-entities-components-systems"&gt;
+&lt;h2&gt;Making Games: Entities, Components, Systems ⚙️&lt;/h2&gt;
+&lt;p&gt;Games are an incredibly fun and flexible type of project to work on.&lt;/p&gt;
+&lt;p&gt;At it's core, all games need a &amp;quot;game loop&amp;quot;:&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;Process input&lt;/li&gt;
+&lt;li&gt;Transforms state&lt;/li&gt;
+&lt;li&gt;Display new state&lt;/li&gt;
+&lt;li&gt;Repeat&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Outside of that, the possibilities are endless.
+But while the &lt;em&gt;possibilities&lt;/em&gt; are endless, there are a few &lt;em&gt;patterns&lt;/em&gt; that lots of folks seem to gravitate toward.&lt;/p&gt;
+&lt;p&gt;You could write a whole book on game programming patterns (and somebody has, links at the bottom).
+Today we're going to talk about one popular pattern: &lt;strong&gt;ECS: Entity Component System&lt;/strong&gt;.
+Here's what that looks like:&lt;/p&gt;
+&lt;dl class="docutils"&gt;
+&lt;dt&gt;Components&lt;/dt&gt;
+&lt;dd&gt;&lt;p class="first"&gt;Pieces of data mixed, matched, and queried on.&lt;/p&gt;
+&lt;p class="last"&gt;Example: Some components needed to simulate physics might be &amp;quot;Mass&amp;quot;, &amp;quot;Movable&amp;quot;, and &amp;quot;Friction&amp;quot;&lt;/p&gt;
+&lt;/dd&gt;
+&lt;dt&gt;Entities&lt;/dt&gt;
+&lt;dd&gt;&lt;p class="first"&gt;A Unique ID associated with a collection of Components.&lt;/p&gt;
+&lt;p&gt;Example: Potted plant you can break have the following components:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Sprite(&amp;quot;/path/to/plant.png&amp;quot;)&lt;/li&gt;
+&lt;li&gt;Mass(6.8)&lt;/li&gt;
+&lt;li&gt;Movable(True)&lt;/li&gt;
+&lt;li&gt;Location((2, 5, 2))&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Each of these components are reusable.
+Instead of creating a &amp;quot;PottedPlant&amp;quot; class in code, we can define each entity in a config file like this:&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+potted-plant.txt:
+Sprite /path/to/plant.png
+Mass 6.8
+Movable True
+Location 2 5 2
+&lt;/pre&gt;
+&lt;p&gt;This makes our engine much more reusable and separates our content from our logic.&lt;/p&gt;
+&lt;p class="last"&gt;But how do we use these components?&lt;/p&gt;
+&lt;/dd&gt;
+&lt;dt&gt;Systems&lt;/dt&gt;
+&lt;dd&gt;&lt;p class="first"&gt;Functions that operate on entities with specific components.&lt;/p&gt;
+&lt;p&gt;A System queries for all entities with a specific subset of components and does some transformation on it.&lt;/p&gt;
+&lt;p&gt;Example: a system that applies fire damage to an entity might look like this:&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+entities_on_fire = entities.query(on_fire=True, health &amp;gt; 0)
+for entity in entities_on_fire:
+    entity.health -= 5
+&lt;/pre&gt;
+&lt;p class="last"&gt;This is nice compared with a classes-based approach where we would need to manage inheritance to manually make sure everything interacted correctly.
+Here we define systems based on what features an entity has.
+The resulting systems and components interact with eachother in interesting and potentially unexpected ways.&lt;/p&gt;
+&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;p&gt;ECS is a popular pattern for creating interactive games and simulations.
+Engines like Unity have some ECS patterns built in, and almost every big game engine uses ECS in some way.&lt;/p&gt;
+&lt;p&gt;Of course ECS isn't a silver bullet, but for this blog post it's good enough.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="tools-of-the-trade-c-and-c"&gt;
+&lt;h2&gt;Tools of the Trade: C and C++ ⚒️&lt;/h2&gt;
+&lt;p&gt;C and C++ are very popular languages in games programming.
+They are defacto in the industry and many large engines, both internal and licensed engines, are written in C++.&lt;/p&gt;
+&lt;p&gt;I'm not here to bash on C and C++, but it can be useful to point out why you would bother using Rust if the norm is C++.&lt;/p&gt;
+&lt;p&gt;The usual arguments in favor of Rust go a little something like this:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Rust is memory safe; in Rust it is very difficult to reference freed memory, mutate memory in two threads, and dereference a null pointer.&lt;/li&gt;
+&lt;li&gt;Rust is expressive; a lot of functional-programming language features exist in Rust without the usual run-time cost of those languages.&lt;/li&gt;
+&lt;li&gt;Rust doesn't have any of the C/C++ legacy baggage but &lt;em&gt;can&lt;/em&gt; inter-operate with C/C++ codebases.&lt;/li&gt;
+&lt;li&gt;Rust has a kick-ass community and an ecosystem of battle-tested and safe code.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;So why does this all matter for games?
+I think of it it like this: Any project when it gets sufficiently complex benefits from Rust.
+Rust, by preventing a whole class of memory bugs, makes it easier to maintain a complex codebase over time.
+It might not be life or death, or as mission critical as security software, but completely avoiding null-pointer bugs, at essentially no performance cost, sounds like a huge weight off my shoulders.&lt;/p&gt;
+&lt;p&gt;Games are by their nature huge and sprawling codebases.
+Many bugs in games are caught by a compiler, but even more errors would be caught by the Rust borrow-checker.
+And being able to use some of the nice functional-programming features would be nice too.&lt;/p&gt;
+&lt;p&gt;Of course Rust is a relatively new language so your mileage may vary.
+If I ran a big game studio I don't think I would throw out my C++ code and start fresh with Rust, but I would definitely put some research and development into it for new projects (said the Rust fanboy).&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="rusty-games-hello-amethyst"&gt;
+&lt;h2&gt;Rusty Games: Hello Amethyst 💎&lt;/h2&gt;
+&lt;p&gt;Writing games in a safe, expressive, not C/C++ language sounds great; where do I start?&lt;/p&gt;
+&lt;p&gt;You could write a game from scratch, but there are engines written in Rust you can use today!
+Some of these focus on ease of use, some are for 2D games, some focus on compiling for the web.
+Most of these engines require you to write Rust, as opposed to using a GUI, but even that is changing.&lt;/p&gt;
+&lt;p&gt;For a comprehensive list check out &lt;a class="reference external" href="https://www.arewegameyet.rs"&gt;https://www.arewegameyet.rs&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;You could write this talk for almost any Rust Game Engine, but my personal favorite is Amethyst, so we'll use that.
+Amethyst has a solid API, very active community, and is a good mix of flexible, convenient, and powerful.&lt;/p&gt;
+&lt;p&gt;Amethyst checks off a few other boxes:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Implements an ECS runtime. Register Components, create Entities, and run Systems in Amethyst.&lt;/li&gt;
+&lt;li&gt;Data driven design. Almost all data in Amethyst can be read in from a Config file.&lt;/li&gt;
+&lt;li&gt;Apache + MIT licensed. Free as in speech is always nice.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="section" id="step-0-join-the-cargo-cult"&gt;
+&lt;h3&gt;Step 0: Join the Cargo Cult&lt;/h3&gt;
+&lt;p&gt;In this step we're going to get Rust setup and create a &amp;quot;hello world&amp;quot; rust project.&lt;/p&gt;
+&lt;p&gt;If you haven't already, setup your Rust toolchain and start a Rust project.&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;Install &lt;tt class="docutils literal"&gt;rustup&lt;/tt&gt;, the Rust toolchain manager.&lt;/li&gt;
+&lt;li&gt;Run &lt;tt class="docutils literal"&gt;rustup toolchain install stable&lt;/tt&gt; to install the latest stable Rust.&lt;/li&gt;
+&lt;li&gt;Run &lt;tt class="docutils literal"&gt;cargo new &lt;span class="pre"&gt;seagl-game&lt;/span&gt;&lt;/tt&gt; to create a &amp;quot;hello world&amp;quot; Rust application.&lt;/li&gt;
+&lt;li&gt;Navigate to the new &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;seagl-game&lt;/span&gt;&lt;/tt&gt; folder. Add this to the end of our project's metadata file, &lt;tt class="docutils literal"&gt;Cargo.toml&lt;/tt&gt;:&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre class="code literal-block"&gt;
+# Cargo.toml
+[dependencies.amethyst]
+version = &amp;quot;0.15.1&amp;quot;
+features = [&amp;quot;vulkan&amp;quot;]  # &amp;quot;metal&amp;quot; on MacOS
+&lt;/pre&gt;
+&lt;ol class="arabic simple" start="5"&gt;
+&lt;li&gt;Run &lt;tt class="docutils literal"&gt;cargo build&lt;/tt&gt; to build and cache our dependencies. You should see a &lt;strong&gt;bunch&lt;/strong&gt; of output like this:&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre class="code literal-block"&gt;
+$ cargo build
+...
+Compiling either v1.6.1
+Compiling gimli v0.23.0
+Compiling adler v0.2.3
+Compiling object v0.22.0
+...
+&lt;/pre&gt;
+&lt;p&gt;Now we have a &amp;quot;hello world&amp;quot; Rust project we can start building on.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="step-1-draw-a-window"&gt;
+&lt;h3&gt;Step 1: Draw a Window 📐&lt;/h3&gt;
+&lt;p&gt;Before we run, we need to walk.
+And before we walk we crawl.
+And before we crawl we draw a window.
+This is, of course, a little harder than just asking your computer &amp;quot;Please draw me a window&amp;quot;.&lt;/p&gt;
+&lt;p&gt;First we need to add a bunch of imports to our project:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;use&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;amethyst&lt;/span&gt;::&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;assets&lt;/span&gt;::&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="n"&gt;AssetStorage&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Loader&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;core&lt;/span&gt;::&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;timing&lt;/span&gt;::&lt;span class="n"&gt;Time&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;::&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="n"&gt;Transform&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;TransformBundle&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;derive&lt;/span&gt;::&lt;span class="n"&gt;SystemDesc&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;ecs&lt;/span&gt;::&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;Component&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;DenseVecStorage&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Entities&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Join&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Read&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ReadStorage&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;System&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SystemData&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;WriteStorage&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;::&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="n"&gt;InputBundle&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;InputHandler&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;StringBindings&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;prelude&lt;/span&gt;::&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;renderer&lt;/span&gt;::&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;plugins&lt;/span&gt;::&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="n"&gt;RenderFlat2D&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;RenderToWindow&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;types&lt;/span&gt;::&lt;span class="n"&gt;DefaultBackend&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;Camera&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ImageFormat&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;RenderingBundle&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SpriteRender&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SpriteSheet&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SpriteSheetFormat&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;Texture&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;utils&lt;/span&gt;::&lt;span class="n"&gt;application_root_dir&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;};&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This is every dependency we will need for the entire project, so if &lt;tt class="docutils literal"&gt;cargo build|run&lt;/tt&gt; complains about unused dependencies, don't worry... we'll get there.&lt;/p&gt;
+&lt;p&gt;Here we are including a few useful&lt;/p&gt;
+&lt;p&gt;Then we need to add some boiler-plate to our &lt;tt class="docutils literal"&gt;main&lt;/tt&gt; function:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// This is necessary to make Rust&amp;#39;s type-checker happy&lt;/span&gt;
+&lt;span class="c1"&gt;// Our main function technically returns an Amethyst Result&lt;/span&gt;
+&lt;span class="c1"&gt;// It can either return an Amethyst error or a unit value&lt;/span&gt;
+&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nc"&gt;amethyst&lt;/span&gt;::&lt;span class="nb"&gt;Result&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="c1"&gt;// Not required, but a logger very useful&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;amethyst&lt;/span&gt;::&lt;span class="n"&gt;start_logger&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;Default&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="c1"&gt;// Declare some useful variables used to tell Amethyst where our asset files and config files live&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;app_root&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;application_root_dir&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;?&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;assets_dir&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;app_root&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;assets&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;display_config_path&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;app_root&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;config&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;display.ron&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="c1"&gt;// Declare a renderer bundle&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="c1"&gt;// Amethyst adds this collection of 2D Render systems to our game&amp;#39;s runtime&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;renderer&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;RenderingBundle&lt;/span&gt;::&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;DefaultBackend&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;with_plugin&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="n"&gt;RenderToWindow&lt;/span&gt;::&lt;span class="n"&gt;from_config_path&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;display_config_path&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;?&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;                &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;with_clear&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;&lt;span class="mf"&gt;1.00&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;0.33&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;0.00&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;1.0&lt;/span&gt;&lt;span class="p"&gt;]),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="n"&gt;with_plugin&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;RenderFlat2D&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="c1"&gt;// Build the game&amp;#39;s systems&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;game_data&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;GameDataBuilder&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;with_bundle&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;renderer&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;?&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="c1"&gt;// Build our application, which includes our game data, where our assets live, and our starting state&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;game&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Application&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;assets_dir&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SeaglState&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;game_data&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;?&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="c1"&gt;// Run the game!&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;game&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="c1"&gt;// Nothing bad happened, so return `()`&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nb"&gt;Ok&lt;/span&gt;&lt;span class="p"&gt;(())&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That won't compile because we haven't defined our &lt;tt class="docutils literal"&gt;SeaglState&lt;/tt&gt;.&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ cargo run
+...
+error[E0425]: cannot find value `SeaglState` in this scope
+  --&amp;gt; src/main.rs:17:49
+   |
+30 |     let mut game = Application::new(assets_dir, SeaglState, game_data)?;
+   |                                                 ^^^^^^^^^^ not found in this scope
+&lt;/pre&gt;
+&lt;p&gt;Let's add &lt;tt class="docutils literal"&gt;SeaglState&lt;/tt&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// States can store values, but for now we can use a unit-struct&lt;/span&gt;
+&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;SeaglState&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="c1"&gt;// We get a working state for free by rubber-stamping the &amp;quot;SimpleState&amp;quot; struct onto our SeaglState&lt;/span&gt;
+&lt;span class="c1"&gt;// We will implement our own logic for handling state start-up in the next step&lt;/span&gt;
+&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SimpleState&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SeaglState&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We will add some methods to &lt;tt class="docutils literal"&gt;SeaglState&lt;/tt&gt; later, but for now this makes Rust and Amethyst happy enough to compile.&lt;/p&gt;
+&lt;p&gt;But if we run our code we get a wonderfully cryptic error message:&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+Compiling seagl-talk v0.1.0 (/home/pop/seagl-talk)
+ Finished dev [unoptimized + debuginfo] target(s) in 24.81s
+  Running `target/debug/seagl-talk`
+Error: Error { inner: Inner { source: None, backtrace: None, error: File(Os { code: 2, kind: NotFound, message: &amp;quot;No such file or directory&amp;quot; }) } }
+&lt;/pre&gt;
+&lt;p&gt;We get errors like this when we have an unhandled exception in our code.
+In our &lt;tt class="docutils literal"&gt;main&lt;/tt&gt; function, that is any place where we call a function with a &lt;tt class="docutils literal"&gt;?&lt;/tt&gt;, e.g., &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;foo(...)?;&lt;/span&gt;&lt;/tt&gt;.&lt;/p&gt;
+&lt;p&gt;TLDT (Too Long Didn't Troubleshoot) this is because we haven't created our display config file!&lt;/p&gt;
+&lt;p&gt;Add a new file &lt;tt class="docutils literal"&gt;display.ron&lt;/tt&gt; in a new folder called &lt;tt class="docutils literal"&gt;config/&lt;/tt&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// config/display.ron&lt;/span&gt;
+&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;title&lt;/span&gt;: &lt;span class="s"&gt;&amp;quot;SeaGL!&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;dimensions&lt;/span&gt;: &lt;span class="nb"&gt;Some&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="mi"&gt;500&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;500&lt;/span&gt;&lt;span class="p"&gt;)),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now when we &lt;tt class="docutils literal"&gt;cargo run&lt;/tt&gt; we should get a wonderful orange window:&lt;/p&gt;
+&lt;img alt="It worked! We drew a window." src="/assets/images/seagl-2020/blank-window.png" /&gt;
+&lt;/div&gt;
+&lt;div class="section" id="step-2-draw-a-seagl"&gt;
+&lt;h3&gt;Step 2: Draw a SeaGL 🕊️&lt;/h3&gt;
+&lt;p&gt;Alas, we have a window but no game!
+Let's draw our first character to the screen.&lt;/p&gt;
+&lt;div class="admonition note"&gt;
+&lt;p class="first admonition-title"&gt;Note&lt;/p&gt;
+&lt;p class="last"&gt;Did you know that SeaGL's mascot is named Patch?
+&lt;a class="reference external" href="https://seagl.org/news/2020/09/10/naming-contest.html"&gt;https://seagl.org/news/2020/09/10/naming-contest.html&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;First we'll create a Component for our Seagl.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;#[derive(Default)]&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;Seagl&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Component&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Seagl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;type&lt;/span&gt; &lt;span class="nc"&gt;Storage&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;DenseVecStorage&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Self&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Next we'll create a Seagl entity.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SimpleState&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SeaglState&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;on_start&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;: &lt;span class="nc"&gt;StateData&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;GameData&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Transform&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;set_translation_xyz&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;50.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;50.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;seagl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Seagl&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;world&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;create_entity&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;with&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;seagl&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;with&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;build&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This is a good start, but our Seagl is a spriteless ghost!&lt;/p&gt;
+&lt;div class="admonition warning"&gt;
+&lt;p class="first admonition-title"&gt;Warning&lt;/p&gt;
+&lt;p class="last"&gt;Seagull ghosts are terrifying.
+Add a sprite!&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;First we need to load the spritesheet into memory.
+Add this in our &lt;cite&gt;on_start&lt;/cite&gt; function above where we added the seagl:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;sprite_sheet_handle&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;loader&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;world&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read_resource&lt;/span&gt;::&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Loader&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;texture_storage&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;world&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read_resource&lt;/span&gt;::&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;AssetStorage&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Texture&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;texture_handle&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;loader&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;load&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="s"&gt;&amp;quot;texture/spritesheet.png&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;ImageFormat&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;texture_storage&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;sprite_sheet_store&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;world&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read_resource&lt;/span&gt;::&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;AssetStorage&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;SpriteSheet&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;loader&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;load&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="s"&gt;&amp;quot;texture/spritesheet.ron&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;SpriteSheetFormat&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;texture_handle&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;sprite_sheet_store&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;};&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Then modify our Seagl entity like so:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="gi"&gt;++ main.rs&lt;/span&gt;
+&lt;span class="gu"&gt;@@ impl SimpleState for SeaglState&lt;/span&gt;
+&lt;span class="gu"&gt;@@ fn on_start(...)&lt;/span&gt;
+  let mut transform = Transform::default();
+  transform.set_translation_xyz(50.0, 50.0, 0.0);
+&lt;span class="gi"&gt;+ let sprite = SpriteRender::new(sprite_sheet_handle.clone(), 0);&lt;/span&gt;
+  let seagl = Seagl::default();
+  data.world
+      .create_entity()
+      .with(seagl)
+&lt;span class="gi"&gt;+     .with(sprite)&lt;/span&gt;
+      .with(transform)
+      .build();
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Let's see.
+We created a Seagl entity. Let's try running this thing:&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ cargo run
+...
+thread 'main' panicked at 'Tried to fetch resource of type `MaskedStorage&amp;lt;Seagl&amp;gt;`[^1] from the `World`, but the resource does not exist.
+
+You may ensure the resource exists through one of the following methods:
+
+* Inserting it when the world is created: `world.insert(..)`.
+* If the resource implements `Default`, include it in a system's `SystemData`, and ensure the system is registered in the dispatcher.
+* If the resource does not implement `Default`, insert it in the world during `System::setup`.
+&lt;/pre&gt;
+&lt;p&gt;Hmm.
+It seems like our &lt;tt class="docutils literal"&gt;Seagl&lt;/tt&gt; Component isn't registered with Amethyst.
+This happens implicitly when we add a system that uses our component, but until we write a System, we'll have to explicitly register our Component with Amethyst.&lt;/p&gt;
+&lt;p&gt;Add this toward the top of our &lt;tt class="docutils literal"&gt;on_start&lt;/tt&gt; method:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;world&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;register&lt;/span&gt;::&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Seagl&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Let's try running again:&lt;/p&gt;
+&lt;pre class="code literal-block"&gt;
+$ cargo run
+...
+Error { inner: Inner { source: Some(Error { inner: Inner { source: None, backtrace: None,
+error: Os { code: 2, kind: NotFound, message: &amp;quot;No such file or directory&amp;quot; } } }), backtrace: None,
+error: StringError(&amp;quot;Failed to fetch metadata for \&amp;quot;/home/pop/seagl-talk/assets/texture/spritesheet.ron\&amp;quot;&amp;quot;) } }
+&lt;/pre&gt;
+&lt;p&gt;Ah, a different runtime error.
+This time we forgot to add our spritesheet image and spritesheet config file.
+Lets add those.&lt;/p&gt;
+&lt;p&gt;Add this code to a file in &lt;tt class="docutils literal"&gt;assets/texture/spritesheet.ron&lt;/tt&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// assets/texture/spritesheet.ron&lt;/span&gt;
+&lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;texture_width&lt;/span&gt;: &lt;span class="mi"&gt;32&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;texture_height&lt;/span&gt;: &lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;sprites&lt;/span&gt;: &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// Seagl&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;: &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;: &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="n"&gt;width&lt;/span&gt;: &lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="n"&gt;height&lt;/span&gt;: &lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And save this image to &lt;tt class="docutils literal"&gt;assets/texture/spritesheet.png&lt;/tt&gt;:&lt;/p&gt;
+&lt;img alt="Seagl and Burger. 32x16. Pixel on LCD." src="/assets/images/seagl-2020/spritesheet.png" style="width: 100%;" /&gt;
+&lt;p&gt;Now if we run &lt;tt class="docutils literal"&gt;cargo run&lt;/tt&gt; we get the same blank orange window.
+This happened because we forgot to add a Camera to the scene!&lt;/p&gt;
+&lt;p&gt;Add this to the end of our &lt;tt class="docutils literal"&gt;on_start&lt;/tt&gt; function:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Transform&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="n"&gt;transform&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;set_translation_xyz&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;50.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;50.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;1.0&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;world&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;create_entity&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;with&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Camera&lt;/span&gt;::&lt;span class="n"&gt;standard_2d&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;100.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;100.0&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;with&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;build&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;img alt="That's a nice looking Seagl there..." src="/assets/images/seagl-2020/window-with-seagl.png" /&gt;
+&lt;div class="admonition note"&gt;
+&lt;p class="first admonition-title"&gt;Note&lt;/p&gt;
+&lt;p class="last"&gt;It's so beautifull...&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="step-3-move-around"&gt;
+&lt;h3&gt;Step 3: Move Around 🏇&lt;/h3&gt;
+&lt;p&gt;Thinking back to our ECS discussion, we have two of the three ingredients: an Entity, some Components, but no Systems!&lt;/p&gt;
+&lt;p&gt;First, we need to create a System struct and implement &lt;tt class="docutils literal"&gt;System&lt;/tt&gt; on it.&lt;/p&gt;
+&lt;p&gt;Our System's run function looks like this in psuedocode:&lt;/p&gt;
+&lt;pre class="code text literal-block"&gt;
+for every seagl that can move:
+    If the user input was to move horizontal:
+        Move the seagl horizontally
+    If the user input was to move vertical:
+        Move the seagl vertically
+&lt;/pre&gt;
+&lt;p&gt;This doesn't look _exactly_ the same in Rust, but it's pretty close.&lt;/p&gt;
+&lt;pre class="code rust literal-block"&gt;
+&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;derive&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;SystemDesc&lt;/span&gt;&lt;span class="p"&gt;)]&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;MoveSystem&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;
+
+&lt;/span&gt;&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="na"&gt;'s&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;System&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="na"&gt;'s&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;MoveSystem&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;type&lt;/span&gt; &lt;span class="nc"&gt;SystemData&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;WriteStorage&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="na"&gt;'s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Transform&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;ReadStorage&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="na"&gt;'s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Seagl&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;Read&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="na"&gt;'s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Time&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;Read&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="na"&gt;'s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;InputHandler&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;StringBindings&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+
+    &lt;/span&gt;&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;run&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;transforms&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;seagls&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;time&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;: &lt;span class="nc"&gt;Self&lt;/span&gt;::&lt;span class="n"&gt;SystemData&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;speed&lt;/span&gt;: &lt;span class="kt"&gt;f32&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;50.0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;_seagl&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;in&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;seagls&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;transforms&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;Some&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;horizontal&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;axis_value&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;horizontal&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;prepend_translation_x&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;
+                    &lt;/span&gt;&lt;span class="n"&gt;horizontal&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;delta_seconds&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;speed&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="k"&gt;as&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;f32&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+
+            &lt;/span&gt;&lt;span class="p"&gt;};&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;Some&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;vertical&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;axis_value&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;vertical&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;prepend_translation_y&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;
+                    &lt;/span&gt;&lt;span class="n"&gt;vertical&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;delta_seconds&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;speed&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;as&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;f32&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="p"&gt;};&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;We declare a &lt;tt class="docutils literal"&gt;SystemData&lt;/tt&gt; type which is a tuple of components.
+The &lt;tt class="docutils literal"&gt;Transform&lt;/tt&gt; component will be modified, so we require it as &lt;tt class="docutils literal"&gt;mut&lt;/tt&gt;, but everything else is &lt;tt class="docutils literal"&gt;Read&lt;/tt&gt; for stuff that Amethyst provides and &lt;tt class="docutils literal"&gt;ReadStorage&lt;/tt&gt; for things we created.&lt;/p&gt;
+&lt;p&gt;We loop over every entity with the &lt;tt class="docutils literal"&gt;Seagl&lt;/tt&gt; and &lt;tt class="docutils literal"&gt;Transform&lt;/tt&gt; components, then we match against any user input:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;If we had &amp;quot;vertical&amp;quot;  input, move the entity on the x axis.&lt;/li&gt;
+&lt;li&gt;If we had &amp;quot;horizontal&amp;quot; input, move the entity on the y axis.&lt;/li&gt;
+&lt;li&gt;We don't need to explicitly say &amp;quot;move left&amp;quot;/&amp;quot;move right&amp;quot; because the horizontal/vertical inputs can be positive or negative.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Next we need to register this system with out game.
+Because we are using Inputs we also need to register the inputs bundle with the game.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="gi"&gt;+++ main.rs&lt;/span&gt;
+&lt;span class="gu"&gt;@@ fn main() -&amp;gt; amethyst::Result&amp;lt;()&amp;gt;&lt;/span&gt;
+     )
+     .with_plugin(RenderFlat2D::default());
+
+&lt;span class="gi"&gt;+    let bindings_path = app_root.join(&amp;quot;config&amp;quot;).join(&amp;quot;bindings.ron&amp;quot;);&lt;/span&gt;
+&lt;span class="gi"&gt;+    let inputs = InputBundle::&amp;lt;StringBindings&amp;gt;::new().with_bindings_from_file(bindings_path)?;&lt;/span&gt;
+&lt;span class="gi"&gt;+&lt;/span&gt;
+     let game_data = GameDataBuilder::default()
+         .with_bundle(transform)?
+         .with_bundle(renderer)?;
+&lt;span class="gi"&gt;+        .with_bundle(inputs)?&lt;/span&gt;
+&lt;span class="gi"&gt;+        .with(MoveSystem, &amp;quot;move_system&amp;quot;, &amp;amp;[&amp;quot;input_system&amp;quot;]);&lt;/span&gt;
+
+     let mut game = Application::new(assets_dir, SeaglState, game_data)?;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We have a dependency on the &lt;tt class="docutils literal"&gt;input_system&lt;/tt&gt;, so Amethyst will ensure that system runs before &lt;tt class="docutils literal"&gt;move_system&lt;/tt&gt;.&lt;/p&gt;
+&lt;p&gt;Next we need to create a config file for our movement bindings.
+Instead of hard-coding &amp;quot;Up arrow means move up, down arrow means down&amp;quot; we put that in config files:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// config/bindings.ron&lt;/span&gt;
+&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;axes&lt;/span&gt;: &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="s"&gt;&amp;quot;horizontal&amp;quot;&lt;/span&gt;: &lt;span class="nc"&gt;Emulated&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pos&lt;/span&gt;: &lt;span class="nc"&gt;Key&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Right&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;neg&lt;/span&gt;: &lt;span class="nc"&gt;Key&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Left&lt;/span&gt;&lt;span class="p"&gt;)),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="s"&gt;&amp;quot;vertical&amp;quot;&lt;/span&gt;: &lt;span class="nc"&gt;Emulated&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pos&lt;/span&gt;: &lt;span class="nc"&gt;Key&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Up&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;neg&lt;/span&gt;: &lt;span class="nc"&gt;Key&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Down&lt;/span&gt;&lt;span class="p"&gt;)),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;actions&lt;/span&gt;: &lt;span class="p"&gt;{},&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This is a good start, but you'll notice the Seagl doesn't turn left and right, this _totally_ breaks my suspension of disbelief so we're gonna need to fix that in our &lt;tt class="docutils literal"&gt;run&lt;/tt&gt; method:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="gh"&gt;diff --git a/src/main.rs b/src/main.rs&lt;/span&gt;
+&lt;span class="gu"&gt;@@ impl&amp;lt;&amp;#39;s&amp;gt; System&amp;lt;&amp;#39;s&amp;gt; for MoveSystem&lt;/span&gt;
+&lt;span class="gu"&gt;@@ run(...)&lt;/span&gt;
+  if let Some(vertical) = input.axis_value(&amp;quot;vertical&amp;quot;) {
+      transform.prepend_translation_x(
+        horizontal * time.delta_seconds() * speed  as f32
+      );
+&lt;span class="gi"&gt;+     if horizontal &amp;gt; 0.0 {&lt;/span&gt;
+&lt;span class="gi"&gt;+       transform.set_rotation_y_axis(std::f32::consts::PI);&lt;/span&gt;
+&lt;span class="gi"&gt;+     }&lt;/span&gt;
+&lt;span class="gi"&gt;+     if horizontal &amp;lt; 0.0 {&lt;/span&gt;
+&lt;span class="gi"&gt;+       transform.set_rotation_y_axis(0.0);&lt;/span&gt;
+&lt;span class="gi"&gt;+     }&lt;/span&gt;
+&lt;span class="gi"&gt;+&lt;/span&gt;
+  };
+  if let Some(vertical) = input.axis_value(&amp;quot;vertical&amp;quot;) {
+      transform.prepend_translation_y(
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In our &amp;quot;horizontal&amp;quot; check we added:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;If the input was greater than 0, flip our sprite on the Y axis.&lt;/li&gt;
+&lt;li&gt;If the input was less than 0, reset our sprite on the Y axis.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This makes it look like our Seagl is facing the direction they're moving which should help boost our Metacritic score when we publish this at the end of the blogpost.&lt;/p&gt;
+&lt;div class="admonition note"&gt;
+&lt;p class="first admonition-title"&gt;Note&lt;/p&gt;
+&lt;p&gt;We rotate by PI because our 2D sprite is in the 3D world and we're rotating it in radians.&lt;/p&gt;
+&lt;p class="last"&gt;Do you ever feel like a 2D sprite in a 3D world?
+I know I do...&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="step-4-eat-some-food"&gt;
+&lt;h3&gt;Step 4: Eat some food! 🍔&lt;/h3&gt;
+&lt;p&gt;I'm sure we could all get _minutes_ of fun out of moving our seagl around the screen, but this game could really use something else...
+Something tastier.&lt;/p&gt;
+&lt;p&gt;Let's add burgers.&lt;/p&gt;
+&lt;p&gt;This will require us to do everything we just did, again:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Add a Food Compnent.&lt;/li&gt;
+&lt;li&gt;Create a Burger entity with the food component.&lt;/li&gt;
+&lt;li&gt;Add an Eat system.&lt;/li&gt;
+&lt;li&gt;Register our Eat system with the game.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;First we need to add a food Component.&lt;/p&gt;
+&lt;p&gt;Add this component anywhere that feels right:&lt;/p&gt;
+&lt;pre class="code rust literal-block"&gt;
+&lt;span class="cp"&gt;#[derive(Default)]&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;Food&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;
+
+&lt;/span&gt;&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Component&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Food&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;type&lt;/span&gt; &lt;span class="nc"&gt;Storage&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;DenseVecStorage&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Self&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;It's structurally identical to our Seagl, but with a different &lt;tt class="docutils literal"&gt;struct&lt;/tt&gt; it's a totally different component.&lt;/p&gt;
+&lt;p&gt;With a Food component we can add our Burger entity.
+Add this code to our &lt;tt class="docutils literal"&gt;on_setup&lt;/tt&gt; function at the end:&lt;/p&gt;
+&lt;pre class="code rust literal-block"&gt;
+&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;burger_sprite&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SpriteRender&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sprite_sheet_handle&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;clone&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Transform&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;set_translation_xyz&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;75.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;75.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mf"&gt;1.0&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;world&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;create_entity&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;with&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Food&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;with&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;burger_sprite&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;with&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;build&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;We create an entity spawning it at the point (75, 75, -1).&lt;/p&gt;
+&lt;div class="admonition note"&gt;
+&lt;p class="first admonition-title"&gt;Note&lt;/p&gt;
+&lt;p&gt;We spawn the burger at &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;z=-1&lt;/span&gt;&lt;/tt&gt; to ensure the Seagl sprite is closer to the camera and thus is drawn on top of the burger.&lt;/p&gt;
+&lt;p class="last"&gt;Have you ever seen a Seagull _behind_ a burger?
+That's ridiculous.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="admonition note"&gt;
+&lt;p class="first admonition-title"&gt;Note&lt;/p&gt;
+&lt;p&gt;A few exercises left to the reader:&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;How would you spawn multiple burgers?&lt;/li&gt;
+&lt;li&gt;How would you re-spawn burgers when one is eaten?&lt;/li&gt;
+&lt;li&gt;How would you keep track of how many burgers were eaten?&lt;/li&gt;
+&lt;li&gt;How would you display the number of burgers eaten?&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p class="last"&gt;I've only covered enough in this post to answer the first two.&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;And finally an &amp;quot;eat&amp;quot; system.&lt;/p&gt;
+&lt;p&gt;This system's pseudocode looks like this:&lt;/p&gt;
+&lt;pre class="code text literal-block"&gt;
+For each seagl with a location:
+    For each Food with a location:
+        If the Seagl overlaps with the Food:
+            Destory that food
+&lt;/pre&gt;
+&lt;p&gt;This is a bit of a hack.
+If this were a real game we would keep track of how many burgers the Seagl ate, but for this demo, we'll be lazy:&lt;/p&gt;
+&lt;pre class="code rust literal-block"&gt;
+&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;EatSystem&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;
+
+&lt;/span&gt;&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="na"&gt;'s&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;System&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="na"&gt;'s&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;EatSystem&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;type&lt;/span&gt; &lt;span class="nc"&gt;SystemData&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;ReadStorage&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="na"&gt;'s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Transform&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;ReadStorage&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="na"&gt;'s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Seagl&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;WriteStorage&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="na"&gt;'s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Food&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;Entities&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="na"&gt;'s&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+
+    &lt;/span&gt;&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;run&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="k"&gt;mut&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;transforms&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;seagls&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;foods&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;entities&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;: &lt;span class="nc"&gt;Self&lt;/span&gt;::&lt;span class="n"&gt;SystemData&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;_seagl&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;seagl_pos&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;in&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;seagls&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;transforms&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;_food&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;food_pos&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;entity&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;in&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;foods&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;transforms&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;entities&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="c1"&gt;// https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
+&lt;/span&gt;&lt;span class="w"&gt;                &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;seagl_pos&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;translation&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;food_pos&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;translation&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;5.0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt;&lt;span class="w"&gt;
+                   &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;seagl_pos&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;translation&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;8.0&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;food_pos&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;translation&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt;&lt;span class="w"&gt;
+                   &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;seagl_pos&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;translation&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;food_pos&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;translation&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;4.0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt;&lt;span class="w"&gt;
+                   &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;seagl_pos&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;translation&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;8.0&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;food_pos&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;translation&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+                    &lt;/span&gt;&lt;span class="n"&gt;entities&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;delete&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;entity&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="n"&gt;unwrap&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;And last but not least, we need to register this system with our game:&lt;/p&gt;
+&lt;pre class="code diff literal-block"&gt;
+&lt;span class="gi"&gt;+++ main.rs
+&lt;/span&gt;&lt;span class="gu"&gt;&amp;#64;&amp;#64; fn main() -&amp;gt; amethyst::Result&amp;lt;()&amp;gt;
+&lt;/span&gt;     let game_data = GameDataBuilder::default()
+         .with_bundle(transform)?
+         .with_bundle(renderer)?;
+         .with_bundle(inputs)?
+         .with(MoveSystem, &amp;quot;move_system&amp;quot;, &amp;amp;[&amp;quot;input_system&amp;quot;])
+&lt;span class="gi"&gt;+        .with(EatSystem, &amp;quot;eat_system&amp;quot;, &amp;amp;[&amp;quot;move_system&amp;quot;]);&lt;/span&gt;
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="conclusions"&gt;
+&lt;h2&gt;Conclusions&lt;/h2&gt;
+&lt;p&gt;We did it.
+We made a lil' game.
+It had a Seagl and a burger.
+And we had fun making it.&lt;/p&gt;
+&lt;p&gt;I wouldn't say it's &lt;em&gt;easy&lt;/em&gt; to make games in Rust, but we are &lt;em&gt;very far&lt;/em&gt; from having to write games from scratch.&lt;/p&gt;
+&lt;p&gt;If this post piqued your interest I hope you check out &lt;a class="reference external" href="https://arewegameyet.rs"&gt;https://arewegameyet.rs&lt;/a&gt; to learn more about the Rust Games ecosystem, and &lt;a class="reference external" href="https://amethyst.rs"&gt;https://amethyst.rs&lt;/a&gt; to learn more about this budding Game Engine.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="links"&gt;
+&lt;h2&gt;Links&lt;/h2&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;SeaGL conference website: &lt;a class="reference external" href="https://seagl.org/"&gt;https://seagl.org/&lt;/a&gt; (You should go if you're in the Pacific Northwest)&lt;/li&gt;
+&lt;li&gt;The code for this post is avaliable at &lt;a class="reference external" href="https://github.com/pop/lets-make-games-with-rust"&gt;https://github.com/pop/lets-make-games-with-rust&lt;/a&gt;.
+I even tagged each step so you can see exactly what we added!&lt;/li&gt;
+&lt;li&gt;Rust Language: &lt;a class="reference external" href="https://www.rust-lang.org/"&gt;https://www.rust-lang.org/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Are We Game Yet?: &lt;a class="reference external" href="https://arewegameyet.rs/"&gt;https://arewegameyet.rs/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Amethyst Game Engine website: &lt;a class="reference external" href="https://amethyst.rs/"&gt;https://amethyst.rs/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Amethyst Game Engine book has a great introduction and overview: &lt;a class="reference external" href="https://book.amethyst.rs/stable/"&gt;https://book.amethyst.rs/stable/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Bevy Game Engine is an interesting iteration on Game Engines in Rust: &lt;a class="reference external" href="https://bevyengine.org/"&gt;https://bevyengine.org/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;My Source that C++ is the defacto language in the games industry: &lt;a class="reference external" href="https://youtu.be/rX0ItVEVjHc"&gt;https://youtu.be/rX0ItVEVjHc&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Game Programming Patterns is an awesome book with a free &amp;amp; legal copy online: &lt;a class="reference external" href="https://gameprogrammingpatterns.com/"&gt;https://gameprogrammingpatterns.com/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;rustup&lt;/tt&gt; homepage for installation instructions: &lt;a class="reference external" href="https://rustup.rs/"&gt;https://rustup.rs/&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+</content><category term="tech"></category><category term="Rust"></category><category term="Amethyst"></category><category term="Games"></category></entry><entry><title>Kubernetes as an external service proxy</title><link href="elijahcaine.me/kubernetes-as-an-external-service-proxy" rel="alternate"></link><published>2018-10-13T00:00:00-07:00</published><updated>2018-10-13T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2018-10-13:elijahcaine.me/kubernetes-as-an-external-service-proxy</id><summary type="html">&lt;p class="first last"&gt;An adventure where we learn [Kubernetes] by doing [a very straight forward project]; documenting every success, failure, and quip along the way.&lt;/p&gt;
 </summary><content type="html">&lt;p&gt;Say you have a firewall restriction that creates the following situation:&lt;/p&gt;
 &lt;ol class="arabic simple"&gt;
 &lt;li&gt;App1 cannot communicate directly with App2.&lt;/li&gt;
