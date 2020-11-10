@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="author" content="Elijah Voigt">
+    <link rel="stylesheet" type="text/css" href="../../theme/css/styles.css"/>
+        <link href="/rss.xml" type="application/rss+xml"   rel="alternate" title="elijahcaine.me RSS Feed" />
+        <link href="/atom.xml" type="application/atom+xml" rel="alternate" title="elijahcaine.me Atom Feed" />
+  </head>
+
+  <body>
+    <div class="site">
+      <header>
+        <a href="/">(🏠 elijahcaine.me)</a>
+        <a href="https://github.com/pop/">(🐙 github 🐱)</a>
+        <a href="/resume.pdf">(👔 resume)</a>
+      </header>
+
+      <div id="content">
+
+<div class="post">
+  <h1 class="posttitle">
+    Let's Build a Game with Rust
+  </h1>
+
+  <div class="postinfo">
+    <p class="published" title="2020-11-13T00:00:00-08:00">
+      Fri 13 November 2020
+    </p>
+  </div>
+</div>
+
+<div class="article">
+  <div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This is the outline for a talk I gave at the Seattle GNU Linux conference (SeaGL) 2020.
+Once the video is posted I will link it here.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The code for this post can be found at <a class="reference external" href="https://github.com/pop/lets-make-games-with-rust">https://github.com/pop/lets-make-games-with-rust</a></p>
+</div>
+<p>Like many of you, I really like games.
+I enjoy playing games, talking about games, and a few times I've even tried making games.
+I enjoy making games for a few reasons:</p>
+<ul class="simple">
+<li>Games are an interesting technical challenge.</li>
+<li>They are a flexible artistic outlet.</li>
+<li>I don't make games in my day-job (yay hobbies).</li>
+</ul>
+<p>I'm also interested in this programming language called Rust!
+You might have heard of it.
+Rust is a maturing systems programming language which aims to be performant, reliable, and productive.</p>
+<ul class="simple">
+<li>Performant in that it often goes head to head with C and C++ in benchmarks.</li>
+<li>Reliable in that it refuses to compile memory unsafe code.</li>
+<li>Productive because it includes &quot;zero cost abstractions&quot; (link <tt class="docutils literal">filter</tt> and <tt class="docutils literal">map</tt>) and awesome tooling.</li>
+</ul>
+<p>The community is pretty good too!</p>
+<p>This post is about bringing those two interests together.
+Let's learn how to build a videogame with the Rust programming language.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>This post is for folks who have a passing familiarity with Rust.
+If Rust is new to you, you get a little confused.</p>
+<p class="last">You're a smart cookie though, I'm sure you'll keep up.</p>
+</div>
+<div class="section" id="making-games-entities-components-systems">
+<h2>Making Games: Entities, Components, Systems ⚙️</h2>
+<p>Games are an incredibly fun and flexible type of project to work on.</p>
+<p>At it's core, all games need a &quot;game loop&quot;:</p>
+<ol class="arabic simple">
+<li>Process input</li>
+<li>Transforms state</li>
+<li>Display new state</li>
+<li>Repeat</li>
+</ol>
+<p>Outside of that, the possibilities are endless.
+But while the <em>possibilities</em> are endless, there are a few <em>patterns</em> that lots of folks seem to gravitate toward.</p>
+<p>You could write a whole book on game programming patterns (and somebody has, links at the bottom).
+Today we're going to talk about one popular pattern: <strong>ECS: Entity Component System</strong>.
+Here's what that looks like:</p>
+<dl class="docutils">
+<dt>Components</dt>
+<dd><p class="first">Pieces of data mixed, matched, and queried on.</p>
+<p class="last">Example: Some components needed to simulate physics might be &quot;Mass&quot;, &quot;Movable&quot;, and &quot;Friction&quot;</p>
+</dd>
+<dt>Entities</dt>
+<dd><p class="first">A Unique ID associated with a collection of Components.</p>
+<p>Example: Potted plant you can break have the following components:</p>
+<ul class="simple">
+<li>Sprite(&quot;/path/to/plant.png&quot;)</li>
+<li>Mass(6.8)</li>
+<li>Movable(True)</li>
+<li>Location((2, 5, 2))</li>
+</ul>
+<p>Each of these components are reusable.
+Instead of creating a &quot;PottedPlant&quot; class in code, we can define each entity in a config file like this:</p>
+<pre class="code literal-block">
+potted-plant.txt:
+Sprite /path/to/plant.png
+Mass 6.8
+Movable True
+Location 2 5 2
+</pre>
+<p>This makes our engine much more reusable and separates our content from our logic.</p>
+<p class="last">But how do we use these components?</p>
+</dd>
+<dt>Systems</dt>
+<dd><p class="first">Functions that operate on entities with specific components.</p>
+<p>A System queries for all entities with a specific subset of components and does some transformation on it.</p>
+<p>Example: a system that applies fire damage to an entity might look like this:</p>
+<pre class="code literal-block">
+entities_on_fire = entities.query(on_fire=True, health &gt; 0)
+for entity in entities_on_fire:
+    entity.health -= 5
+</pre>
+<p class="last">This is nice compared with a classes-based approach where we would need to manage inheritance to manually make sure everything interacted correctly.
+Here we define systems based on what features an entity has.
+The resulting systems and components interact with eachother in interesting and potentially unexpected ways.</p>
+</dd>
+</dl>
+<p>ECS is a popular pattern for creating interactive games and simulations.
+Engines like Unity have some ECS patterns built in, and almost every big game engine uses ECS in some way.</p>
+<p>Of course ECS isn't a silver bullet, but for this blog post it's good enough.</p>
+</div>
+<div class="section" id="tools-of-the-trade-c-and-c">
+<h2>Tools of the Trade: C and C++ ⚒️</h2>
+<p>C and C++ are very popular languages in games programming.
+They are defacto in the industry and many large engines, both internal and licensed engines, are written in C++.</p>
+<p>I'm not here to bash on C and C++, but it can be useful to point out why you would bother using Rust if the norm is C++.</p>
+<p>The usual arguments in favor of Rust go a little something like this:</p>
+<ul class="simple">
+<li>Rust is memory safe; in Rust it is very difficult to reference freed memory, mutate memory in two threads, and dereference a null pointer.</li>
+<li>Rust is expressive; a lot of functional-programming language features exist in Rust without the usual run-time cost of those languages.</li>
+<li>Rust doesn't have any of the C/C++ legacy baggage but <em>can</em> inter-operate with C/C++ codebases.</li>
+<li>Rust has a kick-ass community and an ecosystem of battle-tested and safe code.</li>
+</ul>
+<p>So why does this all matter for games?
+I think of it it like this: Any project when it gets sufficiently complex benefits from Rust.
+Rust, by preventing a whole class of memory bugs, makes it easier to maintain a complex codebase over time.
+It might not be life or death, or as mission critical as security software, but completely avoiding null-pointer bugs, at essentially no performance cost, sounds like a huge weight off my shoulders.</p>
+<p>Games are by their nature huge and sprawling codebases.
+Many bugs in games are caught by a compiler, but even more errors would be caught by the Rust borrow-checker.
+And being able to use some of the nice functional-programming features would be nice too.</p>
+<p>Of course Rust is a relatively new language so your mileage may vary.
+If I ran a big game studio I don't think I would throw out my C++ code and start fresh with Rust, but I would definitely put some research and development into it for new projects (said the Rust fanboy).</p>
+</div>
+<div class="section" id="rusty-games-hello-amethyst">
+<h2>Rusty Games: Hello Amethyst 💎</h2>
+<p>Writing games in a safe, expressive, not C/C++ language sounds great; where do I start?</p>
+<p>You could write a game from scratch, but there are engines written in Rust you can use today!
+Some of these focus on ease of use, some are for 2D games, some focus on compiling for the web.
+Most of these engines require you to write Rust, as opposed to using a GUI, but even that is changing.</p>
+<p>For a comprehensive list check out <a class="reference external" href="https://www.arewegameyet.rs">https://www.arewegameyet.rs</a></p>
+<p>You could write this talk for almost any Rust Game Engine, but my personal favorite is Amethyst, so we'll use that.
+Amethyst has a solid API, very active community, and is a good mix of flexible, convenient, and powerful.</p>
+<p>Amethyst checks off a few other boxes:</p>
+<ul class="simple">
+<li>Implements an ECS runtime. Register Components, create Entities, and run Systems in Amethyst.</li>
+<li>Data driven design. Almost all data in Amethyst can be read in from a Config file.</li>
+<li>Apache + MIT licensed. Free as in speech is always nice.</li>
+</ul>
+<div class="section" id="step-0-join-the-cargo-cult">
+<h3>Step 0: Join the Cargo Cult</h3>
+<p>In this step we're going to get Rust setup and create a &quot;hello world&quot; rust project.</p>
+<p>If you haven't already, setup your Rust toolchain and start a Rust project.</p>
+<ol class="arabic simple">
+<li>Install <tt class="docutils literal">rustup</tt>, the Rust toolchain manager.</li>
+<li>Run <tt class="docutils literal">rustup toolchain install stable</tt> to install the latest stable Rust.</li>
+<li>Run <tt class="docutils literal">cargo new <span class="pre">seagl-game</span></tt> to create a &quot;hello world&quot; Rust application.</li>
+<li>Navigate to the new <tt class="docutils literal"><span class="pre">seagl-game</span></tt> folder. Add this to the end of our project's metadata file, <tt class="docutils literal">Cargo.toml</tt>:</li>
+</ol>
+<pre class="code literal-block">
+# Cargo.toml
+[dependencies.amethyst]
+version = &quot;0.15.1&quot;
+features = [&quot;vulkan&quot;]  # &quot;metal&quot; on MacOS
+</pre>
+<ol class="arabic simple" start="5">
+<li>Run <tt class="docutils literal">cargo build</tt> to build and cache our dependencies. You should see a <strong>bunch</strong> of output like this:</li>
+</ol>
+<pre class="code literal-block">
+$ cargo build
+...
+Compiling either v1.6.1
+Compiling gimli v0.23.0
+Compiling adler v0.2.3
+Compiling object v0.22.0
+...
+</pre>
+<p>Now we have a &quot;hello world&quot; Rust project we can start building on.</p>
+</div>
+<div class="section" id="step-1-draw-a-window">
+<h3>Step 1: Draw a Window 📐</h3>
+<p>Before we run, we need to walk.
+And before we walk we crawl.
+And before we crawl we draw a window.
+This is, of course, a little harder than just asking your computer &quot;Please draw me a window&quot;.</p>
+<p>First we need to add a bunch of imports to our project:</p>
+<div class="highlight"><pre><span></span><span class="k">use</span><span class="w"> </span><span class="n">amethyst</span>::<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">assets</span>::<span class="p">{</span><span class="n">AssetStorage</span><span class="p">,</span><span class="w"> </span><span class="n">Loader</span><span class="p">},</span><span class="w"></span>
+<span class="w">    </span><span class="n">core</span>::<span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">timing</span>::<span class="n">Time</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="n">transform</span>::<span class="p">{</span><span class="n">Transform</span><span class="p">,</span><span class="w"> </span><span class="n">TransformBundle</span><span class="p">},</span><span class="w"></span>
+<span class="w">    </span><span class="p">},</span><span class="w"></span>
+<span class="w">    </span><span class="n">derive</span>::<span class="n">SystemDesc</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">ecs</span>::<span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">Component</span><span class="p">,</span><span class="w"> </span><span class="n">DenseVecStorage</span><span class="p">,</span><span class="w"> </span><span class="n">Entities</span><span class="p">,</span><span class="w"> </span><span class="n">Join</span><span class="p">,</span><span class="w"> </span><span class="n">Read</span><span class="p">,</span><span class="w"> </span><span class="n">ReadStorage</span><span class="p">,</span><span class="w"> </span><span class="n">System</span><span class="p">,</span><span class="w"> </span><span class="n">SystemData</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="n">WriteStorage</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="p">},</span><span class="w"></span>
+<span class="w">    </span><span class="n">input</span>::<span class="p">{</span><span class="n">InputBundle</span><span class="p">,</span><span class="w"> </span><span class="n">InputHandler</span><span class="p">,</span><span class="w"> </span><span class="n">StringBindings</span><span class="p">},</span><span class="w"></span>
+<span class="w">    </span><span class="n">prelude</span>::<span class="o">*</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">renderer</span>::<span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">plugins</span>::<span class="p">{</span><span class="n">RenderFlat2D</span><span class="p">,</span><span class="w"> </span><span class="n">RenderToWindow</span><span class="p">},</span><span class="w"></span>
+<span class="w">        </span><span class="n">types</span>::<span class="n">DefaultBackend</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="n">Camera</span><span class="p">,</span><span class="w"> </span><span class="n">ImageFormat</span><span class="p">,</span><span class="w"> </span><span class="n">RenderingBundle</span><span class="p">,</span><span class="w"> </span><span class="n">SpriteRender</span><span class="p">,</span><span class="w"> </span><span class="n">SpriteSheet</span><span class="p">,</span><span class="w"> </span><span class="n">SpriteSheetFormat</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="n">Texture</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="p">},</span><span class="w"></span>
+<span class="w">    </span><span class="n">utils</span>::<span class="n">application_root_dir</span><span class="p">,</span><span class="w"></span>
+<span class="p">};</span><span class="w"></span>
+</pre></div>
+<p>This is every dependency we will need for the entire project, so if <tt class="docutils literal">cargo build|run</tt> complains about unused dependencies, don't worry... we'll get there.</p>
+<p>Here we are including a few useful</p>
+<p>Then we need to add some boiler-plate to our <tt class="docutils literal">main</tt> function:</p>
+<div class="highlight"><pre><span></span><span class="c1">// This is necessary to make Rust&#39;s type-checker happy</span>
+<span class="c1">// Our main function technically returns an Amethyst Result</span>
+<span class="c1">// It can either return an Amethyst error or a unit value</span>
+<span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span>-&gt; <span class="nc">amethyst</span>::<span class="nb">Result</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// Not required, but a logger very useful</span>
+<span class="w">    </span><span class="n">amethyst</span>::<span class="n">start_logger</span><span class="p">(</span><span class="nb">Default</span>::<span class="n">default</span><span class="p">());</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">// Declare some useful variables used to tell Amethyst where our asset files and config files live</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">app_root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">application_root_dir</span><span class="p">()</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">assets_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">app_root</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;assets&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">display_config_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">app_root</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;config&quot;</span><span class="p">).</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;display.ron&quot;</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">// Declare a renderer bundle</span>
+<span class="w">    </span><span class="c1">// Amethyst adds this collection of 2D Render systems to our game&#39;s runtime</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">renderer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RenderingBundle</span>::<span class="o">&lt;</span><span class="n">DefaultBackend</span><span class="o">&gt;</span>::<span class="n">new</span><span class="p">()</span><span class="w"></span>
+<span class="w">        </span><span class="p">.</span><span class="n">with_plugin</span><span class="p">(</span><span class="w"></span>
+<span class="w">            </span><span class="n">RenderToWindow</span>::<span class="n">from_config_path</span><span class="p">(</span><span class="n">display_config_path</span><span class="p">)</span><span class="o">?</span><span class="w"></span>
+<span class="w">                </span><span class="p">.</span><span class="n">with_clear</span><span class="p">([</span><span class="mf">1.00</span><span class="p">,</span><span class="w"> </span><span class="mf">0.33</span><span class="p">,</span><span class="w"> </span><span class="mf">0.00</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">]),</span><span class="w"></span>
+<span class="w">        </span><span class="p">).</span><span class="n">with_plugin</span><span class="p">(</span><span class="n">RenderFlat2D</span>::<span class="n">default</span><span class="p">());</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">// Build the game&#39;s systems</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">game_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GameDataBuilder</span>::<span class="n">default</span><span class="p">()</span><span class="w"></span>
+<span class="w">        </span><span class="p">.</span><span class="n">with_bundle</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">// Build our application, which includes our game data, where our assets live, and our starting state</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">game</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Application</span>::<span class="n">new</span><span class="p">(</span><span class="n">assets_dir</span><span class="p">,</span><span class="w"> </span><span class="n">SeaglState</span><span class="p">,</span><span class="w"> </span><span class="n">game_data</span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">// Run the game!</span>
+<span class="w">    </span><span class="n">game</span><span class="p">.</span><span class="n">run</span><span class="p">();</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">// Nothing bad happened, so return `()`</span>
+<span class="w">    </span><span class="nb">Ok</span><span class="p">(())</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+<p>That won't compile because we haven't defined our <tt class="docutils literal">SeaglState</tt>.</p>
+<pre class="code literal-block">
+$ cargo run
+...
+error[E0425]: cannot find value `SeaglState` in this scope
+  --&gt; src/main.rs:17:49
+   |
+30 |     let mut game = Application::new(assets_dir, SeaglState, game_data)?;
+   |                                                 ^^^^^^^^^^ not found in this scope
+</pre>
+<p>Let's add <tt class="docutils literal">SeaglState</tt></p>
+<div class="highlight"><pre><span></span><span class="c1">// States can store values, but for now we can use a unit-struct</span>
+<span class="k">struct</span> <span class="nc">SeaglState</span><span class="p">;</span><span class="w"></span>
+
+<span class="c1">// We get a working state for free by rubber-stamping the &quot;SimpleState&quot; struct onto our SeaglState</span>
+<span class="c1">// We will implement our own logic for handling state start-up in the next step</span>
+<span class="k">impl</span><span class="w"> </span><span class="n">SimpleState</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">SeaglState</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
+</pre></div>
+<p>We will add some methods to <tt class="docutils literal">SeaglState</tt> later, but for now this makes Rust and Amethyst happy enough to compile.</p>
+<p>But if we run our code we get a wonderfully cryptic error message:</p>
+<pre class="code literal-block">
+Compiling seagl-talk v0.1.0 (/home/pop/seagl-talk)
+ Finished dev [unoptimized + debuginfo] target(s) in 24.81s
+  Running `target/debug/seagl-talk`
+Error: Error { inner: Inner { source: None, backtrace: None, error: File(Os { code: 2, kind: NotFound, message: &quot;No such file or directory&quot; }) } }
+</pre>
+<p>We get errors like this when we have an unhandled exception in our code.
+In our <tt class="docutils literal">main</tt> function, that is any place where we call a function with a <tt class="docutils literal">?</tt>, e.g., <tt class="docutils literal"><span class="pre">foo(...)?;</span></tt>.</p>
+<p>TLDT (Too Long Didn't Troubleshoot) this is because we haven't created our display config file!</p>
+<p>Add a new file <tt class="docutils literal">display.ron</tt> in a new folder called <tt class="docutils literal">config/</tt>:</p>
+<div class="highlight"><pre><span></span><span class="c1">// config/display.ron</span>
+<span class="p">(</span><span class="w"></span>
+<span class="w">    </span><span class="n">title</span>: <span class="s">&quot;SeaGL!&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">dimensions</span>: <span class="nb">Some</span><span class="p">((</span><span class="mi">500</span><span class="p">,</span><span class="w"> </span><span class="mi">500</span><span class="p">)),</span><span class="w"></span>
+<span class="p">)</span><span class="w"></span>
+</pre></div>
+<p>Now when we <tt class="docutils literal">cargo run</tt> we should get a wonderful orange window:</p>
+<img alt="It worked! We drew a window." src="/assets/images/seagl-2020/blank-window.png" />
+</div>
+<div class="section" id="step-2-draw-a-seagl">
+<h3>Step 2: Draw a SeaGL 🕊️</h3>
+<p>Alas, we have a window but no game!
+Let's draw our first character to the screen.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Did you know that SeaGL's mascot is named Patch?
+<a class="reference external" href="https://seagl.org/news/2020/09/10/naming-contest.html">https://seagl.org/news/2020/09/10/naming-contest.html</a></p>
+</div>
+<p>First we'll create a Component for our Seagl.</p>
+<div class="highlight"><pre><span></span><span class="cp">#[derive(Default)]</span><span class="w"></span>
+<span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">Seagl</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">impl</span><span class="w"> </span><span class="n">Component</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">Seagl</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">type</span> <span class="nc">Storage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DenseVecStorage</span><span class="o">&lt;</span><span class="n">Self</span><span class="o">&gt;</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+<p>Next we'll create a Seagl entity.</p>
+<div class="highlight"><pre><span></span><span class="k">impl</span><span class="w"> </span><span class="n">SimpleState</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">SeaglState</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">fn</span> <span class="nf">on_start</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">data</span>: <span class="nc">StateData</span><span class="o">&lt;</span><span class="n">GameData</span><span class="o">&gt;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">transform</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Transform</span>::<span class="n">default</span><span class="p">();</span><span class="w"></span>
+<span class="w">        </span><span class="n">transform</span><span class="p">.</span><span class="n">set_translation_xyz</span><span class="p">(</span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">seagl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Seagl</span>::<span class="n">default</span><span class="p">();</span><span class="w"></span>
+<span class="w">        </span><span class="n">data</span><span class="p">.</span><span class="n">world</span><span class="w"></span>
+<span class="w">            </span><span class="p">.</span><span class="n">create_entity</span><span class="p">()</span><span class="w"></span>
+<span class="w">            </span><span class="p">.</span><span class="n">with</span><span class="p">(</span><span class="n">seagl</span><span class="p">)</span><span class="w"></span>
+<span class="w">            </span><span class="p">.</span><span class="n">with</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span><span class="w"></span>
+<span class="w">            </span><span class="p">.</span><span class="n">build</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+<p>This is a good start, but our Seagl is a spriteless ghost!</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Seagull ghosts are terrifying.
+Add a sprite!</p>
+</div>
+<p>First we need to load the spritesheet into memory.
+Add this in our <cite>on_start</cite> function above where we added the seagl:</p>
+<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="n">sprite_sheet_handle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">loader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">world</span><span class="p">.</span><span class="n">read_resource</span>::<span class="o">&lt;</span><span class="n">Loader</span><span class="o">&gt;</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">texture_storage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">world</span><span class="p">.</span><span class="n">read_resource</span>::<span class="o">&lt;</span><span class="n">AssetStorage</span><span class="o">&lt;</span><span class="n">Texture</span><span class="o">&gt;&gt;</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">texture_handle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">loader</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="w"></span>
+<span class="w">        </span><span class="s">&quot;texture/spritesheet.png&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="n">ImageFormat</span>::<span class="n">default</span><span class="p">(),</span><span class="w"></span>
+<span class="w">        </span><span class="p">(),</span><span class="w"></span>
+<span class="w">        </span><span class="o">&amp;</span><span class="n">texture_storage</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">sprite_sheet_store</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">world</span><span class="p">.</span><span class="n">read_resource</span>::<span class="o">&lt;</span><span class="n">AssetStorage</span><span class="o">&lt;</span><span class="n">SpriteSheet</span><span class="o">&gt;&gt;</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="n">loader</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="w"></span>
+<span class="w">        </span><span class="s">&quot;texture/spritesheet.ron&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="n">SpriteSheetFormat</span><span class="p">(</span><span class="n">texture_handle</span><span class="p">),</span><span class="w"></span>
+<span class="w">        </span><span class="p">(),</span><span class="w"></span>
+<span class="w">        </span><span class="o">&amp;</span><span class="n">sprite_sheet_store</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="p">)</span><span class="w"></span>
+<span class="p">};</span><span class="w"></span>
+</pre></div>
+<p>Then modify our Seagl entity like so:</p>
+<div class="highlight"><pre><span></span><span class="gi">++ main.rs</span>
+<span class="gu">@@ impl SimpleState for SeaglState</span>
+<span class="gu">@@ fn on_start(...)</span>
+  let mut transform = Transform::default();
+  transform.set_translation_xyz(50.0, 50.0, 0.0);
+<span class="gi">+ let sprite = SpriteRender::new(sprite_sheet_handle.clone(), 0);</span>
+  let seagl = Seagl::default();
+  data.world
+      .create_entity()
+      .with(seagl)
+<span class="gi">+     .with(sprite)</span>
+      .with(transform)
+      .build();
+</pre></div>
+<p>Let's see.
+We created a Seagl entity. Let's try running this thing:</p>
+<pre class="code literal-block">
+$ cargo run
+...
+thread 'main' panicked at 'Tried to fetch resource of type `MaskedStorage&lt;Seagl&gt;`[^1] from the `World`, but the resource does not exist.
+
+You may ensure the resource exists through one of the following methods:
+
+* Inserting it when the world is created: `world.insert(..)`.
+* If the resource implements `Default`, include it in a system's `SystemData`, and ensure the system is registered in the dispatcher.
+* If the resource does not implement `Default`, insert it in the world during `System::setup`.
+</pre>
+<p>Hmm.
+It seems like our <tt class="docutils literal">Seagl</tt> Component isn't registered with Amethyst.
+This happens implicitly when we add a system that uses our component, but until we write a System, we'll have to explicitly register our Component with Amethyst.</p>
+<p>Add this toward the top of our <tt class="docutils literal">on_start</tt> method:</p>
+<div class="highlight"><pre><span></span><span class="n">data</span><span class="p">.</span><span class="n">world</span><span class="p">.</span><span class="n">register</span>::<span class="o">&lt;</span><span class="n">Seagl</span><span class="o">&gt;</span><span class="p">();</span><span class="w"></span>
+</pre></div>
+<p>Let's try running again:</p>
+<pre class="code literal-block">
+$ cargo run
+...
+Error { inner: Inner { source: Some(Error { inner: Inner { source: None, backtrace: None,
+error: Os { code: 2, kind: NotFound, message: &quot;No such file or directory&quot; } } }), backtrace: None,
+error: StringError(&quot;Failed to fetch metadata for \&quot;/home/pop/seagl-talk/assets/texture/spritesheet.ron\&quot;&quot;) } }
+</pre>
+<p>Ah, a different runtime error.
+This time we forgot to add our spritesheet image and spritesheet config file.
+Lets add those.</p>
+<p>Add this code to a file in <tt class="docutils literal">assets/texture/spritesheet.ron</tt>:</p>
+<div class="highlight"><pre><span></span><span class="c1">// assets/texture/spritesheet.ron</span>
+<span class="n">List</span><span class="p">((</span><span class="w"></span>
+<span class="w">    </span><span class="n">texture_width</span>: <span class="mi">32</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">texture_height</span>: <span class="mi">16</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">sprites</span>: <span class="p">[</span><span class="w"></span>
+<span class="w">        </span><span class="p">(</span><span class="w"> </span><span class="c1">// Seagl</span>
+<span class="w">            </span><span class="n">x</span>: <span class="mi">0</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">y</span>: <span class="mi">0</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">width</span>: <span class="mi">16</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">height</span>: <span class="mi">16</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="p">),</span><span class="w"></span>
+<span class="w">    </span><span class="p">],</span><span class="w"></span>
+<span class="p">))</span><span class="w"></span>
+</pre></div>
+<p>And save this image to <tt class="docutils literal">assets/texture/spritesheet.png</tt>:</p>
+<img alt="Seagl and Burger. 32x16. Pixel on LCD." src="/assets/images/seagl-2020/spritesheet.png" style="width: 100%;" />
+<p>Now if we run <tt class="docutils literal">cargo run</tt> we get the same blank orange window.
+This happened because we forgot to add a Camera to the scene!</p>
+<p>Add this to the end of our <tt class="docutils literal">on_start</tt> function:</p>
+<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">transform</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Transform</span>::<span class="n">default</span><span class="p">();</span><span class="w"></span>
+<span class="n">transform</span><span class="p">.</span><span class="n">set_translation_xyz</span><span class="p">(</span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">);</span><span class="w"></span>
+<span class="n">data</span><span class="p">.</span><span class="n">world</span><span class="w"></span>
+<span class="w">    </span><span class="p">.</span><span class="n">create_entity</span><span class="p">()</span><span class="w"></span>
+<span class="w">    </span><span class="p">.</span><span class="n">with</span><span class="p">(</span><span class="n">Camera</span>::<span class="n">standard_2d</span><span class="p">(</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">100.0</span><span class="p">))</span><span class="w"></span>
+<span class="w">    </span><span class="p">.</span><span class="n">with</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">.</span><span class="n">build</span><span class="p">();</span><span class="w"></span>
+</pre></div>
+<img alt="That's a nice looking Seagl there..." src="/assets/images/seagl-2020/window-with-seagl.png" />
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">It's so beautifull...</p>
+</div>
+</div>
+<div class="section" id="step-3-move-around">
+<h3>Step 3: Move Around 🏇</h3>
+<p>Thinking back to our ECS discussion, we have two of the three ingredients: an Entity, some Components, but no Systems!</p>
+<p>First, we need to create a System struct and implement <tt class="docutils literal">System</tt> on it.</p>
+<p>Our System's run function looks like this in psuedocode:</p>
+<pre class="code text literal-block">
+for every seagl that can move:
+    If the user input was to move horizontal:
+        Move the seagl horizontally
+    If the user input was to move vertical:
+        Move the seagl vertically
+</pre>
+<p>This doesn't look _exactly_ the same in Rust, but it's pretty close.</p>
+<pre class="code rust literal-block">
+<span class="p">[</span><span class="n">derive</span><span class="p">(</span><span class="n">SystemDesc</span><span class="p">)]</span><span class="w">
+</span><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">MoveSystem</span><span class="p">;</span><span class="w">
+
+</span><span class="k">impl</span><span class="o">&lt;</span><span class="na">'s</span><span class="o">&gt;</span><span class="w"> </span><span class="n">System</span><span class="o">&lt;</span><span class="na">'s</span><span class="o">&gt;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">MoveSystem</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="k">type</span> <span class="nc">SystemData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="w">
+        </span><span class="n">WriteStorage</span><span class="o">&lt;</span><span class="na">'s</span><span class="p">,</span><span class="w"> </span><span class="n">Transform</span><span class="o">&gt;</span><span class="p">,</span><span class="w">
+        </span><span class="n">ReadStorage</span><span class="o">&lt;</span><span class="na">'s</span><span class="p">,</span><span class="w"> </span><span class="n">Seagl</span><span class="o">&gt;</span><span class="p">,</span><span class="w">
+        </span><span class="n">Read</span><span class="o">&lt;</span><span class="na">'s</span><span class="p">,</span><span class="w"> </span><span class="n">Time</span><span class="o">&gt;</span><span class="p">,</span><span class="w">
+        </span><span class="n">Read</span><span class="o">&lt;</span><span class="na">'s</span><span class="p">,</span><span class="w"> </span><span class="n">InputHandler</span><span class="o">&lt;</span><span class="n">StringBindings</span><span class="o">&gt;&gt;</span><span class="p">,</span><span class="w">
+    </span><span class="p">);</span><span class="w">
+
+    </span><span class="k">fn</span> <span class="nf">run</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="k">mut</span><span class="w"> </span><span class="n">transforms</span><span class="p">,</span><span class="w"> </span><span class="n">seagls</span><span class="p">,</span><span class="w"> </span><span class="n">time</span><span class="p">,</span><span class="w"> </span><span class="n">input</span><span class="p">)</span>: <span class="nc">Self</span>::<span class="n">SystemData</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="kd">let</span><span class="w"> </span><span class="n">speed</span>: <span class="kt">f32</span> <span class="o">=</span><span class="w"> </span><span class="mf">50.0</span><span class="p">;</span><span class="w">
+        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">_seagl</span><span class="p">,</span><span class="w"> </span><span class="n">transform</span><span class="p">)</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="p">(</span><span class="o">&amp;</span><span class="n">seagls</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">transforms</span><span class="p">).</span><span class="n">join</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="n">horizontal</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">input</span><span class="p">.</span><span class="n">axis_value</span><span class="p">(</span><span class="s">&quot;horizontal&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="n">transform</span><span class="p">.</span><span class="n">prepend_translation_x</span><span class="p">(</span><span class="w">
+                    </span><span class="n">horizontal</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">time</span><span class="p">.</span><span class="n">delta_seconds</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">speed</span><span class="w">  </span><span class="k">as</span><span class="w"> </span><span class="kt">f32</span><span class="w">
+                </span><span class="p">);</span><span class="w">
+
+            </span><span class="p">};</span><span class="w">
+            </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="n">vertical</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">input</span><span class="p">.</span><span class="n">axis_value</span><span class="p">(</span><span class="s">&quot;vertical&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="n">transform</span><span class="p">.</span><span class="n">prepend_translation_y</span><span class="p">(</span><span class="w">
+                    </span><span class="n">vertical</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">time</span><span class="p">.</span><span class="n">delta_seconds</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">speed</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">f32</span><span class="w">
+                </span><span class="p">);</span><span class="w">
+            </span><span class="p">};</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span>
+</pre>
+<p>We declare a <tt class="docutils literal">SystemData</tt> type which is a tuple of components.
+The <tt class="docutils literal">Transform</tt> component will be modified, so we require it as <tt class="docutils literal">mut</tt>, but everything else is <tt class="docutils literal">Read</tt> for stuff that Amethyst provides and <tt class="docutils literal">ReadStorage</tt> for things we created.</p>
+<p>We loop over every entity with the <tt class="docutils literal">Seagl</tt> and <tt class="docutils literal">Transform</tt> components, then we match against any user input:</p>
+<ul class="simple">
+<li>If we had &quot;vertical&quot;  input, move the entity on the x axis.</li>
+<li>If we had &quot;horizontal&quot; input, move the entity on the y axis.</li>
+<li>We don't need to explicitly say &quot;move left&quot;/&quot;move right&quot; because the horizontal/vertical inputs can be positive or negative.</li>
+</ul>
+<p>Next we need to register this system with out game.
+Because we are using Inputs we also need to register the inputs bundle with the game.</p>
+<div class="highlight"><pre><span></span><span class="gi">+++ main.rs</span>
+<span class="gu">@@ fn main() -&gt; amethyst::Result&lt;()&gt;</span>
+     )
+     .with_plugin(RenderFlat2D::default());
+
+<span class="gi">+    let bindings_path = app_root.join(&quot;config&quot;).join(&quot;bindings.ron&quot;);</span>
+<span class="gi">+    let inputs = InputBundle::&lt;StringBindings&gt;::new().with_bindings_from_file(bindings_path)?;</span>
+<span class="gi">+</span>
+     let game_data = GameDataBuilder::default()
+         .with_bundle(transform)?
+         .with_bundle(renderer)?;
+<span class="gi">+        .with_bundle(inputs)?</span>
+<span class="gi">+        .with(MoveSystem, &quot;move_system&quot;, &amp;[&quot;input_system&quot;]);</span>
+
+     let mut game = Application::new(assets_dir, SeaglState, game_data)?;
+</pre></div>
+<p>We have a dependency on the <tt class="docutils literal">input_system</tt>, so Amethyst will ensure that system runs before <tt class="docutils literal">move_system</tt>.</p>
+<p>Next we need to create a config file for our movement bindings.
+Instead of hard-coding &quot;Up arrow means move up, down arrow means down&quot; we put that in config files:</p>
+<div class="highlight"><pre><span></span><span class="c1">// config/bindings.ron</span>
+<span class="p">(</span><span class="w"></span>
+<span class="w">    </span><span class="n">axes</span>: <span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="s">&quot;horizontal&quot;</span>: <span class="nc">Emulated</span><span class="p">(</span><span class="n">pos</span>: <span class="nc">Key</span><span class="p">(</span><span class="n">Right</span><span class="p">),</span><span class="w"> </span><span class="n">neg</span>: <span class="nc">Key</span><span class="p">(</span><span class="n">Left</span><span class="p">)),</span><span class="w"></span>
+<span class="w">        </span><span class="s">&quot;vertical&quot;</span>: <span class="nc">Emulated</span><span class="p">(</span><span class="n">pos</span>: <span class="nc">Key</span><span class="p">(</span><span class="n">Up</span><span class="p">),</span><span class="w"> </span><span class="n">neg</span>: <span class="nc">Key</span><span class="p">(</span><span class="n">Down</span><span class="p">)),</span><span class="w"></span>
+<span class="w">    </span><span class="p">},</span><span class="w"></span>
+<span class="w">    </span><span class="n">actions</span>: <span class="p">{},</span><span class="w"></span>
+<span class="p">)</span><span class="w"></span>
+</pre></div>
+<p>This is a good start, but you'll notice the Seagl doesn't turn left and right, this _totally_ breaks my suspension of disbelief so we're gonna need to fix that in our <tt class="docutils literal">run</tt> method:</p>
+<div class="highlight"><pre><span></span><span class="gh">diff --git a/src/main.rs b/src/main.rs</span>
+<span class="gu">@@ impl&lt;&#39;s&gt; System&lt;&#39;s&gt; for MoveSystem</span>
+<span class="gu">@@ run(...)</span>
+  if let Some(vertical) = input.axis_value(&quot;vertical&quot;) {
+      transform.prepend_translation_x(
+        horizontal * time.delta_seconds() * speed  as f32
+      );
+<span class="gi">+     if horizontal &gt; 0.0 {</span>
+<span class="gi">+       transform.set_rotation_y_axis(std::f32::consts::PI);</span>
+<span class="gi">+     }</span>
+<span class="gi">+     if horizontal &lt; 0.0 {</span>
+<span class="gi">+       transform.set_rotation_y_axis(0.0);</span>
+<span class="gi">+     }</span>
+<span class="gi">+</span>
+  };
+  if let Some(vertical) = input.axis_value(&quot;vertical&quot;) {
+      transform.prepend_translation_y(
+</pre></div>
+<p>In our &quot;horizontal&quot; check we added:</p>
+<ul class="simple">
+<li>If the input was greater than 0, flip our sprite on the Y axis.</li>
+<li>If the input was less than 0, reset our sprite on the Y axis.</li>
+</ul>
+<p>This makes it look like our Seagl is facing the direction they're moving which should help boost our Metacritic score when we publish this at the end of the blogpost.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>We rotate by PI because our 2D sprite is in the 3D world and we're rotating it in radians.</p>
+<p class="last">Do you ever feel like a 2D sprite in a 3D world?
+I know I do...</p>
+</div>
+</div>
+<div class="section" id="step-4-eat-some-food">
+<h3>Step 4: Eat some food! 🍔</h3>
+<p>I'm sure we could all get _minutes_ of fun out of moving our seagl around the screen, but this game could really use something else...
+Something tastier.</p>
+<p>Let's add burgers.</p>
+<p>This will require us to do everything we just did, again:</p>
+<ul class="simple">
+<li>Add a Food Compnent.</li>
+<li>Create a Burger entity with the food component.</li>
+<li>Add an Eat system.</li>
+<li>Register our Eat system with the game.</li>
+</ul>
+<p>First we need to add a food Component.</p>
+<p>Add this component anywhere that feels right:</p>
+<pre class="code rust literal-block">
+<span class="cp">#[derive(Default)]</span><span class="w">
+</span><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">Food</span><span class="p">;</span><span class="w">
+
+</span><span class="k">impl</span><span class="w"> </span><span class="n">Component</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">Food</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="k">type</span> <span class="nc">Storage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DenseVecStorage</span><span class="o">&lt;</span><span class="n">Self</span><span class="o">&gt;</span><span class="p">;</span><span class="w">
+</span><span class="p">}</span>
+</pre>
+<p>It's structurally identical to our Seagl, but with a different <tt class="docutils literal">struct</tt> it's a totally different component.</p>
+<p>With a Food component we can add our Burger entity.
+Add this code to our <tt class="docutils literal">on_setup</tt> function at the end:</p>
+<pre class="code rust literal-block">
+<span class="kd">let</span><span class="w"> </span><span class="n">burger_sprite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SpriteRender</span>::<span class="n">new</span><span class="p">(</span><span class="n">sprite_sheet_handle</span><span class="p">.</span><span class="n">clone</span><span class="p">(),</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w">
+</span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">transform</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Transform</span>::<span class="n">default</span><span class="p">();</span><span class="w">
+</span><span class="n">transform</span><span class="p">.</span><span class="n">set_translation_xyz</span><span class="p">(</span><span class="mf">75.0</span><span class="p">,</span><span class="w"> </span><span class="mf">75.0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1.0</span><span class="p">);</span><span class="w">
+</span><span class="n">data</span><span class="p">.</span><span class="n">world</span><span class="w">
+    </span><span class="p">.</span><span class="n">create_entity</span><span class="p">()</span><span class="w">
+    </span><span class="p">.</span><span class="n">with</span><span class="p">(</span><span class="n">Food</span>::<span class="n">default</span><span class="p">())</span><span class="w">
+    </span><span class="p">.</span><span class="n">with</span><span class="p">(</span><span class="n">burger_sprite</span><span class="p">)</span><span class="w">
+    </span><span class="p">.</span><span class="n">with</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span><span class="w">
+    </span><span class="p">.</span><span class="n">build</span><span class="p">();</span>
+</pre>
+<p>We create an entity spawning it at the point (75, 75, -1).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>We spawn the burger at <tt class="docutils literal"><span class="pre">z=-1</span></tt> to ensure the Seagl sprite is closer to the camera and thus is drawn on top of the burger.</p>
+<p class="last">Have you ever seen a Seagull _behind_ a burger?
+That's ridiculous.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>A few exercises left to the reader:</p>
+<ol class="arabic simple">
+<li>How would you spawn multiple burgers?</li>
+<li>How would you re-spawn burgers when one is eaten?</li>
+<li>How would you keep track of how many burgers were eaten?</li>
+<li>How would you display the number of burgers eaten?</li>
+</ol>
+<p class="last">I've only covered enough in this post to answer the first two.</p>
+</div>
+<p>And finally an &quot;eat&quot; system.</p>
+<p>This system's pseudocode looks like this:</p>
+<pre class="code text literal-block">
+For each seagl with a location:
+    For each Food with a location:
+        If the Seagl overlaps with the Food:
+            Destory that food
+</pre>
+<p>This is a bit of a hack.
+If this were a real game we would keep track of how many burgers the Seagl ate, but for this demo, we'll be lazy:</p>
+<pre class="code rust literal-block">
+<span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">EatSystem</span><span class="p">;</span><span class="w">
+
+</span><span class="k">impl</span><span class="o">&lt;</span><span class="na">'s</span><span class="o">&gt;</span><span class="w"> </span><span class="n">System</span><span class="o">&lt;</span><span class="na">'s</span><span class="o">&gt;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">EatSystem</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="k">type</span> <span class="nc">SystemData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="w">
+        </span><span class="n">ReadStorage</span><span class="o">&lt;</span><span class="na">'s</span><span class="p">,</span><span class="w"> </span><span class="n">Transform</span><span class="o">&gt;</span><span class="p">,</span><span class="w">
+        </span><span class="n">ReadStorage</span><span class="o">&lt;</span><span class="na">'s</span><span class="p">,</span><span class="w"> </span><span class="n">Seagl</span><span class="o">&gt;</span><span class="p">,</span><span class="w">
+        </span><span class="n">WriteStorage</span><span class="o">&lt;</span><span class="na">'s</span><span class="p">,</span><span class="w"> </span><span class="n">Food</span><span class="o">&gt;</span><span class="p">,</span><span class="w">
+        </span><span class="n">Entities</span><span class="o">&lt;</span><span class="na">'s</span><span class="o">&gt;</span><span class="p">,</span><span class="w">
+    </span><span class="p">);</span><span class="w">
+
+    </span><span class="k">fn</span> <span class="nf">run</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">transforms</span><span class="p">,</span><span class="w"> </span><span class="n">seagls</span><span class="p">,</span><span class="w"> </span><span class="n">foods</span><span class="p">,</span><span class="w"> </span><span class="n">entities</span><span class="p">)</span>: <span class="nc">Self</span>::<span class="n">SystemData</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">_seagl</span><span class="p">,</span><span class="w"> </span><span class="n">seagl_pos</span><span class="p">)</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="p">(</span><span class="o">&amp;</span><span class="n">seagls</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">transforms</span><span class="p">).</span><span class="n">join</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">_food</span><span class="p">,</span><span class="w"> </span><span class="n">food_pos</span><span class="p">,</span><span class="w"> </span><span class="n">entity</span><span class="p">)</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="p">(</span><span class="o">&amp;</span><span class="n">foods</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">transforms</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">entities</span><span class="p">).</span><span class="n">join</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="c1">// https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
+</span><span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">seagl_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">food_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">5.0</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w">
+                   </span><span class="p">(</span><span class="n">seagl_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">8.0</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">food_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w">
+                   </span><span class="p">(</span><span class="n">seagl_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">y</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">food_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">4.0</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w">
+                   </span><span class="p">(</span><span class="n">seagl_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">8.0</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">food_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">y</span><span class="p">)</span><span class="w">
+                </span><span class="p">{</span><span class="w">
+                    </span><span class="n">entities</span><span class="p">.</span><span class="n">delete</span><span class="p">(</span><span class="n">entity</span><span class="p">).</span><span class="n">unwrap</span><span class="p">();</span><span class="w">
+                </span><span class="p">}</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span>
+</pre>
+<p>And last but not least, we need to register this system with our game:</p>
+<pre class="code diff literal-block">
+<span class="gi">+++ main.rs
+</span><span class="gu">&#64;&#64; fn main() -&gt; amethyst::Result&lt;()&gt;
+</span>     let game_data = GameDataBuilder::default()
+         .with_bundle(transform)?
+         .with_bundle(renderer)?;
+         .with_bundle(inputs)?
+         .with(MoveSystem, &quot;move_system&quot;, &amp;[&quot;input_system&quot;])
+<span class="gi">+        .with(EatSystem, &quot;eat_system&quot;, &amp;[&quot;move_system&quot;]);</span>
+</pre>
+</div>
+</div>
+<div class="section" id="conclusions">
+<h2>Conclusions</h2>
+<p>We did it.
+We made a lil' game.
+It had a Seagl and a burger.
+And we had fun making it.</p>
+<p>I wouldn't say it's <em>easy</em> to make games in Rust, but we are <em>very far</em> from having to write games from scratch.</p>
+<p>If this post piqued your interest I hope you check out <a class="reference external" href="https://arewegameyet.rs">https://arewegameyet.rs</a> to learn more about the Rust Games ecosystem, and <a class="reference external" href="https://amethyst.rs">https://amethyst.rs</a> to learn more about this budding Game Engine.</p>
+</div>
+<div class="section" id="links">
+<h2>Links</h2>
+<ul class="simple">
+<li>SeaGL conference website: <a class="reference external" href="https://seagl.org/">https://seagl.org/</a> (You should go if you're in the Pacific Northwest)</li>
+<li>The code for this post is avaliable at <a class="reference external" href="https://github.com/pop/lets-make-games-with-rust">https://github.com/pop/lets-make-games-with-rust</a>.
+I even tagged each step so you can see exactly what we added!</li>
+<li>Rust Language: <a class="reference external" href="https://www.rust-lang.org/">https://www.rust-lang.org/</a></li>
+<li>Are We Game Yet?: <a class="reference external" href="https://arewegameyet.rs/">https://arewegameyet.rs/</a></li>
+<li>Amethyst Game Engine website: <a class="reference external" href="https://amethyst.rs/">https://amethyst.rs/</a></li>
+<li>Amethyst Game Engine book has a great introduction and overview: <a class="reference external" href="https://book.amethyst.rs/stable/">https://book.amethyst.rs/stable/</a></li>
+<li>Bevy Game Engine is an interesting iteration on Game Engines in Rust: <a class="reference external" href="https://bevyengine.org/">https://bevyengine.org/</a></li>
+<li>My Source that C++ is the defacto language in the games industry: <a class="reference external" href="https://youtu.be/rX0ItVEVjHc">https://youtu.be/rX0ItVEVjHc</a></li>
+<li>Game Programming Patterns is an awesome book with a free &amp; legal copy online: <a class="reference external" href="https://gameprogrammingpatterns.com/">https://gameprogrammingpatterns.com/</a></li>
+<li><tt class="docutils literal">rustup</tt> homepage for installation instructions: <a class="reference external" href="https://rustup.rs/">https://rustup.rs/</a></li>
+</ul>
+</div>
+
+</div>
+
+
+      </div>
+
+      <footer>
+        <p>
+        © 2020 Elijah Voigt, <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="/assets/images/CCA4IL.png" /> Creative Commons Attribution 4.0 International</a>.
+        </p>
+        <p>
+        This website made with locally sourced bits, built with Python 🐍 via Pelican 🐦, developed on Fedora 👒 GNU/Linux 🐃🐧, <a href='https://github.com/pop/elijahcaine.me'>hosted</a> and deployed on GitHub 🐙🐱, and served from clouds ⛅.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>
