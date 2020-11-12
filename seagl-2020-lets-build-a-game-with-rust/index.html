@@ -413,6 +413,12 @@ Lets add those.</p>
 <span class="w">            </span><span class="n">width</span>: <span class="mi">16</span><span class="p">,</span><span class="w"></span>
 <span class="w">            </span><span class="n">height</span>: <span class="mi">16</span><span class="p">,</span><span class="w"></span>
 <span class="w">        </span><span class="p">),</span><span class="w"></span>
+<span class="w">        </span><span class="p">(</span><span class="w"> </span><span class="c1">// Burger</span>
+<span class="w">            </span><span class="n">x</span>: <span class="mi">16</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">y</span>: <span class="mi">0</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">width</span>: <span class="mi">10</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">height</span>: <span class="mi">8</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="p">),</span><span class="w"></span>
 <span class="w">    </span><span class="p">],</span><span class="w"></span>
 <span class="p">))</span><span class="w"></span>
 </pre></div>
@@ -440,44 +446,42 @@ This happened because we forgot to add a Camera to the scene!</p>
 <p>Thinking back to our ECS discussion, we have two of the three ingredients: an Entity, some Components, but no Systems!</p>
 <p>First, we need to create a System struct and implement <tt class="docutils literal">System</tt> on it.</p>
 <p>Our System's run function looks like this in psuedocode:</p>
-<pre class="code text literal-block">
-for every seagl that can move:
+<div class="highlight"><pre><span></span>for every seagl that can move:
     If the user input was to move horizontal:
         Move the seagl horizontally
     If the user input was to move vertical:
         Move the seagl vertically
-</pre>
+</pre></div>
 <p>This doesn't look _exactly_ the same in Rust, but it's pretty close.</p>
-<pre class="code rust literal-block">
-<span class="p">[</span><span class="n">derive</span><span class="p">(</span><span class="n">SystemDesc</span><span class="p">)]</span><span class="w">
-</span><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">MoveSystem</span><span class="p">;</span><span class="w">
+<div class="highlight"><pre><span></span><span class="p">[</span><span class="n">derive</span><span class="p">(</span><span class="n">SystemDesc</span><span class="p">)]</span><span class="w"></span>
+<span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">MoveSystem</span><span class="p">;</span><span class="w"></span>
 
-</span><span class="k">impl</span><span class="o">&lt;</span><span class="na">'s</span><span class="o">&gt;</span><span class="w"> </span><span class="n">System</span><span class="o">&lt;</span><span class="na">'s</span><span class="o">&gt;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">MoveSystem</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="k">type</span> <span class="nc">SystemData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="w">
-        </span><span class="n">WriteStorage</span><span class="o">&lt;</span><span class="na">'s</span><span class="p">,</span><span class="w"> </span><span class="n">Transform</span><span class="o">&gt;</span><span class="p">,</span><span class="w">
-        </span><span class="n">ReadStorage</span><span class="o">&lt;</span><span class="na">'s</span><span class="p">,</span><span class="w"> </span><span class="n">Seagl</span><span class="o">&gt;</span><span class="p">,</span><span class="w">
-        </span><span class="n">Read</span><span class="o">&lt;</span><span class="na">'s</span><span class="p">,</span><span class="w"> </span><span class="n">Time</span><span class="o">&gt;</span><span class="p">,</span><span class="w">
-        </span><span class="n">Read</span><span class="o">&lt;</span><span class="na">'s</span><span class="p">,</span><span class="w"> </span><span class="n">InputHandler</span><span class="o">&lt;</span><span class="n">StringBindings</span><span class="o">&gt;&gt;</span><span class="p">,</span><span class="w">
-    </span><span class="p">);</span><span class="w">
+<span class="k">impl</span><span class="o">&lt;</span><span class="na">&#39;s</span><span class="o">&gt;</span><span class="w"> </span><span class="n">System</span><span class="o">&lt;</span><span class="na">&#39;s</span><span class="o">&gt;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">MoveSystem</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">type</span> <span class="nc">SystemData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+<span class="w">        </span><span class="n">WriteStorage</span><span class="o">&lt;</span><span class="na">&#39;s</span><span class="p">,</span><span class="w"> </span><span class="n">Transform</span><span class="o">&gt;</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="n">ReadStorage</span><span class="o">&lt;</span><span class="na">&#39;s</span><span class="p">,</span><span class="w"> </span><span class="n">Seagl</span><span class="o">&gt;</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="n">Read</span><span class="o">&lt;</span><span class="na">&#39;s</span><span class="p">,</span><span class="w"> </span><span class="n">Time</span><span class="o">&gt;</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="n">Read</span><span class="o">&lt;</span><span class="na">&#39;s</span><span class="p">,</span><span class="w"> </span><span class="n">InputHandler</span><span class="o">&lt;</span><span class="n">StringBindings</span><span class="o">&gt;&gt;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="p">);</span><span class="w"></span>
 
-    </span><span class="k">fn</span> <span class="nf">run</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="k">mut</span><span class="w"> </span><span class="n">transforms</span><span class="p">,</span><span class="w"> </span><span class="n">seagls</span><span class="p">,</span><span class="w"> </span><span class="n">time</span><span class="p">,</span><span class="w"> </span><span class="n">input</span><span class="p">)</span>: <span class="nc">Self</span>::<span class="n">SystemData</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="kd">let</span><span class="w"> </span><span class="n">speed</span>: <span class="kt">f32</span> <span class="o">=</span><span class="w"> </span><span class="mf">50.0</span><span class="p">;</span><span class="w">
-        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">_seagl</span><span class="p">,</span><span class="w"> </span><span class="n">transform</span><span class="p">)</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="p">(</span><span class="o">&amp;</span><span class="n">seagls</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">transforms</span><span class="p">).</span><span class="n">join</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="n">horizontal</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">input</span><span class="p">.</span><span class="n">axis_value</span><span class="p">(</span><span class="s">&quot;horizontal&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-                </span><span class="n">transform</span><span class="p">.</span><span class="n">prepend_translation_x</span><span class="p">(</span><span class="w">
-                    </span><span class="n">horizontal</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">time</span><span class="p">.</span><span class="n">delta_seconds</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">speed</span><span class="w">  </span><span class="k">as</span><span class="w"> </span><span class="kt">f32</span><span class="w">
-                </span><span class="p">);</span><span class="w">
+<span class="w">    </span><span class="k">fn</span> <span class="nf">run</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="k">mut</span><span class="w"> </span><span class="n">transforms</span><span class="p">,</span><span class="w"> </span><span class="n">seagls</span><span class="p">,</span><span class="w"> </span><span class="n">time</span><span class="p">,</span><span class="w"> </span><span class="n">input</span><span class="p">)</span>: <span class="nc">Self</span>::<span class="n">SystemData</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">speed</span>: <span class="kt">f32</span> <span class="o">=</span><span class="w"> </span><span class="mf">50.0</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">_seagl</span><span class="p">,</span><span class="w"> </span><span class="n">transform</span><span class="p">)</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="p">(</span><span class="o">&amp;</span><span class="n">seagls</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">transforms</span><span class="p">).</span><span class="n">join</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="n">horizontal</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">input</span><span class="p">.</span><span class="n">axis_value</span><span class="p">(</span><span class="s">&quot;horizontal&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="n">transform</span><span class="p">.</span><span class="n">prepend_translation_x</span><span class="p">(</span><span class="w"></span>
+<span class="w">                    </span><span class="n">horizontal</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">time</span><span class="p">.</span><span class="n">delta_seconds</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">speed</span><span class="w">  </span><span class="k">as</span><span class="w"> </span><span class="kt">f32</span><span class="w"></span>
+<span class="w">                </span><span class="p">);</span><span class="w"></span>
 
-            </span><span class="p">};</span><span class="w">
-            </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="n">vertical</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">input</span><span class="p">.</span><span class="n">axis_value</span><span class="p">(</span><span class="s">&quot;vertical&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-                </span><span class="n">transform</span><span class="p">.</span><span class="n">prepend_translation_y</span><span class="p">(</span><span class="w">
-                    </span><span class="n">vertical</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">time</span><span class="p">.</span><span class="n">delta_seconds</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">speed</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">f32</span><span class="w">
-                </span><span class="p">);</span><span class="w">
-            </span><span class="p">};</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span>
-</pre>
+<span class="w">            </span><span class="p">};</span><span class="w"></span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="n">vertical</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">input</span><span class="p">.</span><span class="n">axis_value</span><span class="p">(</span><span class="s">&quot;vertical&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="n">transform</span><span class="p">.</span><span class="n">prepend_translation_y</span><span class="p">(</span><span class="w"></span>
+<span class="w">                    </span><span class="n">vertical</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">time</span><span class="p">.</span><span class="n">delta_seconds</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">speed</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">f32</span><span class="w"></span>
+<span class="w">                </span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="p">};</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
 <p>We declare a <tt class="docutils literal">SystemData</tt> type which is a tuple of components.
 The <tt class="docutils literal">Transform</tt> component will be modified, so we require it as <tt class="docutils literal">mut</tt>, but everything else is <tt class="docutils literal">Read</tt> for stuff that Amethyst provides and <tt class="docutils literal">ReadStorage</tt> for things we created.</p>
 <p>We loop over every entity with the <tt class="docutils literal">Seagl</tt> and <tt class="docutils literal">Transform</tt> components, then we match against any user input:</p>
@@ -516,6 +520,7 @@ Instead of hard-coding &quot;Up arrow means move up, down arrow means down&quot;
 <span class="w">    </span><span class="n">actions</span>: <span class="p">{},</span><span class="w"></span>
 <span class="p">)</span><span class="w"></span>
 </pre></div>
+<img alt="It moves!" class="align-center" src="/assets/images/seagl-2020/SeaGL-move.gif" />
 <p>This is a good start, but you'll notice the Seagl doesn't turn left and right, this _totally_ breaks my suspension of disbelief so we're gonna need to fix that in our <tt class="docutils literal">run</tt> method:</p>
 <div class="highlight"><pre><span></span><span class="gh">diff --git a/src/main.rs b/src/main.rs</span>
 <span class="gu">@@ impl&lt;&#39;s&gt; System&lt;&#39;s&gt; for MoveSystem</span>
@@ -547,6 +552,7 @@ Instead of hard-coding &quot;Up arrow means move up, down arrow means down&quot;
 <p class="last">Do you ever feel like a 2D sprite in a 3D world?
 I know I do...</p>
 </div>
+<img alt="It moves!" class="align-center" src="/assets/images/seagl-2020/SeaGL-move-look.gif" />
 </div>
 <div class="section" id="step-4-eat-some-food">
 <h3>Step 4: Eat some food! 🍔</h3>
@@ -562,28 +568,26 @@ Something tastier.</p>
 </ul>
 <p>First we need to add a food Component.</p>
 <p>Add this component anywhere that feels right:</p>
-<pre class="code rust literal-block">
-<span class="cp">#[derive(Default)]</span><span class="w">
-</span><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">Food</span><span class="p">;</span><span class="w">
+<div class="highlight"><pre><span></span><span class="cp">#[derive(Default)]</span><span class="w"></span>
+<span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">Food</span><span class="p">;</span><span class="w"></span>
 
-</span><span class="k">impl</span><span class="w"> </span><span class="n">Component</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">Food</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="k">type</span> <span class="nc">Storage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DenseVecStorage</span><span class="o">&lt;</span><span class="n">Self</span><span class="o">&gt;</span><span class="p">;</span><span class="w">
-</span><span class="p">}</span>
-</pre>
+<span class="k">impl</span><span class="w"> </span><span class="n">Component</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">Food</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">type</span> <span class="nc">Storage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DenseVecStorage</span><span class="o">&lt;</span><span class="n">Self</span><span class="o">&gt;</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
 <p>It's structurally identical to our Seagl, but with a different <tt class="docutils literal">struct</tt> it's a totally different component.</p>
 <p>With a Food component we can add our Burger entity.
 Add this code to our <tt class="docutils literal">on_setup</tt> function at the end:</p>
-<pre class="code rust literal-block">
-<span class="kd">let</span><span class="w"> </span><span class="n">burger_sprite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SpriteRender</span>::<span class="n">new</span><span class="p">(</span><span class="n">sprite_sheet_handle</span><span class="p">.</span><span class="n">clone</span><span class="p">(),</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w">
-</span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">transform</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Transform</span>::<span class="n">default</span><span class="p">();</span><span class="w">
-</span><span class="n">transform</span><span class="p">.</span><span class="n">set_translation_xyz</span><span class="p">(</span><span class="mf">75.0</span><span class="p">,</span><span class="w"> </span><span class="mf">75.0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1.0</span><span class="p">);</span><span class="w">
-</span><span class="n">data</span><span class="p">.</span><span class="n">world</span><span class="w">
-    </span><span class="p">.</span><span class="n">create_entity</span><span class="p">()</span><span class="w">
-    </span><span class="p">.</span><span class="n">with</span><span class="p">(</span><span class="n">Food</span>::<span class="n">default</span><span class="p">())</span><span class="w">
-    </span><span class="p">.</span><span class="n">with</span><span class="p">(</span><span class="n">burger_sprite</span><span class="p">)</span><span class="w">
-    </span><span class="p">.</span><span class="n">with</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span><span class="w">
-    </span><span class="p">.</span><span class="n">build</span><span class="p">();</span>
-</pre>
+<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="n">burger_sprite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SpriteRender</span>::<span class="n">new</span><span class="p">(</span><span class="n">sprite_sheet_handle</span><span class="p">.</span><span class="n">clone</span><span class="p">(),</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w"></span>
+<span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">transform</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Transform</span>::<span class="n">default</span><span class="p">();</span><span class="w"></span>
+<span class="n">transform</span><span class="p">.</span><span class="n">set_translation_xyz</span><span class="p">(</span><span class="mf">75.0</span><span class="p">,</span><span class="w"> </span><span class="mf">75.0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1.0</span><span class="p">);</span><span class="w"></span>
+<span class="n">data</span><span class="p">.</span><span class="n">world</span><span class="w"></span>
+<span class="w">    </span><span class="p">.</span><span class="n">create_entity</span><span class="p">()</span><span class="w"></span>
+<span class="w">    </span><span class="p">.</span><span class="n">with</span><span class="p">(</span><span class="n">Food</span>::<span class="n">default</span><span class="p">())</span><span class="w"></span>
+<span class="w">    </span><span class="p">.</span><span class="n">with</span><span class="p">(</span><span class="n">burger_sprite</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">.</span><span class="n">with</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">.</span><span class="n">build</span><span class="p">();</span><span class="w"></span>
+</pre></div>
 <p>We create an entity spawning it at the point (75, 75, -1).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -604,52 +608,50 @@ That's ridiculous.</p>
 </div>
 <p>And finally an &quot;eat&quot; system.</p>
 <p>This system's pseudocode looks like this:</p>
-<pre class="code text literal-block">
-For each seagl with a location:
+<div class="highlight"><pre><span></span>For each seagl with a location:
     For each Food with a location:
         If the Seagl overlaps with the Food:
             Destory that food
-</pre>
+</pre></div>
 <p>This is a bit of a hack.
 If this were a real game we would keep track of how many burgers the Seagl ate, but for this demo, we'll be lazy:</p>
-<pre class="code rust literal-block">
-<span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">EatSystem</span><span class="p">;</span><span class="w">
+<div class="highlight"><pre><span></span><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">EatSystem</span><span class="p">;</span><span class="w"></span>
 
-</span><span class="k">impl</span><span class="o">&lt;</span><span class="na">'s</span><span class="o">&gt;</span><span class="w"> </span><span class="n">System</span><span class="o">&lt;</span><span class="na">'s</span><span class="o">&gt;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">EatSystem</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="k">type</span> <span class="nc">SystemData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="w">
-        </span><span class="n">ReadStorage</span><span class="o">&lt;</span><span class="na">'s</span><span class="p">,</span><span class="w"> </span><span class="n">Transform</span><span class="o">&gt;</span><span class="p">,</span><span class="w">
-        </span><span class="n">ReadStorage</span><span class="o">&lt;</span><span class="na">'s</span><span class="p">,</span><span class="w"> </span><span class="n">Seagl</span><span class="o">&gt;</span><span class="p">,</span><span class="w">
-        </span><span class="n">WriteStorage</span><span class="o">&lt;</span><span class="na">'s</span><span class="p">,</span><span class="w"> </span><span class="n">Food</span><span class="o">&gt;</span><span class="p">,</span><span class="w">
-        </span><span class="n">Entities</span><span class="o">&lt;</span><span class="na">'s</span><span class="o">&gt;</span><span class="p">,</span><span class="w">
-    </span><span class="p">);</span><span class="w">
+<span class="k">impl</span><span class="o">&lt;</span><span class="na">&#39;s</span><span class="o">&gt;</span><span class="w"> </span><span class="n">System</span><span class="o">&lt;</span><span class="na">&#39;s</span><span class="o">&gt;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">EatSystem</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">type</span> <span class="nc">SystemData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+<span class="w">        </span><span class="n">ReadStorage</span><span class="o">&lt;</span><span class="na">&#39;s</span><span class="p">,</span><span class="w"> </span><span class="n">Transform</span><span class="o">&gt;</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="n">ReadStorage</span><span class="o">&lt;</span><span class="na">&#39;s</span><span class="p">,</span><span class="w"> </span><span class="n">Seagl</span><span class="o">&gt;</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="n">WriteStorage</span><span class="o">&lt;</span><span class="na">&#39;s</span><span class="p">,</span><span class="w"> </span><span class="n">Food</span><span class="o">&gt;</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="n">Entities</span><span class="o">&lt;</span><span class="na">&#39;s</span><span class="o">&gt;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="p">);</span><span class="w"></span>
 
-    </span><span class="k">fn</span> <span class="nf">run</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">transforms</span><span class="p">,</span><span class="w"> </span><span class="n">seagls</span><span class="p">,</span><span class="w"> </span><span class="n">foods</span><span class="p">,</span><span class="w"> </span><span class="n">entities</span><span class="p">)</span>: <span class="nc">Self</span>::<span class="n">SystemData</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">_seagl</span><span class="p">,</span><span class="w"> </span><span class="n">seagl_pos</span><span class="p">)</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="p">(</span><span class="o">&amp;</span><span class="n">seagls</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">transforms</span><span class="p">).</span><span class="n">join</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">_food</span><span class="p">,</span><span class="w"> </span><span class="n">food_pos</span><span class="p">,</span><span class="w"> </span><span class="n">entity</span><span class="p">)</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="p">(</span><span class="o">&amp;</span><span class="n">foods</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">transforms</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">entities</span><span class="p">).</span><span class="n">join</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-                </span><span class="c1">// https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
-</span><span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">seagl_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">food_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">5.0</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w">
-                   </span><span class="p">(</span><span class="n">seagl_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">8.0</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">food_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w">
-                   </span><span class="p">(</span><span class="n">seagl_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">y</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">food_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">4.0</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w">
-                   </span><span class="p">(</span><span class="n">seagl_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">8.0</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">food_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">y</span><span class="p">)</span><span class="w">
-                </span><span class="p">{</span><span class="w">
-                    </span><span class="n">entities</span><span class="p">.</span><span class="n">delete</span><span class="p">(</span><span class="n">entity</span><span class="p">).</span><span class="n">unwrap</span><span class="p">();</span><span class="w">
-                </span><span class="p">}</span><span class="w">
-            </span><span class="p">}</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span>
-</pre>
+<span class="w">    </span><span class="k">fn</span> <span class="nf">run</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">transforms</span><span class="p">,</span><span class="w"> </span><span class="n">seagls</span><span class="p">,</span><span class="w"> </span><span class="n">foods</span><span class="p">,</span><span class="w"> </span><span class="n">entities</span><span class="p">)</span>: <span class="nc">Self</span>::<span class="n">SystemData</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">_seagl</span><span class="p">,</span><span class="w"> </span><span class="n">seagl_pos</span><span class="p">)</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="p">(</span><span class="o">&amp;</span><span class="n">seagls</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">transforms</span><span class="p">).</span><span class="n">join</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">_food</span><span class="p">,</span><span class="w"> </span><span class="n">food_pos</span><span class="p">,</span><span class="w"> </span><span class="n">entity</span><span class="p">)</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="p">(</span><span class="o">&amp;</span><span class="n">foods</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">transforms</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">entities</span><span class="p">).</span><span class="n">join</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="c1">// https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection</span>
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">seagl_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">food_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">5.0</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"></span>
+<span class="w">                   </span><span class="p">(</span><span class="n">seagl_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">8.0</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">food_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"></span>
+<span class="w">                   </span><span class="p">(</span><span class="n">seagl_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">y</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">food_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">4.0</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"></span>
+<span class="w">                   </span><span class="p">(</span><span class="n">seagl_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">8.0</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">food_pos</span><span class="p">.</span><span class="n">translation</span><span class="p">().</span><span class="n">y</span><span class="p">)</span><span class="w"></span>
+<span class="w">                </span><span class="p">{</span><span class="w"></span>
+<span class="w">                    </span><span class="n">entities</span><span class="p">.</span><span class="n">delete</span><span class="p">(</span><span class="n">entity</span><span class="p">).</span><span class="n">unwrap</span><span class="p">();</span><span class="w"></span>
+<span class="w">                </span><span class="p">}</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
 <p>And last but not least, we need to register this system with our game:</p>
-<pre class="code diff literal-block">
-<span class="gi">+++ main.rs
-</span><span class="gu">&#64;&#64; fn main() -&gt; amethyst::Result&lt;()&gt;
-</span>     let game_data = GameDataBuilder::default()
+<div class="highlight"><pre><span></span><span class="gi">+++ main.rs</span>
+<span class="gu">@@ fn main() -&gt; amethyst::Result&lt;()&gt;</span>
+     let game_data = GameDataBuilder::default()
          .with_bundle(transform)?
          .with_bundle(renderer)?;
          .with_bundle(inputs)?
          .with(MoveSystem, &quot;move_system&quot;, &amp;[&quot;input_system&quot;])
 <span class="gi">+        .with(EatSystem, &quot;eat_system&quot;, &amp;[&quot;move_system&quot;]);</span>
-</pre>
+</pre></div>
+<img alt="It moves!" class="align-center" src="/assets/images/seagl-2020/SeaGL-move-look-burger.gif" />
 </div>
 </div>
 <div class="section" id="conclusions">
