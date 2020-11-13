@@ -469,7 +469,7 @@ Because we are using Inputs we also need to register the inputs bundle with the 
 &lt;span class="gi"&gt;+&lt;/span&gt;
      let game_data = GameDataBuilder::default()
          .with_bundle(transform)?
-         .with_bundle(renderer)?;
+         .with_bundle(renderer)?
 &lt;span class="gi"&gt;+        .with_bundle(inputs)?&lt;/span&gt;
 &lt;span class="gi"&gt;+        .with(MoveSystem, &amp;quot;move_system&amp;quot;, &amp;amp;[&amp;quot;input_system&amp;quot;]);&lt;/span&gt;
 
@@ -588,7 +588,7 @@ If this were a real game we would keep track of how many burgers the Seagl ate, 
 &lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;type&lt;/span&gt; &lt;span class="nc"&gt;SystemData&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
 &lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;ReadStorage&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="na"&gt;&amp;#39;s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Transform&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
 &lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;ReadStorage&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="na"&gt;&amp;#39;s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Seagl&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
-&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;WriteStorage&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="na"&gt;&amp;#39;s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Food&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;ReadStorage&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="na"&gt;&amp;#39;s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Food&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
 &lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;Entities&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="na"&gt;&amp;#39;s&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
 &lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
 
@@ -613,7 +613,7 @@ If this were a real game we would keep track of how many burgers the Seagl ate, 
 &lt;span class="gu"&gt;@@ fn main() -&amp;gt; amethyst::Result&amp;lt;()&amp;gt;&lt;/span&gt;
      let game_data = GameDataBuilder::default()
          .with_bundle(transform)?
-         .with_bundle(renderer)?;
+         .with_bundle(renderer)?
          .with_bundle(inputs)?
          .with(MoveSystem, &amp;quot;move_system&amp;quot;, &amp;amp;[&amp;quot;input_system&amp;quot;])
 &lt;span class="gi"&gt;+        .with(EatSystem, &amp;quot;eat_system&amp;quot;, &amp;amp;[&amp;quot;move_system&amp;quot;]);&lt;/span&gt;
