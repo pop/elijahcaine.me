@@ -1,5 +1,195 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>elijahcaine.me</title><link href="elijahcaine.me/" rel="alternate"></link><link href="elijahcaine.me/feeds/all-en.atom.xml" rel="self"></link><id>elijahcaine.me/</id><updated>2020-11-13T00:00:00-08:00</updated><entry><title>Let's Build a Game with Rust</title><link href="elijahcaine.me/seagl-2020-lets-build-a-game-with-rust" rel="alternate"></link><published>2020-11-13T00:00:00-08:00</published><updated>2020-11-13T00:00:00-08:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2020-11-13:elijahcaine.me/seagl-2020-lets-build-a-game-with-rust</id><summary type="html">&lt;p class="first last"&gt;A talk I gave at Seattle GNU Linux Conference 2020&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>elijahcaine.me</title><link href="elijahcaine.me/" rel="alternate"></link><link href="elijahcaine.me/feeds/all-en.atom.xml" rel="self"></link><id>elijahcaine.me/</id><updated>2021-07-07T00:00:00-07:00</updated><entry><title>Nuggit: Manually change your default branch name</title><link href="elijahcaine.me/git-main-branch" rel="alternate"></link><published>2021-07-07T00:00:00-07:00</published><updated>2021-07-07T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2021-07-07:elijahcaine.me/git-main-branch</id><summary type="html">&lt;p class="first last"&gt;Really the story of not upgrading for far too long...&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;So I was on my laptop running an ancient release of Linux called Fedora 30 -- so old COVID wasn't even a twinkle in a bat's eye when it was released.&lt;/p&gt;
+&lt;p&gt;On this ancient OS I'm have &lt;tt class="docutils literal"&gt;git 2.21.3&lt;/tt&gt; which is like 13 versions behind.  I ask yum -- err &lt;em&gt;dnf&lt;/em&gt; -- if there is an upgrade and it's like &amp;quot;nope&amp;quot;. Nothing makes me feel older than software.&lt;/p&gt;
+&lt;p&gt;I've gotten into the habit of naming my default branches &lt;tt class="docutils literal"&gt;main&lt;/tt&gt; instead of &lt;tt class="docutils literal"&gt;master&lt;/tt&gt; because every time I say &amp;quot;master&amp;quot; I need to take a shower. I'm pretty sure the latest git names the default branch &lt;tt class="docutils literal"&gt;main&lt;/tt&gt; out of the box, but git from April 2019 was not aware of problematic language choices.&lt;/p&gt;
+&lt;p&gt;So as one does I'm starting a new repo and I decide before updating &lt;tt class="docutils literal"&gt;git&lt;/tt&gt;, which is gonna require like 3 Fedora upgrades, I'm just going to rename the branch. I know I'll get woke-git if I upgrade Fedora, but I want to write this post first so we're gonna find a workaround.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;[branch:master]$ git branch -m main
+error: refname refs/heads/master not found
+fatal: Branch rename failed
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Hmm. So on a bare repo you can't rename the starting branch because there's no objects in the repo... or something like that &lt;em&gt;waves hands&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;Umm... I guess we'll go spelunking into the &lt;cite&gt;.git&lt;/cite&gt; directory to see if we can manually force our &lt;cite&gt;main&lt;/cite&gt; branch naming.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;[branch:master]$ cd .git
+[.git]$ tree -F
+.
+├── branches/
+├── config
+├── description
+├── HEAD
+├── hooks/
+│   ├── A bunch of sample scripts
+├── info/
+│   └── exclude
+├── objects/
+│   ├── info/
+│   └── pack/
+└── refs/
+        ├── heads/
+        └── tags/
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Well unsurprisingly we have a bunch of empty directories and some sample scripts.&lt;/p&gt;
+&lt;p&gt;The only files that _might_ be worth looking at are &lt;cite&gt;config&lt;/cite&gt;, &lt;cite&gt;description&lt;/cite&gt;, and &lt;cite&gt;HEAD&lt;/cite&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;// config
+[core]
+        repositoryformatversion = 0
+        filemode = true
+        bare = false
+        logallrefupdates = true
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This seems to be config options for this repo, none of which mention branch naming so it's a skip for me.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;// description
+Unnamed repository; edit this file &amp;#39;description&amp;#39; to name the repository.
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I had no idea this feature existed. I have never seen it be used -- but fun facts!&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;// HEAD
+ref: refs/heads/master
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And the money shot. Let's change that bad boy to &lt;cite&gt;refs/heads/main&lt;/cite&gt; and see if my magical git prompt picks it up:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;[.git]$ cd ../
+[branch:main]$
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Heyo! There you have it. How to manually change the name of your main branch in a fresh git repo.&lt;/p&gt;
+&lt;p&gt;Sanity check, this won't fuck up if we commit right?&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ cargo init .
+$ git add . &amp;amp;&amp;amp; git commit -m &amp;quot;initial commit&amp;quot;
+[main (root-commit) ebecbee] initial commit
+ 3 files changed, 12 insertions(+)
+ create mode 100644 .gitignore
+ create mode 100644 Cargo.toml
+ create mode 100644 src/main.rs
+&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="section" id="note"&gt;
+&lt;h2&gt;Note...&lt;/h2&gt;
+&lt;p&gt;After anxiously upgrading to Fedora 34 I confirmed that git fixed a lot of this:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;[pop@lappy foo]$ git init
+hint: Using &amp;#39;master&amp;#39; as the name for the initial branch. This default branch name
+hint: is subject to change. To configure the initial branch name to use in all
+hint: of your new repositories, which will suppress this warning, call:
+hint:
+hint:   git config --global init.defaultBranch &amp;lt;name&amp;gt;
+hint:
+hint: Names commonly chosen instead of &amp;#39;master&amp;#39; are &amp;#39;main&amp;#39;, &amp;#39;trunk&amp;#39; and
+hint: &amp;#39;development&amp;#39;. The just-created branch can be renamed via this command:
+hint:
+hint:   git branch -m &amp;lt;name&amp;gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And yes, &lt;tt class="docutils literal"&gt;git branch &lt;span class="pre"&gt;-m&lt;/span&gt; &amp;lt;name&amp;gt;&lt;/tt&gt; does work on an empty repo.&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="tech"></category><category term="Git"></category><category term="Problematic Language"></category></entry><entry><title>On the Metal</title><link href="elijahcaine.me/on-the-metal" rel="alternate"></link><published>2021-01-18T00:00:00-08:00</published><updated>2021-01-18T00:00:00-08:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2021-01-18:elijahcaine.me/on-the-metal</id><summary type="html">&lt;p class="first last"&gt;Let's learn computer graphics&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;Computing is a big field.
+When I was getting my computer science degree I knew there were at least a dozen specialties I could go into.
+All of these felt like entirely different worlds separated huge vallies of time needed to learn the basics all over again.&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Back-end web dev: Producing value for users with reasonably fast turnaround. Integrating with other systems.&lt;/li&gt;
+&lt;li&gt;Crytography: Math and proofs; correctness is paramount.&lt;/li&gt;
+&lt;li&gt;Front-end web dev: Platform quirks; browsers aren't all the same.&lt;/li&gt;
+&lt;li&gt;Operations: Learning hundreds of tools and how they work together; maintaining complex systems.&lt;/li&gt;
+&lt;li&gt;Networking dev: Gotta go fast; speed is paramount.&lt;/li&gt;
+&lt;li&gt;Games dev: Do a bunch of complex stuff, 60-120 times per second. And make it fun.&lt;/li&gt;
+&lt;li&gt;Mobile app dev: Front-end development with a heavier IDE.&lt;/li&gt;
+&lt;li&gt;Graphics: Physics that needs to look pretty and be fast.&lt;/li&gt;
+&lt;li&gt;Operating systems: Squeezing every bit out of the computer.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="admonition note"&gt;
+&lt;p class="first admonition-title"&gt;Note&lt;/p&gt;
+&lt;p class="last"&gt;This is far from a complete list, and most of my assumptions about these fields, even the ones I have experience in, are nieve.
+The point is that these fields overlap in that they all uses computers, but differ wildly after scratching the surface.&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;This of course ignores the even wider world of computer engineering.
+I don't even know enough about circuit boards and hardware to make a glib guess about it.&lt;/p&gt;
+&lt;div class="section" id="developers-and-programmers"&gt;
+&lt;h2&gt;Developers and Programmers&lt;/h2&gt;
+&lt;blockquote&gt;
+OK, that's cool but like what's your point?&lt;/blockquote&gt;
+&lt;p&gt;I've been a back-end web developer and DevOps™ engineer since before I graduated in 2017.
+I'm very comfortable working at a high level of abstraction.
+I treat computers as black boxes that magically turn my elegant algorithms into changing colors on a screen.&lt;/p&gt;
+&lt;p&gt;Sometimes I can spot performance bugs like this:&lt;/p&gt;
+&lt;pre class="code python literal-block"&gt;
+&lt;span class="n"&gt;new_stuff&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;
+&lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;obj&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;some_queryset&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;new_thing&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;transform_thing&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;obj&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;new_stuff&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;append&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;new_thing&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;new_stuff&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;where I think &amp;quot;Hmm, that's going to be slow if &lt;tt class="docutils literal"&gt;some_queryset&lt;/tt&gt; is like big&amp;quot;.&lt;/p&gt;
+&lt;p&gt;I call working at this higher level of abstraction &amp;quot;developing&amp;quot;.&lt;/p&gt;
+&lt;dl class="docutils"&gt;
+&lt;dt&gt;Developer&lt;/dt&gt;
+&lt;dd&gt;A devleoper turns compute into value, abstracted away the details of that compute.&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;p&gt;This is in contrast with a _programmer_ who is focused on the physical computer.
+A Programmer not only catches obvious bugs like calculating unecessary values, but asks &amp;quot;Is this program written for a computer&amp;quot;.
+Programmers think about cache hits and misses, context switches, byte allignment, and in squeezing computers for all their worth.&lt;/p&gt;
+&lt;dl class="docutils"&gt;
+&lt;dt&gt;Programmer&lt;/dt&gt;
+&lt;dd&gt;A programmer writes software with the computer it runs on in mind.&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;p&gt;Growing up, and even after I started working full time, I considered these two words interchangable.
+A programmer and a devleoper were basically the same title and you just used whichever was more appropriate.&lt;/p&gt;
+&lt;p&gt;I'm not a fan of splitting hairs between words, so what's my point?&lt;/p&gt;
+&lt;p&gt;Drawing a distinction between Developer and Programmer got me to think what I _currently_ do with computers, and what I _want_ to do with them next.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="getting-close-to-the-metal"&gt;
+&lt;h2&gt;Getting close to the metal&lt;/h2&gt;
+&lt;p&gt;I've been &lt;a class="reference external" href="https://github.com/pop/rust-action-heroes/"&gt;dabbling with programming games&lt;/a&gt; for a few months and it is... challenging.&lt;/p&gt;
+&lt;p&gt;I'm very familiar with the patterns of web development and I like working in that space.
+It's lucritive, in relatively high demand, and I've gotten good at it.&lt;/p&gt;
+&lt;p&gt;Games on the other hand I don't have a ledge to hold on to.&lt;/p&gt;
+&lt;p&gt;I'm overwhelemed by graphics, the complex game engines, how hyper aware I need to be of performance.
+It feels like I've spent _years_ learning about how to write software for computers and I opened a door and found an entirely different world.&lt;/p&gt;
+&lt;p&gt;Catching up to the point where I can make good games feels incredibly daunting, and I am _very_ excited.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="how-i-learn"&gt;
+&lt;h2&gt;How I learn&lt;/h2&gt;
+&lt;p&gt;Here's how I learn something totally new:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Ask the obvious question. &amp;quot;How do I program games?&amp;quot;&lt;/li&gt;
+&lt;li&gt;This spawns more questions. &amp;quot;How do I program a graphics engine?&amp;quot;&lt;/li&gt;
+&lt;li&gt;This spawns yet more questions. &amp;quot;What algorithms do I need for this?&amp;quot;&lt;/li&gt;
+&lt;li&gt;Again and again... &amp;quot;What is a dot-product of two vectors?&amp;quot;&lt;/li&gt;
+&lt;li&gt;Until I hit bedrock. &amp;quot;I have derived how dot-products work.&amp;quot;&lt;/li&gt;
+&lt;li&gt;Then the entire chain of questions get anwswered.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;For the algorithmically minded, this is like a depth-first search.
+I don't feel like I understand anything until I've asked and answered every question up the stack.&lt;/p&gt;
+&lt;p&gt;In practics I don't actually drill down this directly.
+I usually do a bunch slower &amp;quot;breadth-first&amp;quot; search where I ask a lot of questions randomly until I hit bedrock and everything clicks.&lt;/p&gt;
+&lt;p&gt;This is very fulfilling in the end, I have a deep understanding of what I'm doing and I'm able to reason about what I'm doing at a few levels -- but it's incredibly slow and I give up before I get to the bottom of things.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="let-s-program-games"&gt;
+&lt;h2&gt;Let's program games&lt;/h2&gt;
+&lt;p&gt;I'm really interested in making games, but I'm having a hard time picking up different engines.&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Unity and Unreal are power hogs and I don't have the patience to learn what all the buttons do.&lt;/li&gt;
+&lt;li&gt;Amethyst and Bevy are good Rust frameworks, but I still haven't hit bedrock.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;So becuase I'm very good at convincing myself of bad ideas, let's dig into how games work and learn the fundimentals.
+Not becuase I want to write a game engine completely from scratch, I'm not Jonathan Blow.
+Once I understand how higher level engines work I'll enjoy working with them, or I will have the power to fix them if I don't like them.&lt;/p&gt;
+&lt;div class="section" id="graphics"&gt;
+&lt;h3&gt;Graphics&lt;/h3&gt;
+&lt;p&gt;I picked &amp;quot;graphics&amp;quot; out of a hat so here's a bunch of resources I've been collecting about graphics programming:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;a class="reference external" href="http://www.pbr-book.org/3ed-2018/contents.html"&gt;PBRT&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://www.scratchapixel.com/"&gt;Scratchpixel&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://web.engr.oregonstate.edu/~mjb/cs550/"&gt;CS 450&lt;/a&gt; Introduction to Computer Graphics&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://web.engr.oregonstate.edu/~mjb/cs557/"&gt;CS 457&lt;/a&gt; Computer Graphics Shaders&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Rust specific resources:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://rust-tutorials.github.io/learn-gfx-hal/"&gt;Learn GFX Hal&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://sotrh.github.io/learn-wgpu/"&gt;Learn WGPU&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://bheisler.github.io/post/writing-raytracer-in-rust-part-1/"&gt;Writing a raytracer in Rust&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;General game stuff:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://gameprogrammingpatterns.com/contents.html"&gt;Game Programming Patterns&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+</content><category term="tech"></category><category term="math"></category><category term="cgi"></category><category term="graphics"></category><category term="3d"></category></entry><entry><title>Let's Build a Game with Rust</title><link href="elijahcaine.me/seagl-2020-lets-build-a-game-with-rust" rel="alternate"></link><published>2020-11-13T00:00:00-08:00</published><updated>2020-11-13T00:00:00-08:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2020-11-13:elijahcaine.me/seagl-2020-lets-build-a-game-with-rust</id><summary type="html">&lt;p class="first last"&gt;A talk I gave at Seattle GNU Linux Conference 2020&lt;/p&gt;
 </summary><content type="html">&lt;div class="admonition note"&gt;
 &lt;p class="first admonition-title"&gt;Note&lt;/p&gt;
 &lt;p class="last"&gt;This is the outline for a talk I gave at the Seattle GNU Linux conference (SeaGL) 2020.

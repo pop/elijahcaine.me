@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="author" content="Elijah Voigt">
+    <link rel="stylesheet" type="text/css" href="../../theme/css/styles.css"/>
+        <link href="/rss.xml" type="application/rss+xml"   rel="alternate" title="elijahcaine.me RSS Feed" />
+        <link href="/atom.xml" type="application/atom+xml" rel="alternate" title="elijahcaine.me Atom Feed" />
+  </head>
+
+  <body>
+    <div class="site">
+      <header>
+        <a href="/">(🏠 elijahcaine.me)</a>
+        <a href="https://github.com/pop/">(🐙 github 🐱)</a>
+        <a href="/resume.pdf">(👔 resume)</a>
+        <a href="/atom.xml">(📰 feed)</a>
+      </header>
+
+      <div id="content">
+
+<div class="post">
+  <h1 class="posttitle">
+    Deploying Buildbot on Kubernetes
+  </h1>
+
+  <div class="postinfo">
+    <p class="published" title="2021-04-19T00:00:00-07:00">
+      Mon 19 April 2021
+    </p>
+  </div>
+</div>
+
+<div class="article">
+  <hr class="docutils" />
+<p>It dawned on me recently that I <em>really like playing with computers</em>.
+I like typing stuff into a computer and making it do exactly what I want.
+I like infrastructure problems where I can write software that orchestrates hundreds of programs working together.</p>
+<p>I also like playing games, but I like thinking about how they're made even more.
+I enjoy talking with friends about balance in games, mechanics in games, and potential changes to those mechanics.</p>
+<p>If you know me you might know that I'm not <em>that</em> good at computers <em>or</em> videogames.
+I usually play to my strengths in both areas.
+With computers I write server-side or infrastructure software, and with videogames I play the campaign.</p>
+<p>My friend Sam and I started playing games recently.
+He's based in Minnisota, and I'm based on Portland, so we would jump on Discord every Sunday to play games for ~2hrs.
+First we played Diablo 3, DOTA Underworlds, then the Halo series, then Minecraft, and now Overwatch.
+I'm a big fan of Overwatch, and I am very bad at it -- but I'm showing steady improvement!</p>
+<p>Overwatch is the first online competitive games I've gotten serious about.
+Every other online game I played -- mostly Team Fortress 2 -- I just played for fun and didn't think about the strategy of.
+With Overwatch I am focusing on the Tank class, <strong>studying</strong> how to play each character, and I feel <em>kinda bad</em> when I lose.</p>
+<p>I'm having a blast.
+I am loving being bad at something.</p>
+<p>While Sam and I were playing we started shooting the shit about making a game ourselves.
+We workshopped some ideas and found this idea where you're a cab driver and when you pick up patrons the game changes and &quot;glitches&quot;.
+You pick up a boxer and other cars start punching you, pick up a toddler and the world is drawn in crayon, shit like that.</p>
+<p>At a similar time I started watching Johnathan Blow and Casey Moriarti's streams about videogame development.
+These guys both code their own game engines from scratch, and they make it seem hard but fulfilling.
+They don't aspouse to saying you &quot;have&quot; to code you own games from scrach, but they make a lot of good points about having control over the engine, and gaining expertise that is often lost in modern software development.</p>
+<p>At the same time <em>again</em> (I know this is a bad story, I'm just telling you shit is happening, we'll get to the graphics stuff in a bit) I was working on a software project that was useful, but not concerned with performance at all.
+I thought this was isolated to our company and our project, but as I listened to these streams I was comforted knowing that <em>lots</em> of software is written with a focus on features, and &quot;features&quot; rarely include performance requirements beyond &quot;fast enough&quot;.</p>
+<p>In talking to some technologists in my life this is a hard idea to articulate, but the thrust of what I'm realizing is that I don't know how to write fast software, only &quot;fast enough&quot; software.
+I have spent my entire career thinking of performance requirements and not thinking about performance <em>possibilities</em>.
+Chandler Caruth also has good talks on this topic.</p>
+<p>The games industry, based on my research, makes software that is as fast as <em>possible</em>, not as fast as <em>enough</em>.
+This happens to be because making software go as fast as possible <em>is</em> a <em>user requirement</em>, but that's still cool!</p>
+<p>So what does it mean for software to go <em>as fast as possible</em>.
+.. measuring performance
+.. cache hits/miss
+.. data locality
+.. parallelization
+.. minimize memory allocations
+.. no RAII</p>
+<p>So this is all to say that I'm using this transitive frustration from the folks I'm following online to get into game development.</p>
+<p>Some people might say to play to your strengths to maximize your profitability and skills in the workplace.
+I agree with that, if I were maximizing my life for money.
+I have decided that I am maximizing my life for daily average joy.
+This means work should be enjoyable, but it also means persuing whatever hobby brings the most joy or endorphis, not the hobby that brings in the most cash money.
+I also think people that are soly focused on one thing for that reason are boring as hell.
+If you do one thing becuase that's the most logical way to maximize personal profits, that's boring as hell.
+If you do one thing becuase that brings you the most pure joy and you hadn't even thought of brancing out because you were having so much fun -- hell yeah keep riding that high dude.</p>
+<p>Ultimately I like the open source Rust engines, but I don't have any prior knowledge developing engineso I can't be more than a user.
+But I want to be a contributor.
+I want to be the kind of expert that is able to make Rust a games programming language.
+I want to be the kind of expert that gives talks on how to write performant code and inspire others like I have been inspired.</p>
+<p>I'm not going to quit my job just to persue this, I've flaked out of other ideas like this in the past, but it is my main hobby at the moment.
+If it becomes my passion maybe I will persue it to try to make a living off of this notion.</p>
+<!-- I write rust. I don't write C++/C/Java/C#/ObjC/.Net.
+Sometimes I write go, sometimes I write python, sometimes I write javascript. -->
+<!-- making the audio sampler. -->
+<!-- learnig graphcs: Graphics Shaders: Theory and Practice Second Edition -->
+<!-- making a game + engine. -->
+<!-- "From Scratch" means different things to different people.
+Why not using Amethyst/Bevy? I gave a talk on Amethyst!
+Rust b/c I hate bugs.
+wgpu because I'm lazy and want it to work.
+rodio for similar reasons.
+most other stuff is roll your own.
+using libraries when the library doesn't get in my way. -->
+
+</div>
+
+
+      </div>
+
+      <footer>
+        <p>
+        © 2021 Elijah Voigt, <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="/assets/images/CCA4IL.png" /> Creative Commons Attribution 4.0 International</a>.
+        </p>
+        <p>
+        This website made with locally sourced bits, built with Python 🐍 via Pelican 🐦, developed on Fedora 👒 GNU/Linux 🐃🐧, <a href='https://github.com/pop/elijahcaine.me'>hosted</a> and deployed on GitHub 🐙🐱, and served from clouds ⛅.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

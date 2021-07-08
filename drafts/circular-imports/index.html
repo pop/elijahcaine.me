@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="author" content="Elijah Voigt">
+    <link rel="stylesheet" type="text/css" href="../../theme/css/styles.css"/>
+        <link href="/rss.xml" type="application/rss+xml"   rel="alternate" title="elijahcaine.me RSS Feed" />
+        <link href="/atom.xml" type="application/atom+xml" rel="alternate" title="elijahcaine.me Atom Feed" />
+  </head>
+
+  <body>
+    <div class="site">
+      <header>
+        <a href="/">(🏠 elijahcaine.me)</a>
+        <a href="https://github.com/pop/">(🐙 github 🐱)</a>
+        <a href="/resume.pdf">(👔 resume)</a>
+        <a href="/atom.xml">(📰 feed)</a>
+      </header>
+
+      <div id="content">
+
+<div class="post">
+  <h1 class="posttitle">
+    Circular Imports
+  </h1>
+
+  <div class="postinfo">
+    <p class="published" title="2021-01-31T00:00:00-08:00">
+      Sun 31 January 2021
+    </p>
+  </div>
+</div>
+
+<div class="article">
+  <p>Don't you hate when you're writing a python program and you get hit with one of these?</p>
+<div class="highlight"><pre><span></span>Traceback (most recent call last):
+  File &quot;a.py&quot;, line 1, in &lt;module&gt;
+    from b import g
+  File &quot;/home/pop/Projects/src/localhost/circular/b.py&quot;, line 1, in &lt;module&gt;
+    from a import f
+  File &quot;/home/pop/Projects/src/localhost/circular/a.py&quot;, line 1, in &lt;module&gt;
+    from b import g
+ImportError: cannot import name &#39;g&#39; from partially initialized module &#39;b&#39; (most likely due to a circular import) (/home/pop/Projects/src/localhost/circular/b.py)
+</pre></div>
+<p>What a drag.</p>
+<p>Circular imports are of course the literal devel in programming, but in a Godel Escher Bach sort of way they are all around us.</p>
+<div class="section" id="welcome-to-my-ted-talk">
+<h2>welcome to my ted talk</h2>
+<p>There are a lot of problems in the world that everybody agrees are problems <a class="footnote-reference" href="#id7" id="id1">[1]</a>, but we can sometimes disagree about what the solution is.</p>
+<p>Many of these problems stem can be thought of as emergent properties of other phenomena.</p>
+<p>Take for example, plastic.</p>
+</div>
+<div class="section" id="fuck-plastic">
+<h2>fuck plastic</h2>
+<p>Remember the good old days in America when women tended to the house while PTSD ridden white men worked a 40 minute drive away and the ethnically, racially, sexually, abally discriminated minorities were repressed?</p>
+<p>Well something that actually was pretty sweet was milk delivery.</p>
+<p>Milk, delivered regularly in reusable glass bottles had incredibly ecological benefits compared with how we get milk <a class="footnote-reference" href="#id9" id="id2">[3]</a> today.</p>
+<p>Deliveries are an incredibly efficient means of distriuting goods <a class="footnote-reference" href="#id8" id="id3">[2]</a> and re-using glass bottles requires far less energy than say, melting a bottle down or worse creating a plastic single-use bottle.</p>
+<p>I really want to focus on the glass bottles because they are _so_ efficient, why did we ever stop?</p>
+<p>Lobbying.</p>
+</div>
+<div class="section" id="from-plastics-import-lobbying">
+<h2>from plastics import lobbying</h2>
+<p>That's right: lobbying, not the free market, gave us the fucking horrific amount of single-use plastic we have today.</p>
+<p>For sure there are a million things we need to cut the fuck out if we want this planet to be anything close to what we were born into in 100 years, but plastics are worth spending a few hundred words.</p>
+<p>The plastics industry spent millions <a class="footnote-reference" href="#id10" id="id4">[4]</a> lobbying to allow the use of single use plastics instead of reusable containers.</p>
+<p>Instead of identifying the inevitable crisis of too much fucking plastic and shutting that shit down, governments across the world wer just like &quot;yeah this is cool, pour up my dude&quot;.</p>
+<p>Congress, given no external input, very well could have legislated against the use of single-use plastics, but because they were convinced... with money... otherwise here we are in a world full of single use plastics, and just like a virus it's spread so far that it feels impossible to slow it's spread.</p>
+<p>So clearly we need to stop lobbying.
+We need to think of some clever way to prevent corruptable government officials from being bought off to vote against the interests of their constituents, their country, and future generations...</p>
+<p>Well that's clearly impossible.</p>
+<p>Let's dig deeper.
+What causes lobbying?</p>
+<p>Profit.</p>
+</div>
+<div class="section" id="from-lobbying-import-profit">
+<h2>from lobbying import profit</h2>
+<p>It is clear that profit is the reason lobbying exists.</p>
+<p>Some lobbying is good.
+If you own a farm and you hear about legislation that will like... just straight up dump a bunch of nuclear waste on your property, you're probably going to knock on some doors and grease some palms to prevent that from happening.</p>
+<p>Arithmetically it makes sense that lobbying is tied to profit.
+If a piece of legislation is projected to decrease profits by 30 million USD, you're probably willing to spend 2 million USD to prevent it from going through.</p>
+<p>Lobbying, like swordfishing <a class="footnote-reference" href="#id11" id="id5">[5]</a>, is a targeted, and therefore monetarily effective, way to influence change.</p>
+<p>Maximizing profit has a lot of other problems <a class="footnote-reference" href="#id12" id="id6">[6]</a> like supressing wages despite productivity going up, and cock-blocking public alternatives to private services like healthcare...
+Where was I?</p>
+<p>Oh right, so this begs the question, where does profit come from?</p>
+</div>
+<div class="section" id="from-profit-import">
+<h2>from profit import ???</h2>
+</div>
+<div class="section" id="soapbox-intensifies">
+<h2>soapbox intensifies</h2>
+<table class="docutils footnote" frame="void" id="id7" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>All <em>good faith actors</em> actors agree are a problem.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[2]</a></td><td>Citation needed?</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id9" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[3]</a></td><td>Yes, also mylks.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id10" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[4]</a></td><td>... <em>sigh</em> citation needed.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id11" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id5">[5]</a></td><td>The internet phishing scam not the oceanic activity.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id12" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id6">[6]</a></td><td>... citation... needed...?</td></tr>
+</tbody>
+</table>
+</div>
+
+</div>
+
+
+      </div>
+
+      <footer>
+        <p>
+        © 2021 Elijah Voigt, <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="/assets/images/CCA4IL.png" /> Creative Commons Attribution 4.0 International</a>.
+        </p>
+        <p>
+        This website made with locally sourced bits, built with Python 🐍 via Pelican 🐦, developed on Fedora 👒 GNU/Linux 🐃🐧, <a href='https://github.com/pop/elijahcaine.me'>hosted</a> and deployed on GitHub 🐙🐱, and served from clouds ⛅.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

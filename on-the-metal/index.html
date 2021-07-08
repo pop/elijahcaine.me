@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="author" content="Elijah Voigt">
+    <link rel="stylesheet" type="text/css" href="../theme/css/styles.css"/>
+        <link href="/rss.xml" type="application/rss+xml"   rel="alternate" title="elijahcaine.me RSS Feed" />
+        <link href="/atom.xml" type="application/atom+xml" rel="alternate" title="elijahcaine.me Atom Feed" />
+  </head>
+
+  <body>
+    <div class="site">
+      <header>
+        <a href="/">(🏠 elijahcaine.me)</a>
+        <a href="https://github.com/pop/">(🐙 github 🐱)</a>
+        <a href="/resume.pdf">(👔 resume)</a>
+        <a href="/atom.xml">(📰 feed)</a>
+      </header>
+
+      <div id="content">
+
+<div class="post">
+  <h1 class="posttitle">
+    On the Metal
+  </h1>
+
+  <div class="postinfo">
+    <p class="published" title="2021-01-18T00:00:00-08:00">
+      Mon 18 January 2021
+    </p>
+  </div>
+</div>
+
+<div class="article">
+  <p>Computing is a big field.
+When I was getting my computer science degree I knew there were at least a dozen specialties I could go into.
+All of these felt like entirely different worlds separated huge vallies of time needed to learn the basics all over again.</p>
+<ul class="simple">
+<li>Back-end web dev: Producing value for users with reasonably fast turnaround. Integrating with other systems.</li>
+<li>Crytography: Math and proofs; correctness is paramount.</li>
+<li>Front-end web dev: Platform quirks; browsers aren't all the same.</li>
+<li>Operations: Learning hundreds of tools and how they work together; maintaining complex systems.</li>
+<li>Networking dev: Gotta go fast; speed is paramount.</li>
+<li>Games dev: Do a bunch of complex stuff, 60-120 times per second. And make it fun.</li>
+<li>Mobile app dev: Front-end development with a heavier IDE.</li>
+<li>Graphics: Physics that needs to look pretty and be fast.</li>
+<li>Operating systems: Squeezing every bit out of the computer.</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This is far from a complete list, and most of my assumptions about these fields, even the ones I have experience in, are nieve.
+The point is that these fields overlap in that they all uses computers, but differ wildly after scratching the surface.</p>
+</div>
+<p>This of course ignores the even wider world of computer engineering.
+I don't even know enough about circuit boards and hardware to make a glib guess about it.</p>
+<div class="section" id="developers-and-programmers">
+<h2>Developers and Programmers</h2>
+<blockquote>
+OK, that's cool but like what's your point?</blockquote>
+<p>I've been a back-end web developer and DevOps™ engineer since before I graduated in 2017.
+I'm very comfortable working at a high level of abstraction.
+I treat computers as black boxes that magically turn my elegant algorithms into changing colors on a screen.</p>
+<p>Sometimes I can spot performance bugs like this:</p>
+<pre class="code python literal-block">
+<span class="n">new_stuff</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">some_queryset</span><span class="p">:</span>
+    <span class="n">new_thing</span> <span class="o">=</span> <span class="n">transform_thing</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+    <span class="n">new_stuff</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_thing</span><span class="p">)</span>
+<span class="k">return</span> <span class="n">new_stuff</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre>
+<p>where I think &quot;Hmm, that's going to be slow if <tt class="docutils literal">some_queryset</tt> is like big&quot;.</p>
+<p>I call working at this higher level of abstraction &quot;developing&quot;.</p>
+<dl class="docutils">
+<dt>Developer</dt>
+<dd>A devleoper turns compute into value, abstracted away the details of that compute.</dd>
+</dl>
+<p>This is in contrast with a _programmer_ who is focused on the physical computer.
+A Programmer not only catches obvious bugs like calculating unecessary values, but asks &quot;Is this program written for a computer&quot;.
+Programmers think about cache hits and misses, context switches, byte allignment, and in squeezing computers for all their worth.</p>
+<dl class="docutils">
+<dt>Programmer</dt>
+<dd>A programmer writes software with the computer it runs on in mind.</dd>
+</dl>
+<p>Growing up, and even after I started working full time, I considered these two words interchangable.
+A programmer and a devleoper were basically the same title and you just used whichever was more appropriate.</p>
+<p>I'm not a fan of splitting hairs between words, so what's my point?</p>
+<p>Drawing a distinction between Developer and Programmer got me to think what I _currently_ do with computers, and what I _want_ to do with them next.</p>
+</div>
+<div class="section" id="getting-close-to-the-metal">
+<h2>Getting close to the metal</h2>
+<p>I've been <a class="reference external" href="https://github.com/pop/rust-action-heroes/">dabbling with programming games</a> for a few months and it is... challenging.</p>
+<p>I'm very familiar with the patterns of web development and I like working in that space.
+It's lucritive, in relatively high demand, and I've gotten good at it.</p>
+<p>Games on the other hand I don't have a ledge to hold on to.</p>
+<p>I'm overwhelemed by graphics, the complex game engines, how hyper aware I need to be of performance.
+It feels like I've spent _years_ learning about how to write software for computers and I opened a door and found an entirely different world.</p>
+<p>Catching up to the point where I can make good games feels incredibly daunting, and I am _very_ excited.</p>
+</div>
+<div class="section" id="how-i-learn">
+<h2>How I learn</h2>
+<p>Here's how I learn something totally new:</p>
+<ul class="simple">
+<li>Ask the obvious question. &quot;How do I program games?&quot;</li>
+<li>This spawns more questions. &quot;How do I program a graphics engine?&quot;</li>
+<li>This spawns yet more questions. &quot;What algorithms do I need for this?&quot;</li>
+<li>Again and again... &quot;What is a dot-product of two vectors?&quot;</li>
+<li>Until I hit bedrock. &quot;I have derived how dot-products work.&quot;</li>
+<li>Then the entire chain of questions get anwswered.</li>
+</ul>
+<p>For the algorithmically minded, this is like a depth-first search.
+I don't feel like I understand anything until I've asked and answered every question up the stack.</p>
+<p>In practics I don't actually drill down this directly.
+I usually do a bunch slower &quot;breadth-first&quot; search where I ask a lot of questions randomly until I hit bedrock and everything clicks.</p>
+<p>This is very fulfilling in the end, I have a deep understanding of what I'm doing and I'm able to reason about what I'm doing at a few levels -- but it's incredibly slow and I give up before I get to the bottom of things.</p>
+</div>
+<div class="section" id="let-s-program-games">
+<h2>Let's program games</h2>
+<p>I'm really interested in making games, but I'm having a hard time picking up different engines.</p>
+<ul class="simple">
+<li>Unity and Unreal are power hogs and I don't have the patience to learn what all the buttons do.</li>
+<li>Amethyst and Bevy are good Rust frameworks, but I still haven't hit bedrock.</li>
+</ul>
+<p>So becuase I'm very good at convincing myself of bad ideas, let's dig into how games work and learn the fundimentals.
+Not becuase I want to write a game engine completely from scratch, I'm not Jonathan Blow.
+Once I understand how higher level engines work I'll enjoy working with them, or I will have the power to fix them if I don't like them.</p>
+<div class="section" id="graphics">
+<h3>Graphics</h3>
+<p>I picked &quot;graphics&quot; out of a hat so here's a bunch of resources I've been collecting about graphics programming:</p>
+<ul class="simple">
+<li><a class="reference external" href="http://www.pbr-book.org/3ed-2018/contents.html">PBRT</a></li>
+<li><a class="reference external" href="https://www.scratchapixel.com/">Scratchpixel</a></li>
+<li><a class="reference external" href="https://web.engr.oregonstate.edu/~mjb/cs550/">CS 450</a> Introduction to Computer Graphics</li>
+<li><a class="reference external" href="https://web.engr.oregonstate.edu/~mjb/cs557/">CS 457</a> Computer Graphics Shaders</li>
+</ul>
+<p>Rust specific resources:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://rust-tutorials.github.io/learn-gfx-hal/">Learn GFX Hal</a></li>
+<li><a class="reference external" href="https://sotrh.github.io/learn-wgpu/">Learn WGPU</a></li>
+<li><a class="reference external" href="https://bheisler.github.io/post/writing-raytracer-in-rust-part-1/">Writing a raytracer in Rust</a></li>
+</ul>
+<p>General game stuff:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://gameprogrammingpatterns.com/contents.html">Game Programming Patterns</a></li>
+</ul>
+</div>
+</div>
+
+</div>
+
+
+      </div>
+
+      <footer>
+        <p>
+        © 2021 Elijah Voigt, <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="/assets/images/CCA4IL.png" /> Creative Commons Attribution 4.0 International</a>.
+        </p>
+        <p>
+        This website made with locally sourced bits, built with Python 🐍 via Pelican 🐦, developed on Fedora 👒 GNU/Linux 🐃🐧, <a href='https://github.com/pop/elijahcaine.me'>hosted</a> and deployed on GitHub 🐙🐱, and served from clouds ⛅.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

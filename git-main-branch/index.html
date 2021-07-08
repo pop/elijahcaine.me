@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="author" content="Elijah Voigt">
+    <link rel="stylesheet" type="text/css" href="../theme/css/styles.css"/>
+        <link href="/rss.xml" type="application/rss+xml"   rel="alternate" title="elijahcaine.me RSS Feed" />
+        <link href="/atom.xml" type="application/atom+xml" rel="alternate" title="elijahcaine.me Atom Feed" />
+  </head>
+
+  <body>
+    <div class="site">
+      <header>
+        <a href="/">(🏠 elijahcaine.me)</a>
+        <a href="https://github.com/pop/">(🐙 github 🐱)</a>
+        <a href="/resume.pdf">(👔 resume)</a>
+        <a href="/atom.xml">(📰 feed)</a>
+      </header>
+
+      <div id="content">
+
+<div class="post">
+  <h1 class="posttitle">
+    Nuggit: Manually change your default branch name
+  </h1>
+
+  <div class="postinfo">
+    <p class="published" title="2021-07-07T00:00:00-07:00">
+      Wed 07 July 2021
+    </p>
+  </div>
+</div>
+
+<div class="article">
+  <p>So I was on my laptop running an ancient release of Linux called Fedora 30 -- so old COVID wasn't even a twinkle in a bat's eye when it was released.</p>
+<p>On this ancient OS I'm have <tt class="docutils literal">git 2.21.3</tt> which is like 13 versions behind.  I ask yum -- err <em>dnf</em> -- if there is an upgrade and it's like &quot;nope&quot;. Nothing makes me feel older than software.</p>
+<p>I've gotten into the habit of naming my default branches <tt class="docutils literal">main</tt> instead of <tt class="docutils literal">master</tt> because every time I say &quot;master&quot; I need to take a shower. I'm pretty sure the latest git names the default branch <tt class="docutils literal">main</tt> out of the box, but git from April 2019 was not aware of problematic language choices.</p>
+<p>So as one does I'm starting a new repo and I decide before updating <tt class="docutils literal">git</tt>, which is gonna require like 3 Fedora upgrades, I'm just going to rename the branch. I know I'll get woke-git if I upgrade Fedora, but I want to write this post first so we're gonna find a workaround.</p>
+<div class="highlight"><pre><span></span>[branch:master]$ git branch -m main
+error: refname refs/heads/master not found
+fatal: Branch rename failed
+</pre></div>
+<p>Hmm. So on a bare repo you can't rename the starting branch because there's no objects in the repo... or something like that <em>waves hands</em>.</p>
+<p>Umm... I guess we'll go spelunking into the <cite>.git</cite> directory to see if we can manually force our <cite>main</cite> branch naming.</p>
+<div class="highlight"><pre><span></span>[branch:master]$ cd .git
+[.git]$ tree -F
+.
+├── branches/
+├── config
+├── description
+├── HEAD
+├── hooks/
+│   ├── A bunch of sample scripts
+├── info/
+│   └── exclude
+├── objects/
+│   ├── info/
+│   └── pack/
+└── refs/
+        ├── heads/
+        └── tags/
+</pre></div>
+<p>Well unsurprisingly we have a bunch of empty directories and some sample scripts.</p>
+<p>The only files that _might_ be worth looking at are <cite>config</cite>, <cite>description</cite>, and <cite>HEAD</cite>.</p>
+<div class="highlight"><pre><span></span>// config
+[core]
+        repositoryformatversion = 0
+        filemode = true
+        bare = false
+        logallrefupdates = true
+</pre></div>
+<p>This seems to be config options for this repo, none of which mention branch naming so it's a skip for me.</p>
+<div class="highlight"><pre><span></span>// description
+Unnamed repository; edit this file &#39;description&#39; to name the repository.
+</pre></div>
+<p>I had no idea this feature existed. I have never seen it be used -- but fun facts!</p>
+<div class="highlight"><pre><span></span>// HEAD
+ref: refs/heads/master
+</pre></div>
+<p>And the money shot. Let's change that bad boy to <cite>refs/heads/main</cite> and see if my magical git prompt picks it up:</p>
+<div class="highlight"><pre><span></span>[.git]$ cd ../
+[branch:main]$
+</pre></div>
+<p>Heyo! There you have it. How to manually change the name of your main branch in a fresh git repo.</p>
+<p>Sanity check, this won't fuck up if we commit right?</p>
+<div class="highlight"><pre><span></span>$ cargo init .
+$ git add . &amp;&amp; git commit -m &quot;initial commit&quot;
+[main (root-commit) ebecbee] initial commit
+ 3 files changed, 12 insertions(+)
+ create mode 100644 .gitignore
+ create mode 100644 Cargo.toml
+ create mode 100644 src/main.rs
+</pre></div>
+<div class="section" id="note">
+<h2>Note...</h2>
+<p>After anxiously upgrading to Fedora 34 I confirmed that git fixed a lot of this:</p>
+<div class="highlight"><pre><span></span>[pop@lappy foo]$ git init
+hint: Using &#39;master&#39; as the name for the initial branch. This default branch name
+hint: is subject to change. To configure the initial branch name to use in all
+hint: of your new repositories, which will suppress this warning, call:
+hint:
+hint:   git config --global init.defaultBranch &lt;name&gt;
+hint:
+hint: Names commonly chosen instead of &#39;master&#39; are &#39;main&#39;, &#39;trunk&#39; and
+hint: &#39;development&#39;. The just-created branch can be renamed via this command:
+hint:
+hint:   git branch -m &lt;name&gt;
+</pre></div>
+<p>And yes, <tt class="docutils literal">git branch <span class="pre">-m</span> &lt;name&gt;</tt> does work on an empty repo.</p>
+</div>
+
+</div>
+
+
+      </div>
+
+      <footer>
+        <p>
+        © 2021 Elijah Voigt, <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="/assets/images/CCA4IL.png" /> Creative Commons Attribution 4.0 International</a>.
+        </p>
+        <p>
+        This website made with locally sourced bits, built with Python 🐍 via Pelican 🐦, developed on Fedora 👒 GNU/Linux 🐃🐧, <a href='https://github.com/pop/elijahcaine.me'>hosted</a> and deployed on GitHub 🐙🐱, and served from clouds ⛅.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>
