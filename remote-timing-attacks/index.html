@@ -323,16 +323,16 @@ You said this was a real threat!</blockquote>
     <span class="sd">&quot;&quot;&quot;Custom `==` operator&quot;&quot;&quot;</span>
     <span class="c1"># Fail if the strings aren't the right length</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="kc">False</span>
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)):</span>
         <span class="c1"># Short-circuit if the strings don't match</span>
         <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
-            <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">return</span> <span class="kc">False</span>
 
         <span class="n">sleep</span><span class="p">(</span><span class="mf">0.15</span><span class="p">)</span> <span class="c1"># This exaggerates it just enough for our purposes</span>
 
-    <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="kc">True</span>
 
 <span class="c1"># Hard-coded secret globals FOR DEMONSTRATIONS ONLY</span>
 <span class="n">secret</span> <span class="o">=</span> <span class="s1">'l33t'</span>
@@ -343,17 +343,17 @@ You said this was a real threat!</blockquote>
     <span class="k">try</span><span class="p">:</span>
         <span class="c1"># The user got it right!</span>
         <span class="k">if</span> <span class="n">is_equal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">secret</span><span class="p">):</span>
-            <span class="k">print</span><span class="p">(</span><span class="s1">'You got the secret!'</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">'You got the secret!'</span><span class="p">)</span>
 
         <span class="c1"># The user got it wrong</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s1">'Try again!'</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">'Try again!'</span><span class="p">)</span>
 
     <span class="c1"># The user forgot to enter a guess.</span>
     <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s1">'Usage: python secret.py yourguess</span><span class="se">\n</span><span class="s1">'</span> \
+        <span class="nb">print</span><span class="p">(</span><span class="s1">'Usage: python secret.py yourguess</span><span class="se">\n</span><span class="s1">'</span> \
              <span class="o">+</span><span class="s1">'The secret may consist of characters in [a-z0-9] '</span>\
-             <span class="o">+</span><span class="s1">'and is {} characters long.'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">secret</span><span class="p">)))</span>
+             <span class="o">+</span><span class="s1">'and is </span><span class="si">{}</span><span class="s1"> characters long.'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">secret</span><span class="p">)))</span>
 </pre>
 <p>The thing that makes the above code particularly useful for our purposes is that it exaggerates the time it takes to evaluate the <tt class="docutils literal">is_equal</tt> function.
 Think of this as the 'backpedaling' the CPU does... turned up to 11.
@@ -393,12 +393,12 @@ Most important [for the author] we don't need to use Statistics<sup>TM</sup> to 
 
     <span class="c1"># This is a hackey-looking way of getting the outlier time.</span>
     <span class="n">current</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">characters</span><span class="p">[</span><span class="n">guess_times</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">guess_times</span><span class="p">))]</span>
-    <span class="k">print</span><span class="p">(</span><span class="s1">'character {} is {}'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">current</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'character </span><span class="si">{}</span><span class="s1"> is </span><span class="si">{}</span><span class="s1">'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">current</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
 
     <span class="c1"># Uncomment the following line for fun debug output</span>
     <span class="c1"># print(guess_times.index(max(guess_times)))</span>
 
-<span class="k">print</span><span class="p">(</span><span class="s1">'Final guess is {}'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">''</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'Final guess is </span><span class="si">{}</span><span class="s1">'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">''</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current</span><span class="p">)))</span>
 </pre>
 <p>It's a bit convoluted in parts but if you stare at it for a while and read the enlightening comments you should see why this gets the right answer.</p>
 <p>I encourage you to copy that code into two files, <tt class="docutils literal">secret.py</tt> and <tt class="docutils literal">attack.py</tt> and run it like so:</p>

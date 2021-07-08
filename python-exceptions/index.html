@@ -37,8 +37,8 @@
 <span class="k">try</span><span class="p">:</span>
     <span class="n">var</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
 <span class="k">except</span> <span class="ne">ZeroDivisionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Error: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
-    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;You had one job!&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Error: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;You had one job!&#39;</span><span class="p">)</span>
 </pre></div>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
@@ -93,8 +93,8 @@ when you write your code you'll say something like the following:</p>
 <div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
     <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;myfakefile.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;File `myfakefile.txt` does not exist&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;File `myfakefile.txt` does not exist&#39;</span><span class="p">)</span>
 </pre></div>
 <p>To recap, here is one way (and my preferred method for) 'doing' python
 exception handling:</p>
@@ -125,9 +125,9 @@ from the <tt class="docutils literal">Exception</tt> class or another pre-existi
     <span class="n">foo</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Just don&#39;t mention snakes: &quot;</span><span class="p">)</span>
     <span class="n">check_for_snakes</span><span class="p">(</span><span class="n">foo</span><span class="p">)</span>
 <span class="k">except</span> <span class="n">CusssstomError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
 <span class="k">else</span><span class="p">:</span>
-    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Thanks. I appreciate it.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Thanks. I appreciate it.&quot;</span><span class="p">)</span>
 </pre></div>
 <p>The above code defines the <tt class="docutils literal">CusssstomError</tt> exception class which you can
 <tt class="docutils literal">raise</tt>. Very neat and <a class="reference external" href="https://docs.python.org/2/glossary.html#term-pythonic">pythonic</a></p>

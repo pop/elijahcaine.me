@@ -125,7 +125,7 @@ objects_example.py
 Declare a class named BazClass.
 &quot;&quot;&quot;</span>
 <span class="k">class</span> <span class="nc">BazClass</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;
         The __init__ function sets class variables and sets up the object.
         &quot;&quot;&quot;</span>
@@ -136,8 +136,8 @@ Declare a class named BazClass.
         <span class="sd">&quot;&quot;&quot;
         a() acts on the object variables (accessed via `self`).
         &quot;&quot;&quot;</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Variable you set {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var1</span><span class="p">))</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Variable set by class definition {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var2</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Variable you set </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var1</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Variable set by class definition </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var2</span><span class="p">))</span>
 
 <span class="sd">&quot;&quot;&quot;
 Creating an instance of the class and call the `a()` function.
@@ -159,10 +159,10 @@ program state -- the list goes on.  Here's an example to get us started.</p>
 <p>Non-functional paradigm:</p>
 <pre class="code javascript literal-block">
 <span class="kd">function</span> <span class="nx">average_evens</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">avg</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="nx">avg</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span>
 
-    <span class="k">for</span> <span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">x</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">x</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">x</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">x</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">%</span> <span class="mf">2</span> <span class="o">==</span> <span class="mf">0</span><span class="p">)</span> <span class="p">{</span>
             <span class="nx">avg</span> <span class="o">+=</span> <span class="nx">x</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
         <span class="p">}</span>
     <span class="p">}</span>
@@ -175,7 +175,7 @@ program state -- the list goes on.  Here's an example to get us started.</p>
 <pre class="code javascript literal-block">
 <span class="kd">function</span> <span class="nx">average_evens</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">return</span> <span class="nx">x</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">x</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">x</span> <span class="o">%</span> <span class="mf">2</span> <span class="o">==</span> <span class="mf">0</span><span class="p">)</span> <span class="p">{</span>
             <span class="k">return</span> <span class="nx">x</span><span class="p">;</span>
         <span class="p">}</span>
     <span class="p">})</span> <span class="o">/</span> <span class="nx">x</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
