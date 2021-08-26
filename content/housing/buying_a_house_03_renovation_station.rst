@@ -10,11 +10,6 @@ Buying a House Part 3: Renovation Station!
 *This is part 3 of a 4 part series on buying a home*.
 *Check out part 1 for to start from the beginning*.
 
-Buying a House Part 3: Renovation Station
-
-*This is part 3 of a 4 part series on buying a home*.
-*Check out part 1 for to start from the beginning*.
-
 Congratulations!
 You slogged through finding, trying to buy, and then successfully buying a house.
 Give yourself a pat on the back because that is an impressive feat you've accomplished.
