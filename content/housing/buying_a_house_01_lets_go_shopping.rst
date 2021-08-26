@@ -1,14 +1,11 @@
 Buying a House Part 1: Let's Go Shopping!
-=========
+=========================================
 
 :date: 2021-08-26
 :slug: buying-a-house-01-lets-go-shopping
 :status: published
 :summary: So you're interested in buying a house eh?
 :tags: housing, life, HGTV
-
-Let's go house shopping
-=======================
 
 So you're interested in buying a house eh?
 Well boy howdy do I have a series of blog posts for you.
@@ -24,7 +21,7 @@ Here's the road-map:
 ---
 
 Hey, quick disclaimer
-=====================
+---------------------
 
 Some things I **can** claim to be an expert on: Docker, Linux, why my dog is making that face, etc.
 But with home-buying I am at best a novice, so please take everything you read here with a grain of salt.
@@ -42,7 +39,7 @@ Okay, **now** we can get started.
 ---
 
 So um, why do you want to buy a house?
-======================================
+--------------------------------------
 
 Before diving into the home buying process, let's ask an annoyingly simple yet effective question: "why"?
 
@@ -68,7 +65,7 @@ I was always resistant to buying a house, but after realizing it was a reasonabl
 This is where our home buying journey begins.
 
 Let's triage
-============
+------------
 
 Before buying a house, or even visiting a house, you should go to sites like Zillow and Redfin.
 They both have basically the same home listing, so choose whichever one has a better interface for you.
@@ -121,7 +118,7 @@ If prices in your target neighborhood are out of reach, explore other candidates
 Also if you just like shopping for homes for the kick of it, because shopping is fun, power to you.
 
 Get yourself a realtor
-======================
+----------------------
 
 A realtor is like a lawyer.
 You never *want* one, but they are incredible necessary for some of life's biggest shit.
@@ -145,7 +142,7 @@ For example:
 She also knew how to fill out the copious forms needed to put an offer on a house, but we'll get to that in the next post.
 
 So. Many. Houses.
-=================
+-----------------
 
 In total we were house shopping for about 5 weeks.
 We averaged visiting 10 houses per week, doing 1 to 2 trips per week and visiting 6 houses per trip.
@@ -169,7 +166,7 @@ It might be at the upper end of your budget, or it might be a *little bit of a f
 And you will *definitely* know when it's *not* the right house.
 
 Getting on your knees and asking the bank for a pre-approval
-============================================================
+------------------------------------------------------------
 
 We haven't bought a house yet, but before you can even try you need to get a bank to say "Yeah they're good for it".
 This requires asking a bank pretty please, giving them like 3 years of financial, employment, and credit records.
@@ -183,7 +180,7 @@ Once the offer is accepted you get the *real* loan for whatever the final loan a
 But we're getting ahead of ourselves.
 
 The offer process
-=================
+-----------------
 
 This might *sound* like we're buying a house, but trust me there are a lot more offers on houses than there are sales on houses.
 
@@ -195,7 +192,7 @@ You also fill out a bunch of details like when you want the sale to be complete 
 That pre-down-payment is called Earnest Money and it's often between 5k and 10k, it counts toward your down payment, and it can be refunded if the deal falls through.
 
 It's a marathon, pace yourself
-==============================
+------------------------------
 
 Lucy went into this expecting that buying a house was like buying anything else.
 You find what you like, offer a fair (or listed) price, and boom you get it.
