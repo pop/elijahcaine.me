@@ -1,5 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>elijahcaine.me - tech</title><link href="elijahcaine.me/" rel="alternate"></link><link href="elijahcaine.me/feeds/tech.atom.xml" rel="self"></link><id>elijahcaine.me/</id><updated>2021-07-07T00:00:00-07:00</updated><entry><title>Nuggit: Manually change your default branch name</title><link href="elijahcaine.me/git-main-branch" rel="alternate"></link><published>2021-07-07T00:00:00-07:00</published><updated>2021-07-07T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2021-07-07:elijahcaine.me/git-main-branch</id><summary type="html">&lt;p class="first last"&gt;Really the story of not upgrading for far too long...&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>elijahcaine.me - tech</title><link href="elijahcaine.me/" rel="alternate"></link><link href="elijahcaine.me/feeds/tech.atom.xml" rel="self"></link><id>elijahcaine.me/</id><updated>2021-09-02T00:00:00-07:00</updated><entry><title>Dynamic Dispatch in Python</title><link href="elijahcaine.me/python-dynamic-dispatch" rel="alternate"></link><published>2021-09-02T00:00:00-07:00</published><updated>2021-09-02T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2021-09-02:elijahcaine.me/python-dynamic-dispatch</id><summary type="html">&lt;p class="first last"&gt;HeY wAnT tO SeE a NEat PYtHOn TriCK!?&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;🦝 Hey want tO see a nEat PYtHoN triCK?&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;f&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;str&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;hiya &lt;/span&gt;&lt;span class="si"&gt;{}&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+
+&lt;span class="nb"&gt;locals&lt;/span&gt;&lt;span class="p"&gt;()[&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;f&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;](&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Spongebob&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;🐮 Oh cool, does that use the string &lt;tt class="docutils literal"&gt;&amp;quot;f&amp;quot;&lt;/tt&gt; to find--&lt;/p&gt;
+&lt;p&gt;🦝 DoEs It FiNd ThE fUnCtIoN &lt;tt class="docutils literal"&gt;&amp;quot;f&amp;quot;&lt;/tt&gt; aNd CaLl iT?? yEaH It DoEs.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ python script.py
+hiya Spongebob
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;🐮 Oh that's neat. I didn't know you could do that with Python--&lt;/p&gt;
+&lt;p&gt;🦝 whaTEveR i dON't cArE wHaT YOU tHinK.&lt;/p&gt;
+&lt;p&gt;🐮 You asked me --&lt;/p&gt;
+&lt;p&gt;🦝 I sAiD sHuT uP. i'M dOiNg HoT gIrL sHiT.&lt;/p&gt;
+&lt;p&gt;🐮 Are you ok? You're yelling a lot about Python again--&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# shut up&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;test_patrick&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;context&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;TestContext&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="c1"&gt;# do thing&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;test_crabs&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;context&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;TestContext&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="c1"&gt;# do other thing&lt;/span&gt;
+
+&lt;span class="n"&gt;context&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;TestContext&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="n"&gt;tests&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;
+&lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;t&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;locals&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;t&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;startswith&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;test_&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="n"&gt;tests&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;append&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;t&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;test&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;tests&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;test&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;context&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;🐮 Oh so you could...&lt;/p&gt;
+&lt;p&gt;🦝 ...&lt;/p&gt;
+&lt;p&gt;🐮 Are you going to interrupt me?&lt;/p&gt;
+&lt;p&gt;🦝 Not yet.&lt;/p&gt;
+&lt;p&gt;🐮 Ok... you could search your scope and find a bunch of functions with a name and common interface--&lt;/p&gt;
+&lt;p&gt;🦝 AND CALL THEM! DYNAMIC DISPATCH!!&lt;/p&gt;
+&lt;p&gt;🐮 That's nice.&lt;/p&gt;
+&lt;p&gt;🦝 YEAH IT IS COOL!&lt;/p&gt;
+</content><category term="tech"></category><category term="python"></category><category term="dyanmic dispatch"></category><category term="tidbit"></category></entry><entry><title>Nuggit: Manually change your default branch name</title><link href="elijahcaine.me/git-main-branch" rel="alternate"></link><published>2021-07-07T00:00:00-07:00</published><updated>2021-07-07T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2021-07-07:elijahcaine.me/git-main-branch</id><summary type="html">&lt;p class="first last"&gt;Really the story of not upgrading for far too long...&lt;/p&gt;
 </summary><content type="html">&lt;p&gt;So I was on my laptop running an ancient release of Linux called Fedora 30 -- so old COVID wasn't even a twinkle in a bat's eye when it was released.&lt;/p&gt;
 &lt;p&gt;On this ancient OS I'm have &lt;tt class="docutils literal"&gt;git 2.21.3&lt;/tt&gt; which is like 13 versions behind.  I ask yum -- err &lt;em&gt;dnf&lt;/em&gt; -- if there is an upgrade and it's like &amp;quot;nope&amp;quot;. Nothing makes me feel older than software.&lt;/p&gt;
 &lt;p&gt;I've gotten into the habit of naming my default branches &lt;tt class="docutils literal"&gt;main&lt;/tt&gt; instead of &lt;tt class="docutils literal"&gt;master&lt;/tt&gt; because every time I say &amp;quot;master&amp;quot; I need to take a shower. I'm pretty sure the latest git names the default branch &lt;tt class="docutils literal"&gt;main&lt;/tt&gt; out of the box, but git from April 2019 was not aware of problematic language choices.&lt;/p&gt;
