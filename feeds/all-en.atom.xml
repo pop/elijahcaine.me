@@ -1,5 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>elijahcaine.me</title><link href="elijahcaine.me/" rel="alternate"></link><link href="elijahcaine.me/feeds/all-en.atom.xml" rel="self"></link><id>elijahcaine.me/</id><updated>2021-09-02T00:00:00-07:00</updated><entry><title>Dynamic Dispatch in Python</title><link href="elijahcaine.me/python-dynamic-dispatch" rel="alternate"></link><published>2021-09-02T00:00:00-07:00</published><updated>2021-09-02T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2021-09-02:elijahcaine.me/python-dynamic-dispatch</id><summary type="html">&lt;p class="first last"&gt;HeY wAnT tO SeE a NEat PYtHOn TriCK!?&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>elijahcaine.me</title><link href="elijahcaine.me/" rel="alternate"></link><link href="elijahcaine.me/feeds/all-en.atom.xml" rel="self"></link><id>elijahcaine.me/</id><updated>2021-12-21T00:00:00-08:00</updated><entry><title>Buying a House Part 2: Show Me The Money!</title><link href="elijahcaine.me/buying-a-house-02-show-me-the-money" rel="alternate"></link><published>2021-12-21T00:00:00-08:00</published><updated>2021-12-21T00:00:00-08:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2021-12-21:elijahcaine.me/buying-a-house-02-show-me-the-money</id><summary type="html">&lt;p class="first last"&gt;Getting an offer accepted is half the battle!&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;em&gt;This is part 2 of a 4 part series on buying a home&lt;/em&gt;
+Check out &lt;a class="reference external" href="buying-a-house-01-lets-go-shopping"&gt;part 1&lt;/a&gt; for to start from the beginning.&lt;/p&gt;
+&lt;p&gt;In this post we will talk about everything that happens between getting an offer accepted on a house and your move-in day.
+How exciting!
+Let's get started.&lt;/p&gt;
+&lt;div class="section" id="so-you-got-an-offer-accepted"&gt;
+&lt;h2&gt;So you got an offer accepted&lt;/h2&gt;
+&lt;p&gt;You slogged through the home-buying process, your heart was broken in 12 pieces when you barely didn't get &amp;quot;the one&amp;quot; and then &amp;quot;the other one&amp;quot; and finally &amp;quot;the real one&amp;quot;, but you powered through and now you have an offer accepted.&lt;/p&gt;
+&lt;p&gt;Great, you're half way done!
+Just kidding, this part is much easier, but it is time consuming.&lt;/p&gt;
+&lt;p&gt;Now in theory you can skip all these steps with a shit-ton of money and taking a shot of unnecessary risk.
+I mean you can pay in cash for a house &lt;em&gt;and&lt;/em&gt; waive home inspections to expedite the home-buying process.
+I only have one anecdote of this happening, and the guy who told it to me was a prick, so I'm pretty sure it's fake news.
+The only reason you would pay in cash is to avoid paying mortgage fees and to close the deal faster.
+The only reason you would waive inspections is to make close on the house faster if you don't care or really trust the current owner.
+Mortgage rates are bonkers low right now, and most people aren't in &lt;em&gt;that much&lt;/em&gt; of a rush to close on their house, so again: fake news.
+For normal people with a normal amount of debt and a sane income we do things the way I'm about to describe.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Steps down from soap-box&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;Now that your offer is accepted you have a 30 day clock.
+At the end of those 30 days you will hopefully have a house.
+Very cool.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="inspections"&gt;
+&lt;h2&gt;Inspections&lt;/h2&gt;
+&lt;p&gt;The first step is to schedule home inspections.
+Your realtor should do this.
+You will schedule a standard home inspection, but you can also request special inspections if you are concerned.
+For example we tested for Radon and buried oil tanks, because both of those are shitty things in Portland.
+These inspections are one of the few fees paid by the buyer because you as the buyer can be as picky as you want about the inspections.&lt;/p&gt;
+&lt;p&gt;Once the inspections happen you'll do a walk-through.
+Often this is the &lt;em&gt;second time you have seen the house in person&lt;/em&gt;, which I just find hilarious.
+The inspector should walk you through the house and tell you literally everything wrong with the house that they can find.
+They might also mention any concerns they have based on the listing's disclosures and the year the house was built/renovated.
+The inspector shouldn't have any horse in this race, they're getting paid weather the deal falls through or not, so they should be pretty matter-of-fact.
+This means they might tell you some scary shit like &amp;quot;This ceiling is probably asbestos, don't touch it until you get that tested&amp;quot;, this is just because you need to know everything that might be a deal breaker before the next step.&lt;/p&gt;
+&lt;p&gt;Once the walk-through is complete your inspector will write up an inspection report and send it to you and your realtor for you to review and keep.
+This is a very long, very boring, and very important document.
+Keep a copy.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="negotiations"&gt;
+&lt;h2&gt;Negotiations&lt;/h2&gt;
+&lt;p&gt;Now that you know everything about the house:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Disclosures given in the house listing.&lt;/li&gt;
+&lt;li&gt;Inspection results.&lt;/li&gt;
+&lt;li&gt;You've been inside like... twice.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;You can enter the negotiation phase fully informed.
+Negotiations are not done in a board room -- I wish -- they're done asynchronously by the seller and buyer's realtors.&lt;/p&gt;
+&lt;p&gt;You sit down &lt;strong&gt;with your realtor&lt;/strong&gt; and go over the inspection results.
+If your realtor is good they'll basically do the negotiation for you, reviewing what the plan is before locking it in.&lt;/p&gt;
+&lt;p&gt;For example, our realtor said the following:
+* The pipes are clogged with baby wipes or something, that can take 7k to fix so let's ask to knock off 7k.
+* The garage door is busted, let's ask to take 5k off for that.
+* Some other stuff got knocked off but I don't remember it a year later.&lt;/p&gt;
+&lt;p&gt;We figure out how much to ask for by basically looking up how much it would reasonably cost to fix broken shit.
+If your roof was caving in you would be able to ask to take a lot, if a stair was busted that would probably be less.&lt;/p&gt;
+&lt;p&gt;You can't get away with asking for price reductions for &lt;em&gt;aesthetic&lt;/em&gt; differences, like you wish the house had more outlets, but you could ask to get the price knocked if the electrical was unsafe.&lt;/p&gt;
+&lt;p&gt;Your realtor should then write this up and send it to the seller's realtor who will respond with a counter.
+Sometimes they will choose to fix broken things themselves or they may drop the price for a given request.
+In our case the owner dropped the price a bit, around 3k, and spent her own money to fix clogged pipes, which cost a few thousand.&lt;/p&gt;
+&lt;p&gt;In the negotiation the seller has an incentive to keep the final price fairly high while the buyer has an incentive to get the price as low as possible.
+This means sellers might find more expensive quotes and the buyer might find cheaper quotes for repair costs.
+But both parties have an incentive to complete the sale of the house.&lt;/p&gt;
+&lt;p&gt;If a seller refuses to negotiate on the price of the house, the buyer at this point has the option to pull out of the deal.
+The buyer will most likely get their Earnest Money back because they found something out about the house after the offer was accepted which the buyer refused to fix or decrease the price for.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="but-what-does-the-bank-think-it-s-worth"&gt;
+&lt;h2&gt;But what does the bank think it's worth?&lt;/h2&gt;
+&lt;p&gt;After negotiating on a price the bank gets involved again.
+It takes the bank under a week to, given the home inspection plus their piles of data, determine what they think it's worth.
+This has very little to do with what you thought it was worth and it is what the bank is willing to cover in the form of a home loan.&lt;/p&gt;
+&lt;p&gt;If the bank decides the house is worth &lt;em&gt;more&lt;/em&gt; than the final offer you're golden.
+You get a loan for the negotiated price and it'll be 100% covered by the bank.&lt;/p&gt;
+&lt;p&gt;For example: If the final offer is 100k and the bank decides the house is worth 105k, you need to do the normal 20% down payment, and then you get an 80k loan for the rest.&lt;/p&gt;
+&lt;p&gt;... But if the bank decides the house is worth &lt;em&gt;less&lt;/em&gt; than the final offer you're some amount of fucked.
+You need to pay the difference out of pocket, or pull out of the deal.&lt;/p&gt;
+&lt;p&gt;For example: If the final offer is 100k but the bank decides the house is worth 60k, you need to cover 20k down payment, plus the 20k difference on the remaining cost.
+100k - 20k = 80k ideal loan.
+80k - 20k = 60k what the bank will actually loan you.&lt;/p&gt;
+&lt;p&gt;Note, I'm using 100k as a round number for math examples.
+This is not some cruel joke, it's just easier numbers.
+Most houses we looked at were between 350k and 600k.&lt;/p&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="section" id="side-note-why-do-we-need-down-payments"&gt;
+&lt;h3&gt;Side note, why do we need down payments?&lt;/h3&gt;
+&lt;p&gt;Wait, why do we have down payments?
+It's complicated, but I &lt;em&gt;think&lt;/em&gt; it's a collection of reasons:
+* The more you pay up front, the less monthly payments you have. 20% up front is a good way to reduce your monthly payments from the get-go.
+* Credit worthiness or some bullshit. Banks want to make sure you have skin in the game, so before you can get approved for a loan you need to prove you have 20%+ of the cost of the house for them to cover the other 80%.&lt;/p&gt;
+&lt;p&gt;That's my best bet.
+Ask a realtor or your local economist or banker or something; they'll probably have a better answer.&lt;/p&gt;
+&lt;hr class="docutils" /&gt;
+&lt;p&gt;Once the bank settles on a price you can close on the house.
+You'll get a real loan for the final price (minus the difference you've paid in cash).
+Finally, 30 days (ish) after getting your offer accepted you'll walk into a title company, go over a stack of papers with a professional, sign a bunch of those papers, and walk out the proud owner of a house.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="what-now"&gt;
+&lt;h2&gt;What now?&lt;/h2&gt;
+&lt;p&gt;We had to wait a few weeks after closing to actually move in.
+The previous owner needed the funds from closing to close on her own house, but that ended up going faster than expected so we only had to stay at my parents house (#privilege #safetynet) for two weeks.&lt;/p&gt;
+&lt;p&gt;Your realtor should give you some keys for the new house.
+I suggest throwing those out once you're moved in and replace the locks -- even in a nice neighborhood, you have no idea who has the old keys.&lt;/p&gt;
+&lt;p&gt;Rent a moving van and bribe your friends, or hire some movers if you're smart, and enjoy your beautiful house!&lt;/p&gt;
+&lt;hr class="docutils" /&gt;
+&lt;p&gt;Wait, is this pipe supposed to be leaking?
+In the next post we'll talk about home renovations!&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="housing"></category><category term="housing"></category><category term="life"></category><category term="HGTV"></category></entry><entry><title>Dynamic Dispatch in Python</title><link href="elijahcaine.me/python-dynamic-dispatch" rel="alternate"></link><published>2021-09-02T00:00:00-07:00</published><updated>2021-09-02T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2021-09-02:elijahcaine.me/python-dynamic-dispatch</id><summary type="html">&lt;p class="first last"&gt;HeY wAnT tO SeE a NEat PYtHOn TriCK!?&lt;/p&gt;
 </summary><content type="html">&lt;p&gt;🦝 Hey want tO see a nEat PYtHoN triCK?&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;f&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;str&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
     &lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;hiya &lt;/span&gt;&lt;span class="si"&gt;{}&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
@@ -47,7 +157,7 @@ This four part series will equip you, a first-time home buyer, with a bunch of k
 &lt;p&gt;Here's the road-map:&lt;/p&gt;
 &lt;ol class="arabic simple"&gt;
 &lt;li&gt;&lt;a class="reference external" href="buying-a-house-01-lets-go-shopping"&gt;Part 1: 🛒 Let's Go Shopping!&lt;/a&gt; in which we start looking for houses.&lt;/li&gt;
-&lt;li&gt;Part 2: &lt;strong&gt;💸 Show Me the Money!&lt;/strong&gt; in which we buy a freaking house.&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="buying-a-house-02-show-me-the-money"&gt;Part 2: 💸 Show Me the Money!&lt;/a&gt; in which we buy a freaking house.&lt;/li&gt;
 &lt;li&gt;Part 3: &lt;strong&gt;👷 Renovation Station.&lt;/strong&gt; in which we live in the freaking house.&lt;/li&gt;
 &lt;li&gt;Part 4: &lt;strong&gt;📈 Is This Investing?&lt;/strong&gt; where we figure out if we made a huge financial mistake (or achievement!)&lt;/li&gt;
 &lt;/ol&gt;
@@ -229,7 +339,7 @@ It will pay off.
 It will get better.
 Your patience will be rewarded.&lt;/p&gt;
 &lt;p&gt;Good luck.
-See you in the next part where we get to buy a freaking house!&lt;/p&gt;
+See you in the &lt;a class="reference external" href="buying-a-house-02-show-me-the-money"&gt;part 2&lt;/a&gt; where we get to buy a freaking house!&lt;/p&gt;
 &lt;/div&gt;
 </content><category term="housing"></category><category term="housing"></category><category term="life"></category><category term="HGTV"></category></entry><entry><title>Nuggit: Manually change your default branch name</title><link href="elijahcaine.me/git-main-branch" rel="alternate"></link><published>2021-07-07T00:00:00-07:00</published><updated>2021-07-07T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2021-07-07:elijahcaine.me/git-main-branch</id><summary type="html">&lt;p class="first last"&gt;Really the story of not upgrading for far too long...&lt;/p&gt;
 </summary><content type="html">&lt;p&gt;So I was on my laptop running an ancient release of Linux called Fedora 30 -- so old COVID wasn't even a twinkle in a bat's eye when it was released.&lt;/p&gt;
