@@ -1,7 +1,7 @@
 Buying a House Part 2: Show Me The Money!
 =========================================
 
-:date: 2021-09-09
+:date: 2021-12-21
 :slug: buying-a-house-02-show-me-the-money
 :status: published
 :summary: Getting an offer accepted is half the battle!
