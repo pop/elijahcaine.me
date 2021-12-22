@@ -1,7 +1,7 @@
 Buying a House Part 3: Renovation Station!
 ==========================================
 
-:date: 2021-09-23
+:date: 2022-01-04
 :slug: buying-a-house-03-renovation-station
 :status: published
 :summary: Basically just bragging about the stuff I've done to my house so far.

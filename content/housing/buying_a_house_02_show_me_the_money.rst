@@ -1,14 +1,14 @@
 Buying a House Part 2: Show Me The Money!
 =========================================
 
-:date: 2021-12-21
+:date: 2021-09-09
 :slug: buying-a-house-02-show-me-the-money
 :status: published
 :summary: Getting an offer accepted is half the battle!
 :tags: housing, life, HGTV
 
-*This is part 2 of a 4 part series on buying a home*
-Check out `part 1 <buying-a-house-01-lets-go-shopping>`_ for to start from the beginning.
+*This is part 2 of a 4 part series on buying a home*.
+*Check out part 1 for to start from the beginning*.
 
 In this post we will talk about everything that happens between getting an offer accepted on a house and your move-in day.
 How exciting!
@@ -122,8 +122,10 @@ Side note, why do we need down payments?
 
 Wait, why do we have down payments?
 It's complicated, but I *think* it's a collection of reasons:
-* The more you pay up front, the less monthly payments you have. 20% up front is a good way to reduce your monthly payments from the get-go.
-* Credit worthiness or some bullshit. Banks want to make sure you have skin in the game, so before you can get approved for a loan you need to prove you have 20%+ of the cost of the house for them to cover the other 80%.
+* The more you pay up front, the less monthly payments you have.
+  20% up front is a good way to reduce your monthly payments from the get-go.
+* Credit worthiness or some bullshit.
+  Banks want to make sure you have skin in the game, so before you can get approved for a loan you need to prove you have 20%+ of the cost of the house for them to cover the other 80%.
 
 That's my best bet.
 Ask a realtor or your local economist or banker or something; they'll probably have a better answer.
