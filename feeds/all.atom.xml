@@ -1,5 +1,313 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>elijahcaine.me</title><link href="elijahcaine.me/" rel="alternate"></link><link href="elijahcaine.me/feeds/all.atom.xml" rel="self"></link><id>elijahcaine.me/</id><updated>2022-01-18T00:00:00-08:00</updated><entry><title>Buying a House Part 4: Is this investing?</title><link href="elijahcaine.me/buying-a-house-04-is-this-investing" rel="alternate"></link><published>2022-01-18T00:00:00-08:00</published><updated>2022-01-18T00:00:00-08:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2022-01-18:elijahcaine.me/buying-a-house-04-is-this-investing</id><summary type="html">&lt;p class="first last"&gt;Everybody says it is, so I guess it is?&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>elijahcaine.me</title><link href="elijahcaine.me/" rel="alternate"></link><link href="elijahcaine.me/feeds/all.atom.xml" rel="self"></link><id>elijahcaine.me/</id><updated>2022-05-17T00:00:00-07:00</updated><entry><title>Rust Ergonomics: Default and From</title><link href="elijahcaine.me/rust-default-from" rel="alternate"></link><published>2022-05-17T00:00:00-07:00</published><updated>2022-05-17T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2022-05-17:elijahcaine.me/rust-default-from</id><summary type="html">&lt;p class="first last"&gt;Exploring ways to make Rust more ergonomic through the use of the Default From Traits&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;I've been writing Rust off and on since 2014 and consistently since 2019 when I got into Rust Game Development.
+Once I started writing more Rust code I noticed it wasn't just more lines of code, but each part of the code was more verbose.&lt;/p&gt;
+&lt;p&gt;Coming from Python where ideas &lt;em&gt;tend&lt;/em&gt; to be pretty succinct, Rust forced you to spell everything out in intense detail.
+Of course you &lt;em&gt;got&lt;/em&gt; something for that verbosity -- &amp;quot;if it compiles, it probably works&amp;quot; -- but my hands were getting tired.
+There has to be a better way!&lt;/p&gt;
+&lt;div class="section" id="verbose-structs"&gt;
+&lt;h2&gt;Verbose Structs&lt;/h2&gt;
+&lt;p&gt;There is a better way, but let's clarify what the problem &lt;em&gt;is&lt;/em&gt; exactly.
+Take this example of a real struct from the &lt;a class="reference external" href="https://bevyengine.org/"&gt;bevy game engine&lt;/a&gt; &lt;tt class="docutils literal"&gt;PbrBundle&lt;/tt&gt;:&lt;/p&gt;
+&lt;pre class="code rust literal-block"&gt;
+&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;type&lt;/span&gt; &lt;span class="nc"&gt;PbrBundle&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;MaterialMeshBundle&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;StandardMaterial&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;It's a type-alias to a &lt;tt class="docutils literal"&gt;MaterialMeshBundle&lt;/tt&gt;.
+Let's check that out:&lt;/p&gt;
+&lt;pre class="code rust literal-block"&gt;
+&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;MaterialMeshBundle&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;M&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;where&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;M&lt;/span&gt;: &lt;span class="nc"&gt;SpecializedMaterial&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;mesh&lt;/span&gt;: &lt;span class="nc"&gt;Handle&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Mesh&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;material&lt;/span&gt;: &lt;span class="nc"&gt;Handle&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;M&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;: &lt;span class="nc"&gt;Transform&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;global_transform&lt;/span&gt;: &lt;span class="nc"&gt;GlobalTransform&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;visibility&lt;/span&gt;: &lt;span class="nc"&gt;Visibility&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;computed_visibility&lt;/span&gt;: &lt;span class="nc"&gt;ComputedVisibility&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;Wow that's a fair number of struct members.&lt;/p&gt;
+&lt;p&gt;If you wanted to create a &lt;tt class="docutils literal"&gt;PbrBundle&lt;/tt&gt; by hand it would be a &lt;em&gt;tedious&lt;/em&gt; process.&lt;/p&gt;
+&lt;pre class="code rust literal-block"&gt;
+&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;my_pbr&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;PbrBundle&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;mesh&lt;/span&gt;: &lt;span class="nc"&gt;get_mesh_handle&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;material&lt;/span&gt;: &lt;span class="nc"&gt;get_material_handle&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;: &lt;span class="nc"&gt;Transform&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;translation&lt;/span&gt;: &lt;span class="nc"&gt;Vec3&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;rotation&lt;/span&gt;: &lt;span class="nc"&gt;Quat&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;scale&lt;/span&gt;: &lt;span class="nc"&gt;Vec3&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;global_transform&lt;/span&gt;: &lt;span class="nc"&gt;GlobalTransform&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;translation&lt;/span&gt;: &lt;span class="nc"&gt;Vec3&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;rotation&lt;/span&gt;: &lt;span class="nc"&gt;Quat&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;scale&lt;/span&gt;: &lt;span class="nc"&gt;Vec3&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;visibility&lt;/span&gt;: &lt;span class="nc"&gt;Visibility&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;is_visibile&lt;/span&gt;: &lt;span class="nc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;computed_visibility&lt;/span&gt;: &lt;span class="nc"&gt;ComputedVisibility&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;is_visibile&lt;/span&gt;: &lt;span class="nc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;Wow my fingers are already tired.&lt;/p&gt;
+&lt;p&gt;Now, assuming you don't know the punchline, you're probably thinking: &lt;em&gt;Just use a constructor!&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;That solves the use-case where the author of the code has a constructor for my use-case, something like this:&lt;/p&gt;
+&lt;pre class="code rust literal-block"&gt;
+&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;my_pbr&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;PbrBundle&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;mesh&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;material&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// Default Transform and Visibilty&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;But what if I want a &lt;em&gt;mostly&lt;/em&gt; &amp;quot;default&amp;quot; &lt;tt class="docutils literal"&gt;PbrBundle&lt;/tt&gt;, with say &lt;tt class="docutils literal"&gt;is_visible = false&lt;/tt&gt;?
+Or I want to add a Transform with a custom scale but a default translation and rotation?&lt;/p&gt;
+&lt;p&gt;Basically, what if I am &lt;em&gt;picky&lt;/em&gt; and want the &lt;em&gt;flexibility&lt;/em&gt; of struct initialization with the &lt;em&gt;convenience&lt;/em&gt; of constructor methods?&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="default-fill-in-the-blanks"&gt;
+&lt;h2&gt;Default: Fill in the blanks&lt;/h2&gt;
+&lt;p&gt;This is totally supported thanks to &lt;a class="reference external" href="https://doc.rust-lang.org/std/default/trait.Default.html"&gt;Rust's &amp;quot;Default&amp;quot; Trait&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The usage is something like this from the previous example:&lt;/p&gt;
+&lt;pre class="code rust literal-block"&gt;
+&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;my_pbr&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;PbrBundle&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;mesh&lt;/span&gt;: &lt;span class="nc"&gt;get_mesh_handle&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;material&lt;/span&gt;: &lt;span class="nc"&gt;get_material_bundle&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;: &lt;span class="nc"&gt;Transform&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;scale&lt;/span&gt;: &lt;span class="nc"&gt;Vec3&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;2.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;2.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;2.0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="o"&gt;..&lt;/span&gt;&lt;span class="nb"&gt;Default&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;visibility&lt;/span&gt;: &lt;span class="nc"&gt;Visibilty&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;is_visible&lt;/span&gt;: &lt;span class="nc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="o"&gt;..&lt;/span&gt;&lt;span class="nb"&gt;Default&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;This example shows creating a &lt;tt class="docutils literal"&gt;PbrBundle&lt;/tt&gt; with a custom &lt;tt class="docutils literal"&gt;mesh&lt;/tt&gt;, &lt;tt class="docutils literal"&gt;material&lt;/tt&gt;, and &lt;tt class="docutils literal"&gt;scale&lt;/tt&gt;, but everything else is a &amp;quot;Default&amp;quot; value.&lt;/p&gt;
+&lt;p&gt;While this flexibility is totally possible with constructors, it would require some creativity, maybe something like this?&lt;/p&gt;
+&lt;pre class="code rust literal-block"&gt;
+&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pbr_bundle&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;PbrBundle&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;mesh&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;material&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;with_scale&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Vec3&lt;/span&gt;::&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;2.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;2.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mf"&gt;2.0&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;with_visibility&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;This is fine, but it is a &lt;strong&gt;lot&lt;/strong&gt; of toil for the author.
+They need to add and maintain a method for each element of their nested struct, document those methods, probably write tests, and all to accomplish the goal of a &amp;quot;Fill in the rest for me&amp;quot; API.&lt;/p&gt;
+&lt;p&gt;One nice part of &lt;tt class="docutils literal"&gt;Default&lt;/tt&gt; is it can be automagically added to any struct whose members implement it via &lt;tt class="docutils literal"&gt;#[derive(Default)]&lt;/tt&gt;.
+This means you get that &amp;quot;Fill in the rest for me&amp;quot; interface for free!&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="close-but-distinct-types"&gt;
+&lt;h2&gt;Close but Distinct Types&lt;/h2&gt;
+&lt;p&gt;Another pain-point I found in Rust was converting between similar but distinct types.
+Unlike my last language Python, which was &lt;em&gt;very&lt;/em&gt; forgiving about types (to a fault), Rust requires very precise type expressions.&lt;/p&gt;
+&lt;p&gt;Let's take this example:&lt;/p&gt;
+&lt;pre class="code rust literal-block"&gt;
+&lt;span class="c1"&gt;// Base Engine Color
+&lt;/span&gt;&lt;span class="cp"&gt;#[derive(Default, Debug, PartialEq)]&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;Color&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;red&lt;/span&gt;: &lt;span class="kt"&gt;f32&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;green&lt;/span&gt;: &lt;span class="kt"&gt;f32&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;blue&lt;/span&gt;: &lt;span class="kt"&gt;f32&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+
+&lt;/span&gt;&lt;span class="sd"&gt;/// Color for UI elements
+&lt;/span&gt;&lt;span class="cp"&gt;#[derive(Default, Debug, PartialEq)]&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;UiColor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Color&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+
+&lt;/span&gt;&lt;span class="sd"&gt;/// Just a demo function, not sure if this is useful...
+&lt;/span&gt;&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;color_rotate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;color&lt;/span&gt;: &lt;span class="nc"&gt;Color&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nc"&gt;Color&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;Color&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;red&lt;/span&gt;: &lt;span class="nc"&gt;color&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;green&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;green&lt;/span&gt;: &lt;span class="nc"&gt;color&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;blue&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;blue&lt;/span&gt;: &lt;span class="nc"&gt;color&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;red&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+
+&lt;/span&gt;&lt;span class="c1"&gt;// Does not compile!
+// E0308: mismatched types expected struct `Color`, found struct `UiColor`
+&lt;/span&gt;&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;UiColor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Color&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;red&lt;/span&gt;: &lt;span class="mf"&gt;0.5&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="o"&gt;..&lt;/span&gt;&lt;span class="nb"&gt;Default&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;});&lt;/span&gt;&lt;span class="w"&gt;
+
+    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;color_rotate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;Here we have a &lt;tt class="docutils literal"&gt;UiColor&lt;/tt&gt; struct that wraps our base &lt;tt class="docutils literal"&gt;Color&lt;/tt&gt; struct.
+We want to use a method made for &lt;tt class="docutils literal"&gt;Color&lt;/tt&gt; values but we get an error that the compiler is expecting a &lt;tt class="docutils literal"&gt;Color&lt;/tt&gt; but we gave it a &lt;tt class="docutils literal"&gt;UiColor&lt;/tt&gt;!
+Come on Rust, just look inside the box!&lt;/p&gt;
+&lt;p&gt;We can work around this issue like so:&lt;/p&gt;
+&lt;pre class="code rust literal-block"&gt;
+&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="c1"&gt;// ...
+&lt;/span&gt;&lt;span class="w"&gt;
+
+    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;UiColor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;color_rotate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;Which passes the inside of &lt;tt class="docutils literal"&gt;a&lt;/tt&gt; to &lt;tt class="docutils literal"&gt;color_rotate&lt;/tt&gt; and then wraps the return in a new &lt;tt class="docutils literal"&gt;UiColor&lt;/tt&gt; struct.
+This works, but it's hard to read and more importantly it requires a keep our API in our head to write &lt;em&gt;any&lt;/em&gt; code.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="from-and-into-simple-type-coercion"&gt;
+&lt;h2&gt;From and &lt;tt class="docutils literal"&gt;into&lt;/tt&gt;: Simple type coercion&lt;/h2&gt;
+&lt;p&gt;The solution is to use the &lt;a class="reference external" href="https://doc.rust-lang.org/std/convert/trait.From.html"&gt;&amp;quot;From&amp;quot;&lt;/a&gt; and trait which provides the &lt;tt class="docutils literal"&gt;into()&lt;/tt&gt; method.&lt;/p&gt;
+&lt;p&gt;Extending the above example, we can implement &lt;tt class="docutils literal"&gt;From Color &lt;span class="pre"&gt;-&amp;gt;&lt;/span&gt; UiColor&lt;/tt&gt; and &lt;tt class="docutils literal"&gt;From UiColor &lt;span class="pre"&gt;-&amp;gt;&lt;/span&gt; Color&lt;/tt&gt; like so:&lt;/p&gt;
+&lt;pre class="code rust literal-block"&gt;
+&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;From&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Color&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;UiColor&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;from&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;: &lt;span class="nc"&gt;Color&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nc"&gt;UiColor&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;UiColor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+
+&lt;/span&gt;&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;From&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;UiColor&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Color&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;from&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;: &lt;span class="nc"&gt;UiColor&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nc"&gt;Color&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;Unfortunately we can't do anything like &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;#[derive(From&amp;lt;UiColor&amp;gt;)]&lt;/span&gt;&lt;/tt&gt; (yet?) but implementing these traits is fairly straight forward and &lt;em&gt;very&lt;/em&gt; powerful.&lt;/p&gt;
+&lt;p&gt;Here we can see our &lt;tt class="docutils literal"&gt;main&lt;/tt&gt; function is fixed with passing assertions.&lt;/p&gt;
+&lt;pre class="code rust literal-block"&gt;
+&lt;span class="k"&gt;fn&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;UiColor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Color&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;red&lt;/span&gt;: &lt;span class="mf"&gt;0.5&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="o"&gt;..&lt;/span&gt;&lt;span class="nb"&gt;Default&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;});&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="fm"&gt;assert_eq!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;UiColor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Color&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;red&lt;/span&gt;: &lt;span class="mf"&gt;0.5&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;green&lt;/span&gt;: &lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;blue&lt;/span&gt;: &lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}));&lt;/span&gt;&lt;span class="w"&gt;
+
+    &lt;/span&gt;&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;b&lt;/span&gt;: &lt;span class="nc"&gt;UiColor&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;color_rotate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;into&lt;/span&gt;&lt;span class="p"&gt;()).&lt;/span&gt;&lt;span class="n"&gt;into&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="fm"&gt;assert_eq!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;UiColor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Color&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;red&lt;/span&gt;: &lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;green&lt;/span&gt;: &lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;blue&lt;/span&gt;: &lt;span class="mf"&gt;0.5&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}));&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;Rust was not only able to cast our &lt;tt class="docutils literal"&gt;UiColor&lt;/tt&gt; to a &lt;tt class="docutils literal"&gt;Color&lt;/tt&gt; in the  call to &lt;tt class="docutils literal"&gt;color_rotate&lt;/tt&gt; but we were able to coerce the result back to a &lt;tt class="docutils literal"&gt;UiColor&lt;/tt&gt; by declaring the type of our &lt;tt class="docutils literal"&gt;b&lt;/tt&gt; variable.&lt;/p&gt;
+&lt;p&gt;Using &lt;tt class="docutils literal"&gt;From&lt;/tt&gt; and &lt;tt class="docutils literal"&gt;into()&lt;/tt&gt; is great because it allows you to ignore the specifics of the types you're working with while still getting the benefits of a strong type system.
+When you use it enough it can feel like parts of your code are &amp;quot;Duckly&amp;quot; typed, like Python and Ruby which have very ergonomic type interactions.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="from-simple-to-complex"&gt;
+&lt;h2&gt;From Simple to Complex&lt;/h2&gt;
+&lt;p&gt;Since learning about &lt;tt class="docutils literal"&gt;From&lt;/tt&gt; started to abuse it to convert simplified types to more complex ones.&lt;/p&gt;
+&lt;p&gt;Take for example this UI struct in Bevy:&lt;/p&gt;
+&lt;pre class="code rust literal-block"&gt;
+&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;NodeBundle&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;node&lt;/span&gt;: &lt;span class="nc"&gt;Node&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;style&lt;/span&gt;: &lt;span class="nc"&gt;Style&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;color&lt;/span&gt;: &lt;span class="nc"&gt;UiColor&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;image&lt;/span&gt;: &lt;span class="nc"&gt;UiImage&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;focus_policy&lt;/span&gt;: &lt;span class="nc"&gt;FocusPolicy&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;: &lt;span class="nc"&gt;Transform&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;global_transform&lt;/span&gt;: &lt;span class="nc"&gt;GlobalTransform&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;pub&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;visibility&lt;/span&gt;: &lt;span class="nc"&gt;Visibility&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;On it's own this isn't bad, but if you write enough UI code it can get tedious.
+Both &lt;tt class="docutils literal"&gt;Node&lt;/tt&gt; and &lt;tt class="docutils literal"&gt;Style&lt;/tt&gt; are nested structs that have a lot of complexity -- &lt;tt class="docutils literal"&gt;Style&lt;/tt&gt; is a struct with 21 members! -- so using &lt;tt class="docutils literal"&gt;Default&lt;/tt&gt; won't cut it here.&lt;/p&gt;
+&lt;p&gt;Instead I made a &amp;quot;dumbed down&amp;quot; version like this:&lt;/p&gt;
+&lt;pre class="code rust literal-block"&gt;
+&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="nc"&gt;SimpleNodeBundle&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;position&lt;/span&gt;: &lt;span class="nc"&gt;SimplePosition&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;color&lt;/span&gt;: &lt;span class="nc"&gt;Color&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;: &lt;span class="nc"&gt;Vec2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+
+&lt;/span&gt;&lt;span class="k"&gt;enum&lt;/span&gt; &lt;span class="nc"&gt;SimplePosition&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;BottomLeft&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;BottomRight&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;TopLeft&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;TopRight&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;This is maybe &lt;em&gt;too&lt;/em&gt; simple, but you can add the complexity you need down the line.
+The important part is that our &lt;tt class="docutils literal"&gt;Simple&lt;/tt&gt; struct is you know... less complex than what it's going to map to.&lt;/p&gt;
+&lt;p&gt;Now that we have a simple struct that we can use to quickly write out some UI elements.&lt;/p&gt;
+&lt;pre class="code rust literal-block"&gt;
+&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;my_ui_element&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SimpleNodeBundle&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;position&lt;/span&gt;: &lt;span class="nc"&gt;SimplePosition&lt;/span&gt;::&lt;span class="n"&gt;TopRight&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;: &lt;span class="nc"&gt;Vec2&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;: &lt;span class="mf"&gt;25.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;: &lt;span class="mf"&gt;100.0&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;color&lt;/span&gt;: &lt;span class="nc"&gt;Color&lt;/span&gt;::&lt;span class="n"&gt;RED&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;On it's own though this is useless.
+Bevy doesn't know what a &lt;tt class="docutils literal"&gt;SimpleNodeBundle&lt;/tt&gt; is, we need to convert this to the &amp;quot;lower level&amp;quot; struct it's replacing.
+We need to cast it up to a Bevy &lt;tt class="docutils literal"&gt;NodeBundle&lt;/tt&gt; with an implementation of &lt;tt class="docutils literal"&gt;From&amp;lt;SimpleNodeBundle&amp;gt; for NodeBundle&lt;/tt&gt;:&lt;/p&gt;
+&lt;pre class="code rust literal-block"&gt;
+&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;From&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;SimpleNodeBundle&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;NodeBundle&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;from&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;: &lt;span class="nc"&gt;SimpleNodeBundle&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nc"&gt;NodeBundle&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;NodeBundle&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="n"&gt;color&lt;/span&gt;: &lt;span class="nc"&gt;UiColor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;color&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="n"&gt;style&lt;/span&gt;: &lt;span class="nc"&gt;Style&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="n"&gt;position&lt;/span&gt;: &lt;span class="nc"&gt;input&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;position&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;into&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;: &lt;span class="nc"&gt;input&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;into&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="o"&gt;..&lt;/span&gt;&lt;span class="nb"&gt;Default&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="o"&gt;..&lt;/span&gt;&lt;span class="nb"&gt;Default&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+
+&lt;/span&gt;&lt;span class="c1"&gt;// NodeBundle's position is a Rect&amp;lt;Val&amp;gt; so we convert SimplePosition to Rect&amp;lt;Val&amp;gt;
+&lt;/span&gt;&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;From&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;SimplePosition&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Rect&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Val&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;from&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;: &lt;span class="nc"&gt;SimplePosition&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nc"&gt;Rect&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Val&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="k"&gt;use&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SimplePosition&lt;/span&gt;::&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="k"&gt;match&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="n"&gt;BottomLeft&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Rect&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="n"&gt;bottom&lt;/span&gt;: &lt;span class="nc"&gt;percent&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="n"&gt;left&lt;/span&gt;: &lt;span class="nc"&gt;percent&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="o"&gt;..&lt;/span&gt;&lt;span class="n"&gt;default&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="n"&gt;BottomRight&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Rect&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="n"&gt;bottom&lt;/span&gt;: &lt;span class="nc"&gt;percent&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="n"&gt;right&lt;/span&gt;: &lt;span class="nc"&gt;percent&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="o"&gt;..&lt;/span&gt;&lt;span class="n"&gt;default&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="n"&gt;TopLeft&lt;/span&gt;&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Rect&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="n"&gt;top&lt;/span&gt;: &lt;span class="nc"&gt;percent&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="n"&gt;left&lt;/span&gt;: &lt;span class="nc"&gt;percent&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="o"&gt;..&lt;/span&gt;&lt;span class="n"&gt;default&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="n"&gt;TopRight&lt;/span&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Rect&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="n"&gt;top&lt;/span&gt;: &lt;span class="nc"&gt;percent&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="n"&gt;right&lt;/span&gt;: &lt;span class="nc"&gt;percent&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="o"&gt;..&lt;/span&gt;&lt;span class="n"&gt;default&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+
+&lt;/span&gt;&lt;span class="c1"&gt;// Similarly size is a Size&amp;lt;Val&amp;gt; but we have a Vec2, so we conver to the right type
+&lt;/span&gt;&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;From&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Vec2&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Size&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Val&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="k"&gt;impl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;from&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;: &lt;span class="nc"&gt;Vec2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-&amp;gt; &lt;span class="nc"&gt;Size&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;Val&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="n"&gt;Size&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="n"&gt;width&lt;/span&gt;: &lt;span class="nc"&gt;Val&lt;/span&gt;::&lt;span class="n"&gt;Px&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="n"&gt;height&lt;/span&gt;: &lt;span class="nc"&gt;Val&lt;/span&gt;::&lt;span class="n"&gt;Px&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;Putting this all together we get (pseudocode) something like this:&lt;/p&gt;
+&lt;pre class="code rust literal-block"&gt;
+&lt;span class="kd"&gt;let&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;my_ui_element&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SimpleNodeBundle&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;position&lt;/span&gt;: &lt;span class="nc"&gt;SimplePosition&lt;/span&gt;::&lt;span class="n"&gt;TopRight&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;: &lt;span class="nc"&gt;Vec2&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;: &lt;span class="mf"&gt;25.0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;: &lt;span class="mf"&gt;100.0&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="n"&gt;color&lt;/span&gt;: &lt;span class="nc"&gt;Color&lt;/span&gt;::&lt;span class="n"&gt;RED&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+
+&lt;/span&gt;&lt;span class="n"&gt;some_bevy_ui_method&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;my_ui_element&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;into&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;Skeptical readers might be thinking &amp;quot;Wow that is awful. This is so much code just to convert one stuct to another slightly simpler struct&amp;quot;.
+You're right that it's a lot of code, but I promise in practice this is a game changer.
+Instead of remembering how to express your ideas to your library of choice every single time, you can express a higher level concept and &lt;tt class="docutils literal"&gt;.into()&lt;/tt&gt; your framework's lower-level structure.
+Being able to succinctly express yourself while still getting the flexibility of a strong expressive type system is a killer feature of Rust and the use of these traits.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="conclusion"&gt;
+&lt;h2&gt;Conclusion&lt;/h2&gt;
+&lt;p&gt;Many of Rust's &amp;quot;pros&amp;quot; are also &amp;quot;cons&amp;quot;.
+Memory safety results in frustratingly negotiating with the compiler.
+A strong type system with compile-time complexity results in slow (but improving) compile times.&lt;/p&gt;
+&lt;p&gt;For the purposes of this post it is Rust's bias toward being explicit.
+Unlike other languages which automagically apply crazy changes to your code, Rust rarely &lt;em&gt;assumes&lt;/em&gt; you want magic sprinkled everywhere.
+You can opt-in to that magic and all of the compile-time and runtime penalties that come with it, but it won't be secretly given to you for you to opt-out of.&lt;/p&gt;
+&lt;p&gt;Rust can sprinkle magic on your code, but you have to explicitly call &lt;tt class="docutils literal"&gt;.magic()&lt;/tt&gt; -- or in our case &lt;tt class="docutils literal"&gt;.into()&lt;/tt&gt; and &lt;tt class="docutils literal"&gt;.default()&lt;/tt&gt;.
+This is a nice middle ground between tedious code and black magic.
+When a language has &lt;em&gt;too much&lt;/em&gt; magic it can result in wild performance implications from seemingly small code changes.
+While tedious code is just a pain to write, even if it is transparent about it's runtime performance.
+Here Rust is able to be transparent, you can audit every use of &lt;tt class="docutils literal"&gt;.into()&lt;/tt&gt; and assess the runtime penalty, while still feeling magical.&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="Rust"></category><category term="tech"></category><category term="rust"></category></entry><entry><title>Buying a House Part 4: Is this investing?</title><link href="elijahcaine.me/buying-a-house-04-is-this-investing" rel="alternate"></link><published>2022-01-18T00:00:00-08:00</published><updated>2022-01-18T00:00:00-08:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2022-01-18:elijahcaine.me/buying-a-house-04-is-this-investing</id><summary type="html">&lt;p class="first last"&gt;Everybody says it is, so I guess it is?&lt;/p&gt;
 </summary><content type="html">&lt;p&gt;&lt;em&gt;This is part 4 of a 4 part series on buying a home&lt;/em&gt;.
 &lt;em&gt;Check out part 1 for to start from the beginning&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;Before buying a house a major talking point used to convince me of the idea was some variation of &amp;quot;It's a great investment!&amp;quot; or &amp;quot;You're just throwing money away by renting&amp;quot;.

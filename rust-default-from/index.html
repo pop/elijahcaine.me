@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="author" content="Elijah Voigt">
+    <link rel="stylesheet" type="text/css" href="../theme/css/styles.css"/>
+        <link href="/rss.xml" type="application/rss+xml"   rel="alternate" title="elijahcaine.me RSS Feed" />
+        <link href="/atom.xml" type="application/atom+xml" rel="alternate" title="elijahcaine.me Atom Feed" />
+  </head>
+
+  <body>
+    <div class="site">
+      <header>
+        <a href="/">(🏠 elijahcaine.me)</a>
+        <a href="https://github.com/pop/">(🐙 github 🐱)</a>
+        <a href="/resume.pdf">(👔 resume)</a>
+        <a href="/atom.xml">(📰 feed)</a>
+      </header>
+
+      <div id="content">
+
+<div class="post">
+  <h1 class="posttitle">
+    Rust Ergonomics: Default and From
+  </h1>
+
+  <div class="postinfo">
+    <p class="published" title="2022-05-17T00:00:00-07:00">
+      Tue 17 May 2022
+    </p>
+  </div>
+</div>
+
+<div class="article">
+  <p>I've been writing Rust off and on since 2014 and consistently since 2019 when I got into Rust Game Development.
+Once I started writing more Rust code I noticed it wasn't just more lines of code, but each part of the code was more verbose.</p>
+<p>Coming from Python where ideas <em>tend</em> to be pretty succinct, Rust forced you to spell everything out in intense detail.
+Of course you <em>got</em> something for that verbosity -- &quot;if it compiles, it probably works&quot; -- but my hands were getting tired.
+There has to be a better way!</p>
+<div class="section" id="verbose-structs">
+<h2>Verbose Structs</h2>
+<p>There is a better way, but let's clarify what the problem <em>is</em> exactly.
+Take this example of a real struct from the <a class="reference external" href="https://bevyengine.org/">bevy game engine</a> <tt class="docutils literal">PbrBundle</tt>:</p>
+<pre class="code rust literal-block">
+<span class="k">pub</span><span class="w"> </span><span class="k">type</span> <span class="nc">PbrBundle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MaterialMeshBundle</span><span class="o">&lt;</span><span class="n">StandardMaterial</span><span class="o">&gt;</span><span class="p">;</span>
+</pre>
+<p>It's a type-alias to a <tt class="docutils literal">MaterialMeshBundle</tt>.
+Let's check that out:</p>
+<pre class="code rust literal-block">
+<span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">MaterialMeshBundle</span><span class="o">&lt;</span><span class="n">M</span><span class="o">&gt;</span><span class="w"> </span><span class="k">where</span><span class="w">
+    </span><span class="n">M</span>: <span class="nc">SpecializedMaterial</span><span class="p">,</span><span class="w">
+</span><span class="p">{</span><span class="w">
+    </span><span class="k">pub</span><span class="w"> </span><span class="n">mesh</span>: <span class="nc">Handle</span><span class="o">&lt;</span><span class="n">Mesh</span><span class="o">&gt;</span><span class="p">,</span><span class="w">
+    </span><span class="k">pub</span><span class="w"> </span><span class="n">material</span>: <span class="nc">Handle</span><span class="o">&lt;</span><span class="n">M</span><span class="o">&gt;</span><span class="p">,</span><span class="w">
+    </span><span class="k">pub</span><span class="w"> </span><span class="n">transform</span>: <span class="nc">Transform</span><span class="p">,</span><span class="w">
+    </span><span class="k">pub</span><span class="w"> </span><span class="n">global_transform</span>: <span class="nc">GlobalTransform</span><span class="p">,</span><span class="w">
+    </span><span class="k">pub</span><span class="w"> </span><span class="n">visibility</span>: <span class="nc">Visibility</span><span class="p">,</span><span class="w">
+    </span><span class="k">pub</span><span class="w"> </span><span class="n">computed_visibility</span>: <span class="nc">ComputedVisibility</span><span class="p">,</span><span class="w">
+</span><span class="p">}</span>
+</pre>
+<p>Wow that's a fair number of struct members.</p>
+<p>If you wanted to create a <tt class="docutils literal">PbrBundle</tt> by hand it would be a <em>tedious</em> process.</p>
+<pre class="code rust literal-block">
+<span class="kd">let</span><span class="w"> </span><span class="n">my_pbr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PbrBundle</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">mesh</span>: <span class="nc">get_mesh_handle</span><span class="p">(),</span><span class="w">
+    </span><span class="n">material</span>: <span class="nc">get_material_handle</span><span class="p">(),</span><span class="w">
+    </span><span class="n">transform</span>: <span class="nc">Transform</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="n">translation</span>: <span class="nc">Vec3</span>::<span class="n">new</span><span class="p">(),</span><span class="w">
+        </span><span class="n">rotation</span>: <span class="nc">Quat</span>::<span class="n">new</span><span class="p">(),</span><span class="w">
+        </span><span class="n">scale</span>: <span class="nc">Vec3</span>::<span class="n">new</span><span class="p">(),</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="n">global_transform</span>: <span class="nc">GlobalTransform</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="n">translation</span>: <span class="nc">Vec3</span>::<span class="n">new</span><span class="p">(),</span><span class="w">
+        </span><span class="n">rotation</span>: <span class="nc">Quat</span>::<span class="n">new</span><span class="p">(),</span><span class="w">
+        </span><span class="n">scale</span>: <span class="nc">Vec3</span>::<span class="n">new</span><span class="p">(),</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="n">visibility</span>: <span class="nc">Visibility</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="n">is_visibile</span>: <span class="nc">true</span><span class="p">,</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="n">computed_visibility</span>: <span class="nc">ComputedVisibility</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="n">is_visibile</span>: <span class="nc">true</span><span class="p">,</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+</span><span class="p">}</span>
+</pre>
+<p>Wow my fingers are already tired.</p>
+<p>Now, assuming you don't know the punchline, you're probably thinking: <em>Just use a constructor!</em></p>
+<p>That solves the use-case where the author of the code has a constructor for my use-case, something like this:</p>
+<pre class="code rust literal-block">
+<span class="kd">let</span><span class="w"> </span><span class="n">my_pbr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PbrBundle</span>::<span class="n">new</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span><span class="w"> </span><span class="n">material</span><span class="p">);</span><span class="w"> </span><span class="c1">// Default Transform and Visibilty</span>
+</pre>
+<p>But what if I want a <em>mostly</em> &quot;default&quot; <tt class="docutils literal">PbrBundle</tt>, with say <tt class="docutils literal">is_visible = false</tt>?
+Or I want to add a Transform with a custom scale but a default translation and rotation?</p>
+<p>Basically, what if I am <em>picky</em> and want the <em>flexibility</em> of struct initialization with the <em>convenience</em> of constructor methods?</p>
+</div>
+<div class="section" id="default-fill-in-the-blanks">
+<h2>Default: Fill in the blanks</h2>
+<p>This is totally supported thanks to <a class="reference external" href="https://doc.rust-lang.org/std/default/trait.Default.html">Rust's &quot;Default&quot; Trait</a>.</p>
+<p>The usage is something like this from the previous example:</p>
+<pre class="code rust literal-block">
+<span class="kd">let</span><span class="w"> </span><span class="n">my_pbr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PbrBundle</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">mesh</span>: <span class="nc">get_mesh_handle</span><span class="p">(),</span><span class="w">
+    </span><span class="n">material</span>: <span class="nc">get_material_bundle</span><span class="p">(),</span><span class="w">
+    </span><span class="n">transform</span>: <span class="nc">Transform</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="n">scale</span>: <span class="nc">Vec3</span>::<span class="n">new</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">),</span><span class="w">
+        </span><span class="o">..</span><span class="nb">Default</span>::<span class="n">default</span><span class="p">()</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="n">visibility</span>: <span class="nc">Visibilty</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="n">is_visible</span>: <span class="nc">true</span><span class="p">,</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="o">..</span><span class="nb">Default</span>::<span class="n">default</span><span class="p">()</span><span class="w">
+</span><span class="p">}</span>
+</pre>
+<p>This example shows creating a <tt class="docutils literal">PbrBundle</tt> with a custom <tt class="docutils literal">mesh</tt>, <tt class="docutils literal">material</tt>, and <tt class="docutils literal">scale</tt>, but everything else is a &quot;Default&quot; value.</p>
+<p>While this flexibility is totally possible with constructors, it would require some creativity, maybe something like this?</p>
+<pre class="code rust literal-block">
+<span class="kd">let</span><span class="w"> </span><span class="n">pbr_bundle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PbrBundle</span>::<span class="n">new</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span><span class="w"> </span><span class="n">material</span><span class="p">)</span><span class="w">
+    </span><span class="p">.</span><span class="n">with_scale</span><span class="p">(</span><span class="n">Vec3</span>::<span class="n">new</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">))</span><span class="w">
+    </span><span class="p">.</span><span class="n">with_visibility</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+</pre>
+<p>This is fine, but it is a <strong>lot</strong> of toil for the author.
+They need to add and maintain a method for each element of their nested struct, document those methods, probably write tests, and all to accomplish the goal of a &quot;Fill in the rest for me&quot; API.</p>
+<p>One nice part of <tt class="docutils literal">Default</tt> is it can be automagically added to any struct whose members implement it via <tt class="docutils literal">#[derive(Default)]</tt>.
+This means you get that &quot;Fill in the rest for me&quot; interface for free!</p>
+</div>
+<div class="section" id="close-but-distinct-types">
+<h2>Close but Distinct Types</h2>
+<p>Another pain-point I found in Rust was converting between similar but distinct types.
+Unlike my last language Python, which was <em>very</em> forgiving about types (to a fault), Rust requires very precise type expressions.</p>
+<p>Let's take this example:</p>
+<pre class="code rust literal-block">
+<span class="c1">// Base Engine Color
+</span><span class="cp">#[derive(Default, Debug, PartialEq)]</span><span class="w">
+</span><span class="k">struct</span> <span class="nc">Color</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">red</span>: <span class="kt">f32</span><span class="p">,</span><span class="w">
+    </span><span class="n">green</span>: <span class="kt">f32</span><span class="p">,</span><span class="w">
+    </span><span class="n">blue</span>: <span class="kt">f32</span><span class="p">,</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span><span class="sd">/// Color for UI elements
+</span><span class="cp">#[derive(Default, Debug, PartialEq)]</span><span class="w">
+</span><span class="k">struct</span> <span class="nc">UiColor</span><span class="p">(</span><span class="n">Color</span><span class="p">);</span><span class="w">
+
+</span><span class="sd">/// Just a demo function, not sure if this is useful...
+</span><span class="k">fn</span> <span class="nf">color_rotate</span><span class="p">(</span><span class="n">color</span>: <span class="nc">Color</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">Color</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">Color</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="n">red</span>: <span class="nc">color</span><span class="p">.</span><span class="n">green</span><span class="p">,</span><span class="w">
+        </span><span class="n">green</span>: <span class="nc">color</span><span class="p">.</span><span class="n">blue</span><span class="p">,</span><span class="w">
+        </span><span class="n">blue</span>: <span class="nc">color</span><span class="p">.</span><span class="n">red</span><span class="p">,</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span><span class="c1">// Does not compile!
+// E0308: mismatched types expected struct `Color`, found struct `UiColor`
+</span><span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="kd">let</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UiColor</span><span class="p">(</span><span class="n">Color</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="n">red</span>: <span class="mf">0.5</span><span class="p">,</span><span class="w">
+        </span><span class="o">..</span><span class="nb">Default</span>::<span class="n">default</span><span class="p">()</span><span class="w">
+    </span><span class="p">});</span><span class="w">
+
+    </span><span class="kd">let</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">color_rotate</span><span class="p">(</span><span class="n">a</span><span class="p">);</span><span class="w">
+</span><span class="p">}</span>
+</pre>
+<p>Here we have a <tt class="docutils literal">UiColor</tt> struct that wraps our base <tt class="docutils literal">Color</tt> struct.
+We want to use a method made for <tt class="docutils literal">Color</tt> values but we get an error that the compiler is expecting a <tt class="docutils literal">Color</tt> but we gave it a <tt class="docutils literal">UiColor</tt>!
+Come on Rust, just look inside the box!</p>
+<p>We can work around this issue like so:</p>
+<pre class="code rust literal-block">
+<span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="c1">// ...
+</span><span class="w">
+
+    </span><span class="kd">let</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UiColor</span><span class="p">(</span><span class="n">color_rotate</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="mi">0</span><span class="p">));</span><span class="w">
+</span><span class="p">}</span>
+</pre>
+<p>Which passes the inside of <tt class="docutils literal">a</tt> to <tt class="docutils literal">color_rotate</tt> and then wraps the return in a new <tt class="docutils literal">UiColor</tt> struct.
+This works, but it's hard to read and more importantly it requires a keep our API in our head to write <em>any</em> code.</p>
+</div>
+<div class="section" id="from-and-into-simple-type-coercion">
+<h2>From and <tt class="docutils literal">into</tt>: Simple type coercion</h2>
+<p>The solution is to use the <a class="reference external" href="https://doc.rust-lang.org/std/convert/trait.From.html">&quot;From&quot;</a> and trait which provides the <tt class="docutils literal">into()</tt> method.</p>
+<p>Extending the above example, we can implement <tt class="docutils literal">From Color <span class="pre">-&gt;</span> UiColor</tt> and <tt class="docutils literal">From UiColor <span class="pre">-&gt;</span> Color</tt> like so:</p>
+<pre class="code rust literal-block">
+<span class="k">impl</span><span class="w"> </span><span class="nb">From</span><span class="o">&lt;</span><span class="n">Color</span><span class="o">&gt;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">UiColor</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="k">fn</span> <span class="nf">from</span><span class="p">(</span><span class="n">input</span>: <span class="nc">Color</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">UiColor</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="n">UiColor</span><span class="p">(</span><span class="n">input</span><span class="p">)</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span><span class="k">impl</span><span class="w"> </span><span class="nb">From</span><span class="o">&lt;</span><span class="n">UiColor</span><span class="o">&gt;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">Color</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="k">fn</span> <span class="nf">from</span><span class="p">(</span><span class="n">input</span>: <span class="nc">UiColor</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">Color</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="n">input</span><span class="p">.</span><span class="mi">0</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span>
+</pre>
+<p>Unfortunately we can't do anything like <tt class="docutils literal"><span class="pre">#[derive(From&lt;UiColor&gt;)]</span></tt> (yet?) but implementing these traits is fairly straight forward and <em>very</em> powerful.</p>
+<p>Here we can see our <tt class="docutils literal">main</tt> function is fixed with passing assertions.</p>
+<pre class="code rust literal-block">
+<span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="kd">let</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UiColor</span><span class="p">(</span><span class="n">Color</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="n">red</span>: <span class="mf">0.5</span><span class="p">,</span><span class="w">
+        </span><span class="o">..</span><span class="nb">Default</span>::<span class="n">default</span><span class="p">()</span><span class="w">
+    </span><span class="p">});</span><span class="w">
+    </span><span class="fm">assert_eq!</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">UiColor</span><span class="p">(</span><span class="n">Color</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">red</span>: <span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="n">green</span>: <span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="n">blue</span>: <span class="mf">0.0</span><span class="w"> </span><span class="p">}));</span><span class="w">
+
+    </span><span class="kd">let</span><span class="w"> </span><span class="n">b</span>: <span class="nc">UiColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">color_rotate</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">into</span><span class="p">()).</span><span class="n">into</span><span class="p">();</span><span class="w">
+    </span><span class="fm">assert_eq!</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">UiColor</span><span class="p">(</span><span class="n">Color</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">red</span>: <span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="n">green</span>: <span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="n">blue</span>: <span class="mf">0.5</span><span class="w"> </span><span class="p">}));</span><span class="w">
+</span><span class="p">}</span>
+</pre>
+<p>Rust was not only able to cast our <tt class="docutils literal">UiColor</tt> to a <tt class="docutils literal">Color</tt> in the  call to <tt class="docutils literal">color_rotate</tt> but we were able to coerce the result back to a <tt class="docutils literal">UiColor</tt> by declaring the type of our <tt class="docutils literal">b</tt> variable.</p>
+<p>Using <tt class="docutils literal">From</tt> and <tt class="docutils literal">into()</tt> is great because it allows you to ignore the specifics of the types you're working with while still getting the benefits of a strong type system.
+When you use it enough it can feel like parts of your code are &quot;Duckly&quot; typed, like Python and Ruby which have very ergonomic type interactions.</p>
+</div>
+<div class="section" id="from-simple-to-complex">
+<h2>From Simple to Complex</h2>
+<p>Since learning about <tt class="docutils literal">From</tt> started to abuse it to convert simplified types to more complex ones.</p>
+<p>Take for example this UI struct in Bevy:</p>
+<pre class="code rust literal-block">
+<span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">NodeBundle</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="k">pub</span><span class="w"> </span><span class="n">node</span>: <span class="nc">Node</span><span class="p">,</span><span class="w">
+    </span><span class="k">pub</span><span class="w"> </span><span class="n">style</span>: <span class="nc">Style</span><span class="p">,</span><span class="w">
+    </span><span class="k">pub</span><span class="w"> </span><span class="n">color</span>: <span class="nc">UiColor</span><span class="p">,</span><span class="w">
+    </span><span class="k">pub</span><span class="w"> </span><span class="n">image</span>: <span class="nc">UiImage</span><span class="p">,</span><span class="w">
+    </span><span class="k">pub</span><span class="w"> </span><span class="n">focus_policy</span>: <span class="nc">FocusPolicy</span><span class="p">,</span><span class="w">
+    </span><span class="k">pub</span><span class="w"> </span><span class="n">transform</span>: <span class="nc">Transform</span><span class="p">,</span><span class="w">
+    </span><span class="k">pub</span><span class="w"> </span><span class="n">global_transform</span>: <span class="nc">GlobalTransform</span><span class="p">,</span><span class="w">
+    </span><span class="k">pub</span><span class="w"> </span><span class="n">visibility</span>: <span class="nc">Visibility</span><span class="p">,</span><span class="w">
+</span><span class="p">}</span>
+</pre>
+<p>On it's own this isn't bad, but if you write enough UI code it can get tedious.
+Both <tt class="docutils literal">Node</tt> and <tt class="docutils literal">Style</tt> are nested structs that have a lot of complexity -- <tt class="docutils literal">Style</tt> is a struct with 21 members! -- so using <tt class="docutils literal">Default</tt> won't cut it here.</p>
+<p>Instead I made a &quot;dumbed down&quot; version like this:</p>
+<pre class="code rust literal-block">
+<span class="k">struct</span> <span class="nc">SimpleNodeBundle</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">position</span>: <span class="nc">SimplePosition</span><span class="p">,</span><span class="w">
+    </span><span class="n">color</span>: <span class="nc">Color</span><span class="p">,</span><span class="w">
+    </span><span class="n">size</span>: <span class="nc">Vec2</span><span class="p">,</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span><span class="k">enum</span> <span class="nc">SimplePosition</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">BottomLeft</span><span class="p">,</span><span class="w">
+    </span><span class="n">BottomRight</span><span class="p">,</span><span class="w">
+    </span><span class="n">TopLeft</span><span class="p">,</span><span class="w">
+    </span><span class="n">TopRight</span><span class="p">,</span><span class="w">
+</span><span class="p">}</span>
+</pre>
+<p>This is maybe <em>too</em> simple, but you can add the complexity you need down the line.
+The important part is that our <tt class="docutils literal">Simple</tt> struct is you know... less complex than what it's going to map to.</p>
+<p>Now that we have a simple struct that we can use to quickly write out some UI elements.</p>
+<pre class="code rust literal-block">
+<span class="kd">let</span><span class="w"> </span><span class="n">my_ui_element</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SimpleNodeBundle</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">position</span>: <span class="nc">SimplePosition</span>::<span class="n">TopRight</span><span class="p">,</span><span class="w">
+    </span><span class="n">size</span>: <span class="nc">Vec2</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">x</span>: <span class="mf">25.0</span><span class="p">,</span><span class="w"> </span><span class="n">y</span>: <span class="mf">100.0</span><span class="w"> </span><span class="p">},</span><span class="w">
+    </span><span class="n">color</span>: <span class="nc">Color</span>::<span class="n">RED</span><span class="p">,</span><span class="w">
+</span><span class="p">}</span>
+</pre>
+<p>On it's own though this is useless.
+Bevy doesn't know what a <tt class="docutils literal">SimpleNodeBundle</tt> is, we need to convert this to the &quot;lower level&quot; struct it's replacing.
+We need to cast it up to a Bevy <tt class="docutils literal">NodeBundle</tt> with an implementation of <tt class="docutils literal">From&lt;SimpleNodeBundle&gt; for NodeBundle</tt>:</p>
+<pre class="code rust literal-block">
+<span class="k">impl</span><span class="w"> </span><span class="nb">From</span><span class="o">&lt;</span><span class="n">SimpleNodeBundle</span><span class="o">&gt;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">NodeBundle</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="k">impl</span><span class="w"> </span><span class="n">from</span><span class="p">(</span><span class="n">input</span>: <span class="nc">SimpleNodeBundle</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">NodeBundle</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="n">NodeBundle</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="n">color</span>: <span class="nc">UiColor</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">color</span><span class="p">),</span><span class="w">
+            </span><span class="n">style</span>: <span class="nc">Style</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="n">position</span>: <span class="nc">input</span><span class="p">.</span><span class="n">position</span><span class="p">.</span><span class="n">into</span><span class="p">(),</span><span class="w">
+                </span><span class="n">size</span>: <span class="nc">input</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">into</span><span class="p">(),</span><span class="w">
+                </span><span class="o">..</span><span class="nb">Default</span>::<span class="n">default</span><span class="p">()</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+            </span><span class="o">..</span><span class="nb">Default</span>::<span class="n">default</span><span class="p">()</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span><span class="c1">// NodeBundle's position is a Rect&lt;Val&gt; so we convert SimplePosition to Rect&lt;Val&gt;
+</span><span class="k">impl</span><span class="w"> </span><span class="nb">From</span><span class="o">&lt;</span><span class="n">SimplePosition</span><span class="o">&gt;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">Rect</span><span class="o">&lt;</span><span class="n">Val</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="k">impl</span><span class="w"> </span><span class="n">from</span><span class="p">(</span><span class="n">input</span>: <span class="nc">SimplePosition</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">Rect</span><span class="o">&lt;</span><span class="n">Val</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="k">use</span><span class="w"> </span><span class="n">SimplePosition</span>::<span class="o">*</span><span class="p">;</span><span class="w">
+        </span><span class="k">match</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="n">BottomLeft</span><span class="w">  </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">Rect</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="n">bottom</span>: <span class="nc">percent</span><span class="p">(</span><span class="mf">0.0</span><span class="p">),</span><span class="w">
+                </span><span class="n">left</span>: <span class="nc">percent</span><span class="p">(</span><span class="mf">0.0</span><span class="p">),</span><span class="w">
+                </span><span class="o">..</span><span class="n">default</span>::<span class="n">default</span><span class="p">()</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="n">BottomRight</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">Rect</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="n">bottom</span>: <span class="nc">percent</span><span class="p">(</span><span class="mf">0.0</span><span class="p">),</span><span class="w">
+                </span><span class="n">right</span>: <span class="nc">percent</span><span class="p">(</span><span class="mf">0.0</span><span class="p">),</span><span class="w">
+                </span><span class="o">..</span><span class="n">default</span>::<span class="n">default</span><span class="p">()</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="n">TopLeft</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">Rect</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="n">top</span>: <span class="nc">percent</span><span class="p">(</span><span class="mf">0.0</span><span class="p">),</span><span class="w">
+                </span><span class="n">left</span>: <span class="nc">percent</span><span class="p">(</span><span class="mf">0.0</span><span class="p">),</span><span class="w">
+                </span><span class="o">..</span><span class="n">default</span>::<span class="n">default</span><span class="p">()</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="n">TopRight</span><span class="w">    </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">Rect</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="n">top</span>: <span class="nc">percent</span><span class="p">(</span><span class="mf">0.0</span><span class="p">),</span><span class="w">
+                </span><span class="n">right</span>: <span class="nc">percent</span><span class="p">(</span><span class="mf">0.0</span><span class="p">),</span><span class="w">
+                </span><span class="o">..</span><span class="n">default</span>::<span class="n">default</span><span class="p">()</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span><span class="c1">// Similarly size is a Size&lt;Val&gt; but we have a Vec2, so we conver to the right type
+</span><span class="k">impl</span><span class="w"> </span><span class="nb">From</span><span class="o">&lt;</span><span class="n">Vec2</span><span class="o">&gt;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">Size</span><span class="o">&lt;</span><span class="n">Val</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="k">impl</span><span class="w"> </span><span class="n">from</span><span class="p">(</span><span class="n">input</span>: <span class="nc">Vec2</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">Size</span><span class="o">&lt;</span><span class="n">Val</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="n">Size</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="n">width</span>: <span class="nc">Val</span>::<span class="n">Px</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">x</span><span class="p">),</span><span class="w">
+            </span><span class="n">height</span>: <span class="nc">Val</span>::<span class="n">Px</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">y</span><span class="p">),</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span>
+</pre>
+<p>Putting this all together we get (pseudocode) something like this:</p>
+<pre class="code rust literal-block">
+<span class="kd">let</span><span class="w"> </span><span class="n">my_ui_element</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SimpleNodeBundle</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">position</span>: <span class="nc">SimplePosition</span>::<span class="n">TopRight</span><span class="p">,</span><span class="w">
+    </span><span class="n">size</span>: <span class="nc">Vec2</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">x</span>: <span class="mf">25.0</span><span class="p">,</span><span class="w"> </span><span class="n">y</span>: <span class="mf">100.0</span><span class="w"> </span><span class="p">},</span><span class="w">
+    </span><span class="n">color</span>: <span class="nc">Color</span>::<span class="n">RED</span><span class="p">,</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span><span class="n">some_bevy_ui_method</span><span class="p">(</span><span class="n">my_ui_element</span><span class="p">.</span><span class="n">into</span><span class="p">());</span>
+</pre>
+<p>Skeptical readers might be thinking &quot;Wow that is awful. This is so much code just to convert one stuct to another slightly simpler struct&quot;.
+You're right that it's a lot of code, but I promise in practice this is a game changer.
+Instead of remembering how to express your ideas to your library of choice every single time, you can express a higher level concept and <tt class="docutils literal">.into()</tt> your framework's lower-level structure.
+Being able to succinctly express yourself while still getting the flexibility of a strong expressive type system is a killer feature of Rust and the use of these traits.</p>
+</div>
+<div class="section" id="conclusion">
+<h2>Conclusion</h2>
+<p>Many of Rust's &quot;pros&quot; are also &quot;cons&quot;.
+Memory safety results in frustratingly negotiating with the compiler.
+A strong type system with compile-time complexity results in slow (but improving) compile times.</p>
+<p>For the purposes of this post it is Rust's bias toward being explicit.
+Unlike other languages which automagically apply crazy changes to your code, Rust rarely <em>assumes</em> you want magic sprinkled everywhere.
+You can opt-in to that magic and all of the compile-time and runtime penalties that come with it, but it won't be secretly given to you for you to opt-out of.</p>
+<p>Rust can sprinkle magic on your code, but you have to explicitly call <tt class="docutils literal">.magic()</tt> -- or in our case <tt class="docutils literal">.into()</tt> and <tt class="docutils literal">.default()</tt>.
+This is a nice middle ground between tedious code and black magic.
+When a language has <em>too much</em> magic it can result in wild performance implications from seemingly small code changes.
+While tedious code is just a pain to write, even if it is transparent about it's runtime performance.
+Here Rust is able to be transparent, you can audit every use of <tt class="docutils literal">.into()</tt> and assess the runtime penalty, while still feeling magical.</p>
+</div>
+
+</div>
+
+
+      </div>
+
+      <footer>
+        <p>
+        © 2022 Elijah Voigt, <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="/assets/images/CCA4IL.png" /> Creative Commons Attribution 4.0 International</a>.
+        </p>
+        <p>
+        This website made with locally sourced bits, built with Python 🐍 via Pelican 🐦, developed on Fedora 👒 GNU/Linux 🐃🐧, <a href='https://github.com/pop/elijahcaine.me'>hosted</a> and deployed on GitHub 🐙🐱, and served from clouds ⛅.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>
