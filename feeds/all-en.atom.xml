@@ -247,22 +247,22 @@ We need to cast it up to a Bevy &lt;tt class="docutils literal"&gt;NodeBundle&lt
             &lt;/span&gt;&lt;span class="n"&gt;BottomLeft&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Rect&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
                 &lt;/span&gt;&lt;span class="n"&gt;bottom&lt;/span&gt;: &lt;span class="nc"&gt;percent&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
                 &lt;/span&gt;&lt;span class="n"&gt;left&lt;/span&gt;: &lt;span class="nc"&gt;percent&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
-                &lt;/span&gt;&lt;span class="o"&gt;..&lt;/span&gt;&lt;span class="n"&gt;default&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="o"&gt;..&lt;/span&gt;&lt;span class="nb"&gt;Default&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
             &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
             &lt;/span&gt;&lt;span class="n"&gt;BottomRight&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Rect&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
                 &lt;/span&gt;&lt;span class="n"&gt;bottom&lt;/span&gt;: &lt;span class="nc"&gt;percent&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
                 &lt;/span&gt;&lt;span class="n"&gt;right&lt;/span&gt;: &lt;span class="nc"&gt;percent&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
-                &lt;/span&gt;&lt;span class="o"&gt;..&lt;/span&gt;&lt;span class="n"&gt;default&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="o"&gt;..&lt;/span&gt;&lt;span class="nb"&gt;Default&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
             &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
             &lt;/span&gt;&lt;span class="n"&gt;TopLeft&lt;/span&gt;&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Rect&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
                 &lt;/span&gt;&lt;span class="n"&gt;top&lt;/span&gt;: &lt;span class="nc"&gt;percent&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
                 &lt;/span&gt;&lt;span class="n"&gt;left&lt;/span&gt;: &lt;span class="nc"&gt;percent&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
-                &lt;/span&gt;&lt;span class="o"&gt;..&lt;/span&gt;&lt;span class="n"&gt;default&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="o"&gt;..&lt;/span&gt;&lt;span class="nb"&gt;Default&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
             &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
             &lt;/span&gt;&lt;span class="n"&gt;TopRight&lt;/span&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Rect&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
                 &lt;/span&gt;&lt;span class="n"&gt;top&lt;/span&gt;: &lt;span class="nc"&gt;percent&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
                 &lt;/span&gt;&lt;span class="n"&gt;right&lt;/span&gt;: &lt;span class="nc"&gt;percent&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
-                &lt;/span&gt;&lt;span class="o"&gt;..&lt;/span&gt;&lt;span class="n"&gt;default&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+                &lt;/span&gt;&lt;span class="o"&gt;..&lt;/span&gt;&lt;span class="nb"&gt;Default&lt;/span&gt;::&lt;span class="n"&gt;default&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
             &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
         &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
     &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
@@ -2424,7 +2424,7 @@ Adam langley via ImperialViolet;
 To read all of the posts, check out the 'Independent Crypto' tag.&lt;/p&gt;
 &lt;/div&gt;
 &lt;p&gt;Let's imagine you are a billionaire.
-You want to know if you have more money than your billionaire friend Bob, but for some reason it's &lt;em&gt;very&lt;/em&gt; faux pas to let anybody how much money you have, even your good friend Bob.&lt;/p&gt;
+You want to know if you have more money than your billionaire friend Bob, but for some reason it's &lt;em&gt;very&lt;/em&gt; faux pas to let anybody know how much money you have, even your good friend Bob.&lt;/p&gt;
 &lt;p&gt;But you're a billionaire!
 You're not used to the phrase &amp;quot;that isn't possible&amp;quot;.
 In your frustration you try to figure out if you can use some of your billions to find a solution.&lt;/p&gt;
@@ -2463,7 +2463,7 @@ This function is garbled by one of the two parties into &lt;tt class="docutils l
 &lt;p&gt;How does Alice actually... 'garble' a circuit?
 It sounds kinda dirty.&lt;/p&gt;
 &lt;p&gt;Each gate (OR, AND, XOR, etc) has two inputs.
-Sick with me.
+Stick with me.
 Each input is encrypted.
 Keeping up?
 So you need a &lt;em&gt;key&lt;/em&gt; to use &lt;em&gt;each gate&lt;/em&gt;.
@@ -5010,7 +5010,12 @@ children to do the same.  But he got up the next morning and did it all again.
 At least he'd have his office to keep him company.&lt;/p&gt;
 &lt;/div&gt;
 </content><category term="creative-writing"></category><category term="Creative Writing"></category><category term="MagicRealismBot"></category></entry><entry><title>Self Censorship and the Social Justice Warrior</title><link href="elijahcaine.me/self-censorship-and-social-justice" rel="alternate"></link><published>2016-08-24T00:00:00-07:00</published><updated>2016-08-24T00:00:00-07:00</updated><author><name>Elijah Voigt</name></author><id>tag:None,2016-08-24:elijahcaine.me/self-censorship-and-social-justice</id><summary type="html">&lt;p class="first last"&gt;Thoughts and opinions about our relation with the media we consume. Or something like that...&lt;/p&gt;
-</summary><content type="html">&lt;p&gt;This post is an articulation of &lt;em&gt;feelings&lt;/em&gt; I have been mulling over about
+</summary><content type="html">&lt;p&gt;---&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Authors note from 2024&lt;/strong&gt;
+I don't &lt;em&gt;disagree&lt;/em&gt; with the thesis of this piece (something about the internet being overzealous in it's negative feedback to creators?) but a lot of my claims are over-reaching and (more importantly) I don't think my voice contributes much to this converstaion -- then and now.
+I am leaving it up because I don't feel that it is problematic, but I do suggest you find a different post to read because honestly it's not very good.&lt;/p&gt;
+&lt;p&gt;---&lt;/p&gt;
+&lt;p&gt;This post is an articulation of &lt;em&gt;feelings&lt;/em&gt; I have been mulling over about
 internet media and culture, a subject I have no academic qualification to speak
 on but have strong feelings about.  I don't intend for this to be inflammatory
 or contrarian but if it helps start a discussion I'll be happy. My only
@@ -5090,9 +5095,9 @@ on The A.V. Club:&lt;/p&gt;
 &lt;p&gt;&lt;a class="reference external" href="http://www.avclub.com/article/steven-universe-writer-gets-hounded-twitter-fans-241092"&gt;Steven Universe writer gets hounded from Twitter by fans&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;[...]&lt;/p&gt;
 &lt;p&gt;The online backlash was apparently quick, powerful, and seemingly coming
-from two different directions: â€™shippers, irritated and outraged by what
+from two different directions: &amp;quot;shippers, irritated and outraged by what
 they saw as Zuke pushing the agenda of her preferred pairing, and others
-who accused the Cartoon Network show of engaging in â€œqueer baiting.â€
+who accused the Cartoon Network show of engaging in 'queer baiting.'
 Among other definitions, the term refers to TV and film producers
 introducing perceived sexual tension between two same-sex characters with
 no intent of ever bringing the relationship to fruition, and is decried by
@@ -5101,7 +5106,7 @@ attention.&lt;/p&gt;
 &lt;p&gt;The criticism and attackers were apparently strong and frequent enough that
 Zuke decided to shut down her social media presence, and close herself off
 to â€œthousands of people who think because I work on a TV show that I owe
-them myself all the time.â€ Her account has since been deleted, but a
+them myself all the time.&amp;quot; Her account has since been deleted, but a
 screenshot of her last tweets is currently making the rounds online.&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;In this instance the writer of a very progressive kids show (which I proudly

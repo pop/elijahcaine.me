@@ -600,7 +600,7 @@ Adam langley via ImperialViolet;
 To read all of the posts, check out the 'Independent Crypto' tag.&lt;/p&gt;
 &lt;/div&gt;
 &lt;p&gt;Let's imagine you are a billionaire.
-You want to know if you have more money than your billionaire friend Bob, but for some reason it's &lt;em&gt;very&lt;/em&gt; faux pas to let anybody how much money you have, even your good friend Bob.&lt;/p&gt;
+You want to know if you have more money than your billionaire friend Bob, but for some reason it's &lt;em&gt;very&lt;/em&gt; faux pas to let anybody know how much money you have, even your good friend Bob.&lt;/p&gt;
 &lt;p&gt;But you're a billionaire!
 You're not used to the phrase &amp;quot;that isn't possible&amp;quot;.
 In your frustration you try to figure out if you can use some of your billions to find a solution.&lt;/p&gt;
@@ -639,7 +639,7 @@ This function is garbled by one of the two parties into &lt;tt class="docutils l
 &lt;p&gt;How does Alice actually... 'garble' a circuit?
 It sounds kinda dirty.&lt;/p&gt;
 &lt;p&gt;Each gate (OR, AND, XOR, etc) has two inputs.
-Sick with me.
+Stick with me.
 Each input is encrypted.
 Keeping up?
 So you need a &lt;em&gt;key&lt;/em&gt; to use &lt;em&gt;each gate&lt;/em&gt;.
